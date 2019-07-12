@@ -2,11 +2,11 @@
   <v-container fluid>
     <v-card>
       <v-card-title>
-        <div class="headline">New Registrations</div>
+        <div class="headline">Reseller Accounts</div>
         <v-spacer></v-spacer>
         <v-text-field
           append-icon="search"
-          label="Search user..."
+          label="Search reseller..."
           single-line
           hide-details
           v-model="search"
@@ -15,26 +15,21 @@
       <v-data-table
         v-model="selected"
         :headers="headers"
-        :items="sortedItems"
+        :items="items"
         item-key="id"
         class="elevation-1"
         :loading="loading"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
-        :pagination.sync="pagination"
       >
         <template slot="items" slot-scope="props">
-          <tr
-            :class="[props.item.status === 'pending' ? 'blue lighten-4' : '']"
-          >
-            <!-- <td class="text-xs-left">{{ props.item.id }} <v-btn flat icon @click="copy($event, props.item)"><v-icon>file_copy</v-icon></v-btn></td> -->
+          <tr>
             <td class="text-xs-center pa-2">
               <v-avatar size="80px" tile v-if="props.item.downloadURL">
-                <v-img
+                <img
                   :src="props.item.downloadURL"
                   :alt="props.item.firstName"
-                  contain
-                ></v-img>
+                />
               </v-avatar>
               <img
                 :src="userPlaceholder"
@@ -43,52 +38,18 @@
                 style="width: 50%;"
               />
             </td>
-            <td class="text-xs-left">{{ props.item.firstName }}</td>
-            <td class="text-xs-left">{{ props.item.middleInitial || "" }}</td>
-            <td class="text-xs-left">{{ props.item.lastName }}</td>
-            <td class="text-xs-left">
-              {{ props.item.birthday | momentize("MMMM D, YYYY") }}
-            </td>
-            <td class="text-xs-left">{{ props.item.address.citymun }}</td>
-            <td class="text-xs-left">{{ props.item.address.province }}</td>
-            <td class="text-xs-left">
-              {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
-            </td>
-            <td class="text-xs-left">
-              <span
-                v-if="props.item.status === 'pending'"
-                class="primary--text"
-              >
-                <strong>PENDING</strong>
-              </span>
-              <span
-                v-if="props.item.status === 'approved'"
-                class="green--text text--darken-1"
-              >
-                <strong>APPROVED</strong>
-              </span>
-              <span
-                v-else-if="props.item.status === 'denied'"
-                class="red--text"
-              >
-                <strong>DENIED</strong>
-              </span>
-            </td>
-            <td class="text-xs-center">
-              <v-btn
-                icon
-                color="primary"
-                dark
-                @click.stop="viewUser(props.item)"
-              >
-                <v-icon>remove_red_eye</v-icon>
-              </v-btn>
-            </td>
+            <td class="text-xs-center">{{ props.item.agentId }}</td>
+            <td class="text-xs-center">{{ props.item.firstName }}</td>
+            <td class="text-xs-center">{{ props.item.middleInitial }}</td>
+            <td class="text-xs-center">{{ props.item.lastName }}</td>
+            <td class="text-xs-center">{{ props.item.birthday }}</td>
+            <td class="text-xs-center">{{ props.item.gender }}</td>
+            <td class="text-xs-center">{{ props.item.email }}</td>
+            <td class="text-xs-center">{{ props.item.contact }}</td>
           </tr>
         </template>
       </v-data-table>
     </v-card>
-    <Toast ref="toast" />
   </v-container>
 </template>
 
@@ -96,27 +57,24 @@
 import mixins from "@/mixins";
 import { DB } from "@/config/firebase";
 import userPlaceholder from "@/assets/placeholder.png";
-import ClipboardJS from "clipboard";
-import Toast from "@/components/Toast";
+const usersCollection = DB.collection("accounts");
 
 export default {
-  created() {
-    this.loading = true;
-  },
   data: () => ({
     items: [],
     search: null,
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
-    pagination: {
-      sortBy: ""
-    },
     selected: [],
     headers: [
       {
         text: "Thumbnail",
         align: "center",
         sortable: false,
-        value: "id"
+        value: "downloadURL"
+      },
+      {
+        text: "ID",
+        value: "agentId"
       },
       {
         text: "First name",
@@ -131,87 +89,52 @@ export default {
         value: "lastName"
       },
       {
-        text: "Birth Date",
+        text: "Birthday",
         value: "birthday"
       },
       {
-        text: "City",
-        value: "address.citymun"
+        text: "Gender",
+        value: "gender"
       },
       {
-        text: "Province",
-        value: "address.province"
+        text: "Email",
+        value: "email"
       },
       {
-        text: "Application date",
-        value: "createdAt"
-      },
-      {
-        text: "Status",
-        value: "status"
-      },
-      {
-        text: "Action",
-        align: "center",
-        sortable: false,
-        value: "id"
+        text: "Contact",
+        value: "contact"
       }
     ],
+    userPlaceholder: userPlaceholder,
     loading: false
   }),
-  async created() {
-    this.loading = true;
-    try {
-      const data = await this.$store.dispatch("distributors/FIND_ALL");
-
-      console.log(data);
-      this.items = data;
-    } catch (error) {
-      console.log(error);
-    }
-    this.loading = false;
+  created() {
+    this.fetchUsers();
   },
   methods: {
-    viewUser(account) {
-      this.$router.push({
-        name: "RegistrationDetails",
-        params: { uid: account.id, account }
-      });
-    },
-    copy(e, item) {
-      const el = document.createElement("button");
-      el.setAttribute("data-clipboard-text", item.id);
-      el.setAttribute("class", "btn");
-      new ClipboardJS(".btn");
+    async fetchUsers() {
+      this.loading = true;
 
-      document.body.appendChild(el);
-      el.click();
+      try {
+        const querySnapshot = await usersCollection
+          .where("type", "==", "Reseller")
+          .where("status", "==", "approved")
+          .get();
 
-      this.$refs.toast.show("success", "Registration ID copied to clipboard");
+        this.items = querySnapshot.docs.map(doc => {
+          const user = doc.data();
+          user.id = doc.id;
+          return user;
+        });
 
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      return false;
+        console.log("Resellers", this.items);
+      } catch (error) {
+        console.log(error);
+      }
+
+      this.loading = false;
     }
   },
-  mixins: [mixins],
-  computed: {
-    user() {
-      return this.$store.getters["auth/GET_USER"];
-    },
-    userPlaceholder() {
-      return userPlaceholder || "";
-    },
-    sortedItems() {
-      const sorter = (a, b) =>
-        a.position - b.position || b.createdAt - a.createdAt;
-
-      return this.items.sort(sorter);
-    }
-  },
-  components: {
-    Toast
-  }
+  mixins: [mixins]
 };
 </script>
