@@ -37,7 +37,11 @@ const users = {
     },
     async ConvertCustomer({ commit,dispatch },payload) {
       try {
-          await usersCollection.doc(payload.id).update({type: "Reseller", agentId: payload.agentId})
+          await usersCollection.doc(payload.id).update({
+              type: "Reseller",
+              agentId: payload.agentId,
+              status: "approved"
+        })
           await dispatch('GetCustomers') ;
           await DB.collection('conversations').add({
             created: Date.now(),
