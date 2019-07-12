@@ -29,9 +29,13 @@ const messages = {
 					const userIndex = c.users.findIndex(user => user !== userId);
 					c.user = await dispatch('auth/GET_USER', c.users[userIndex], { root: true });
 				}
-				// console.log("test");
+				
+				let filteredConversation = conversations.filter(conversation => {
+					return conversation.user.status == "approved"
+				})
 				// console.log(conversations);
-				return conversations;
+
+				return filteredConversation;
 
 			} catch (error) {
 				throw error;
