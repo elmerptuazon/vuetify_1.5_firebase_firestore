@@ -9,10 +9,11 @@ function executeCommand(cmd) {
     return new Promise(function (resolve, reject) {
         exec(cmd, function (err, stdout) {
             if (err) {
+                console.log(err);
                 reject(err);
                 return;
             }
-
+            console.log(stdout);
             resolve(stdout);
         });
     });
@@ -65,6 +66,7 @@ function executeCommand(cmd) {
         await fs.copy(indexSource, indexDestination)
         console.log('index.html update success!')
         console.log('building app')
+
         await executeCommand('npm run build');
         console.log('build success into dist');
 
