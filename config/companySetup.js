@@ -4,35 +4,36 @@ const { exec } = require('child_process');
 // process.argv.forEach(function (val, index, array) {
 //     console.log(index + ': ' + val);
 // });
-// console.log(process.argv[2]);
-function executeCommand(cmd) {
-    return new Promise(function (resolve, reject) {
-        exec(cmd, function (err, stdout) {
-            if (err) {
-                console.log(err);
-                reject(err);
-                return;
-            }
-            console.log(stdout);
-            resolve(stdout);
-        });
-    });
-}
+// console.log(value);
+// function executeCommand(cmd) {
+//     return new Promise(function (resolve, reject) {
+//         exec(cmd, function (err, stdout) {
+//             if (err) {
+//                 console.log(err);
+//                 reject(err);
+//                 return;
+//             }
+//             console.log(stdout);
+//             resolve(stdout);
+//         });
+//     });
+// }
 
-(async function copyCompanySetUp() {
+async function copyCompanySetUp(value) {
     try {
-        let imgSource = `company_setup/${process.argv[2]}/src/assets`;
+        console.log(value);
+        let imgSource = `company_setup/${value}/src/assets`;
         let imgDestination = 'src/assets'
         await fs.copy(imgSource, imgDestination)
         console.log('Img assets update success!')
 
-        let configSource = `company_setup/${process.argv[2]}/environmentConfig`;
+        let configSource = `company_setup/${value}/environmentConfig`;
         let configDestination = 'config'
         await fs.copy(configSource, configDestination)
         console.log('Environment Config update success!')
 
         try {
-            let pageSource = `company_setup/${process.argv[2]}/src/pages`;
+            let pageSource = `company_setup/${value}/src/pages`;
             let pageDestination = 'src/pages'
             await fs.copy(pageSource, pageDestination)
             console.log('Pages update success!')
@@ -40,7 +41,7 @@ function executeCommand(cmd) {
             console.log(`Error: ${e}`);
         }
         try {
-            let componentSource = `company_setup/${process.argv[2]}/src/components`;
+            let componentSource = `company_setup/${value}/src/components`;
             let componentDestination = 'src/components'
             await fs.copy(componentSource, componentDestination)
             console.log('Components update success!')
@@ -48,7 +49,7 @@ function executeCommand(cmd) {
             console.log(`Error: ${e}`);
         }
         try {
-            let moduleSource = `company_setup/${process.argv[2]}/src/store/modules`;
+            let moduleSource = `company_setup/${value}/src/store/modules`;
             let moduleDestination = 'src/store/modules'
             await fs.copy(moduleSource, moduleDestination)
             console.log('Store Modules update success!')
@@ -56,19 +57,19 @@ function executeCommand(cmd) {
             console.log(`Error: ${e}`);
         }
 
-        let staticSource = `company_setup/${process.argv[2]}/static`;
+        let staticSource = `company_setup/${value}/static`;
         let staticgDestination = 'static'
         await fs.copy(staticSource, staticgDestination)
         console.log('Static files update success!')
 
-        let indexSource = `company_setup/${process.argv[2]}/index/index.html`;
+        let indexSource = `company_setup/${value}/index/index.html`;
         let indexDestination = 'index.html'
         await fs.copy(indexSource, indexDestination)
         console.log('index.html update success!')
-        console.log('building app')
+        // console.log('building app')
 
-        await executeCommand('node build/build.js');
-        console.log('build success into dist');
+        // await executeCommand('node build/build.js');
+        // console.log('build success into dist');
 
     }
     catch (err) {
@@ -76,7 +77,7 @@ function executeCommand(cmd) {
     }
 
 
-})();
+};
 
 //update the sources depending on the company
 
@@ -146,4 +147,4 @@ function executeCommand(cmd) {
 //     //return true;
 // })();
 
-// module.exports.copyCompanySetUp = copyCompanySetUp;
+module.exports.copyCompanySetUp = copyCompanySetUp;
