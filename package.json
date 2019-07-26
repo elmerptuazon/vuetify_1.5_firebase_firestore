@@ -1,7 +1,7 @@
 {
-  "name": "everbilena-management-website",
+  "name": "admininistrator-management-website",
   "version": "1.0.0",
-  "description": "BWL Group Management Website",
+  "description": "Administrator Management Website",
   "author": "Robert Soriano <sorianorobertc@gmail.com>",
   "private": true,
   "scripts": {
