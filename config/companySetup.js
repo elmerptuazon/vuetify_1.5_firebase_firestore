@@ -30,21 +30,30 @@ function executeCommand(cmd) {
         await fs.copy(configSource, configDestination)
         console.log('Environment Config update success!')
 
-        let pageSource = `company_setup/${process.argv[2]}/src/pages`;
-        let pageDestination = 'src/pages'
-        await fs.copy(pageSource, pageDestination)
-        console.log('Pages update success!')
-
-        let componentSource = `company_setup/${process.argv[2]}/src/components`;
-        let componentDestination = 'src/components'
-        await fs.copy(componentSource, componentDestination)
-        console.log('Components update success!')
-
-
-        let moduleSource = `company_setup/${process.argv[2]}/src/store/modules`;
-        let moduleDestination = 'src/store/modules'
-        await fs.copy(moduleSource, moduleDestination)
-        console.log('Store Modules update success!')
+        try {
+            let pageSource = `company_setup/${process.argv[2]}/src/pages`;
+            let pageDestination = 'src/pages'
+            await fs.copy(pageSource, pageDestination)
+            console.log('Pages update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
+        try {
+            let componentSource = `company_setup/${process.argv[2]}/src/components`;
+            let componentDestination = 'src/components'
+            await fs.copy(componentSource, componentDestination)
+            console.log('Components update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
+        try {
+            let moduleSource = `company_setup/${process.argv[2]}/src/store/modules`;
+            let moduleDestination = 'src/store/modules'
+            await fs.copy(moduleSource, moduleDestination)
+            console.log('Store Modules update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
 
         let staticSource = `company_setup/${process.argv[2]}/static`;
         let staticgDestination = 'static'
