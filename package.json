@@ -8,8 +8,9 @@
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "start": "npm run dev",
     "build": "node build/build.js",
-    "test": "cross-env NODE_ENV=test npm run build",
-    "setup": "node config/companySetup.js"
+    "test-Barapido": "cross-env NODE_ENV=test node config/companySetup.js Barapido",
+    "test-EverBilena": "cross-env NODE_ENV=test node config/companySetup.js EverBilena",
+    "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
     "axios": "^0.18.0",
