@@ -67,7 +67,7 @@ function executeCommand(cmd) {
         console.log('index.html update success!')
         console.log('building app')
 
-        await executeCommand('npm run build');
+        await executeCommand('node build/build.js');
         console.log('build success into dist');
 
     }
