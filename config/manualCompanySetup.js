@@ -44,21 +44,30 @@ const prompts = require('prompts');
         await fs.copy(configSource, configDestination)
         console.log('Environment Config update success!')
 
-        let pageSource = `company_setup/${answer.value}/src/pages`;
-        let pageDestination = 'src/pages'
-        await fs.copy(pageSource, pageDestination)
-        console.log('Pages update success!')
-
-        let componentSource = `company_setup/${answer.value}/src/components`;
-        let componentDestination = 'src/components'
-        await fs.copy(componentSource, componentDestination)
-        console.log('Components update success!')
-
-
-        let moduleSource = `company_setup/${answer.value}/src/store/modules`;
-        let moduleDestination = 'src/store/modules'
-        await fs.copy(moduleSource, moduleDestination)
-        console.log('Store Modules update success!')
+        try {
+            let pageSource = `company_setup/${answer.value}/src/pages`;
+            let pageDestination = 'src/pages'
+            await fs.copy(pageSource, pageDestination)
+            console.log('Pages update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
+        try {
+            let componentSource = `company_setup/${answer.value}/src/components`;
+            let componentDestination = 'src/components'
+            await fs.copy(componentSource, componentDestination)
+            console.log('Components update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
+        try {
+            let moduleSource = `company_setup/${answer.value}/src/store/modules`;
+            let moduleDestination = 'src/store/modules'
+            await fs.copy(moduleSource, moduleDestination)
+            console.log('Store Modules update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
 
         let staticSource = `company_setup/${answer.value}/static`;
         let staticgDestination = 'static'
