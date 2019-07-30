@@ -57,9 +57,11 @@ const companies = {
 
                     d.sku = d.items.length;
                     d.price = 0;
-
+                    d.resellerPrice = 0;
                     d.items.forEach((item) => {
                         d.price += (item.qty * item.price);
+                        d.resellerPrice += (item.qty * item.resellerPrice);
+
                     });
                 }
 

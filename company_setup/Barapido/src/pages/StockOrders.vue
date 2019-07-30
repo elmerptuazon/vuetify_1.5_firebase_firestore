@@ -120,7 +120,8 @@ export default {
     try {
       const data = await this.$store.dispatch("stock_orders/FIND");
       this.items = data.map(order => {
-        order.discountedTotal = this.applyDiscount(order.price);
+        console.log(order);
+        order.discountedTotal = this.applyDiscount(order.resellerPrice);
         return order;
       });
     } catch (error) {

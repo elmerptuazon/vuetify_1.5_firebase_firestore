@@ -15,7 +15,7 @@
         </td>
         <td class="text-xs-center">{{ props.item.name }}</td>
         <td class="text-xs-center">{{ props.item.attributes | capitalize }}</td>
-        <td class="text-xs-center">{{ props.item.price }}</td>
+        <td class="text-xs-center">{{ props.item.resellerPrice }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.total | currency("P") }}</td>
       </tr>
@@ -66,7 +66,7 @@ export default {
       },
       {
         text: "Price",
-        value: "price",
+        value: "resellerPrice",
         align: "center"
       },
       {
@@ -94,8 +94,8 @@ export default {
 
         return {
           qty: item.qty,
-          price: item.price,
-          total: item.qty * item.price,
+          price: item.resellerPrice,
+          total: item.qty * item.resellerPrice,
           name: item.name,
           attributes: attributes,
           image: item.downloadURL
@@ -106,7 +106,7 @@ export default {
     },
 
     subTotal() {
-      return this.items.reduce((a, b) => a + b.price * b.qty, 0);
+      return this.items.reduce((a, b) => a + b.resellerPrice * b.qty, 0);
     },
 
     discount() {
