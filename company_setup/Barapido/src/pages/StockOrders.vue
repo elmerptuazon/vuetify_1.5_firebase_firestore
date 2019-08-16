@@ -29,7 +29,7 @@
             :class="[props.item.status === 'pending' ? 'blue lighten-4' : '']"
           >
             <td>
-              {{ props.item.user.agentId }}
+              {{ props.item.stockOrderReference }}
             </td>
             <td>
               {{ props.item.user.firstName }}
@@ -74,8 +74,8 @@ export default {
     },
     headers: [
       {
-        text: "Distributor ID",
-        value: "user.agentId"
+        text: "Reference No.",
+        value: "stockOrderReference"
       },
       {
         text: "First Name",
