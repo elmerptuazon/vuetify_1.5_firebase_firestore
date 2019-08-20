@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-card>
       <v-card-title>
         <v-btn icon @click="$router.go(-1)">
@@ -93,12 +93,23 @@
                 :items="status"
                 v-model="selectedStatus"
                 label="Update Status"
-              ></v-select
-            ></v-container>
+              ></v-select>
+              <div class="text-xs-center">
+                <v-btn
+                  v-if="item.status === 'paid'"
+                  @click="shipmentDialog = true"
+                  >Ship this Stock Order</v-btn
+                >
+              </div>
+            </v-container>
           </v-flex>
         </v-layout>
         <div class="mb-2"></div>
-        <StockOrderItems :items="item.items" :loading="loading" />
+        <v-card>
+          <v-card-title class="title">Order Details</v-card-title>
+          <v-divider></v-divider>
+          <StockOrderItems :items="item.items" :loading="loading" />
+        </v-card>
       </v-card-text>
       <v-divider></v-divider>
       <!-- <v-card-actions v-if="item.status === 'pending'">
@@ -107,24 +118,83 @@
 				<v-btn color="green" outline dark large @click="updateStatus('collected')">COLLECTED</v-btn>
 			</v-card-actions> -->
     </v-card>
+    <div class="mb-2"></div>
+    <v-card>
+      <v-card-title class="title">Shipment Details</v-card-title>
 
+      <v-container fluid grid-list-lg>
+        <v-layout row wrap>
+          <v-flex xs12 v-for="item in shipmentList" :key="item.trackingNumber">
+            <v-card class="mt-2" color="white">
+              <v-layout class="mt-0 pt-0" align-center>
+                <v-flex xs4>
+                  <div class="body-2">
+                    {{ item.trackingNumber }}
+                  </div>
+                </v-flex>
+              </v-layout>
+            </v-card>
+          </v-flex>
+        </v-layout>
+      </v-container>
+    </v-card>
+    <v-dialog v-model="shipmentDialog" max-width="800">
+      <v-card>
+        <v-container grid-list-md>
+          <v-card-title>Shipment Details</v-card-title>
+          <v-divider></v-divider>
+          <v-card-text>
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-radio-group v-model="shipmentType" row>
+                  <v-radio label="Full Shipment" value="Full"></v-radio>
+                  <v-radio label="Partial Shipment" value="Partial"></v-radio>
+                  <ShipmentDetails
+                    v-if="shipmentType == 'Partial'"
+                    :items="item.items"
+                    :loading="loading"
+                  />
+                </v-radio-group>
+              </v-flex>
+            </v-layout>
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn @click="SubmitShipment">
+              Submit Shipment
+            </v-btn>
+            <v-btn @click="shipmentDialog = false">
+              Cancel
+            </v-btn>
+          </v-card-actions>
+        </v-container>
+      </v-card>
+    </v-dialog>
     <Toast ref="toast" />
   </v-container>
 </template>
 
 <script>
+import { mapState } from "vuex";
 import mixins from "@/mixins";
 import { DB } from "@/config/firebase";
 import userPlaceholder from "@/assets/placeholder.png";
 import AccountData from "@/components/AccountData";
 import Toast from "@/components/Toast";
 import StockOrderItems from "@/components/StockOrderItems";
+import ShipmentDetails from "@/components/ShipmentDetails";
+import { async } from "q";
 
 export default {
   data: () => ({
     loading: false,
     item: {},
-    status: ["Processing", "Paid", "Shipped", "Delivered", "Cancelled"],
+    status: ["Processing", "Paid", "Cancelled"],
+    shipmentDialog: false,
+    shipmentType: "Full",
+    shipmentDetails: null,
+    partialShipment: false,
     selectedStatus: null
   }),
   async created() {
@@ -141,6 +211,9 @@ export default {
             .get()).data();
           product.downloadURL = data.downloadURL;
           product.name = data.name;
+          if (typeof product.shippedQty === "undefined") {
+            product.shippedQty = 0;
+          }
           items.push(product);
         }
         this.item.items = items;
@@ -180,18 +253,97 @@ export default {
         this.$refs.toast.show("error", "An error occurred");
         console.log(error);
       }
+    },
+    async SubmitShipment() {
+      if (this.shipmentType === "Full") {
+        //pass shipment details to vuex that inserts to database
+        const itemsToShip = this.item.items.map(item => {
+          //console.log(item);
+          const itemToShip = {
+            attributes: item.attributes,
+            qtyToShip: item.qty - item.shippedQty,
+            productName: item.name
+          };
+          return itemToShip;
+        });
+        console.log(itemsToShip);
+
+        this.shipmentDetails = {
+          stockOrderReference: this.item.stockOrderReference,
+          userDetails: {
+            firstName: this.item.user.firstName,
+            lastName: this.item.user.lastName,
+            middleInitial: this.item.user.middleInitial,
+            email: this.item.user.email,
+            contact: this.item.user.contact,
+            userId: this.item.user.id,
+            address: this.item.user.address
+          },
+          dateSubmitted: Date.now(),
+          itemsToShip: itemsToShip,
+          type: "Full Shipment",
+          status: "Pending"
+        };
+        //call vuex and pass this
+        const response = await this.$store.dispatch(
+          "shipment/SubmitShipment",
+          this.shipmentDetails
+        );
+        console.log(response);
+        //after saving the Shipment Details, Update the Stock Order Values and Status
+
+        const remainingStockOrderItems = this.item.items.map(item => {
+          const updatedStockOrder = {
+            attributes: item.attributes,
+            price: item.price,
+            productId: item.productId,
+            qty: item.qty,
+            unique: item.unique,
+            resellerPrice: item.resellerPrice,
+            shippedQty: item.qty - item.shippedQty + item.shippedQty
+          };
+          return updatedStockOrder;
+        });
+        console.log(remainingStockOrderItems);
+        this.item.statusTimeline.push({
+          status: "Shipped",
+          date: Date.now()
+        });
+        const stockOrderUpdatedData = {
+          status: "Shipped",
+          items: remainingStockOrderItems,
+          statusTimeline: this.item.statusTimeline,
+          id: this.item.id
+        };
+
+        const stockOrderUpdateResponse = await this.$store.dispatch(
+          "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+          stockOrderUpdatedData
+        );
+
+        console.log(stockOrderUpdateResponse);
+        this.shipmentDialog = false;
+      }
+      //console.log(this.shipmentList);
+      else {
+        //get shipment details from component, then pass the details to vuex that inserts to database
+      }
     }
   },
   mixins: [mixins],
   computed: {
     userPlaceholder() {
       return userPlaceholder;
-    }
+    },
+    ...mapState("shipment", {
+      shipmentList: state => state.shipmentList
+    })
   },
   components: {
     AccountData,
     Toast,
-    StockOrderItems
+    StockOrderItems,
+    ShipmentDetails
   },
   watch: {
     selectedStatus(val) {
