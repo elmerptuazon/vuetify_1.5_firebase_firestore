@@ -1,6 +1,6 @@
 import { DB, AUTH } from '@/config/firebase';
 
-const companies = {
+const stock_orders = {
     namespaced: true,
     state: {
         companies: []
@@ -88,8 +88,22 @@ const companies = {
             } catch (error) {
                 throw error;
             }
+        },
+        async UPDATE_STOCK_ORDER_DETAILS({ }, payload) {
+            try {
+                const obj = {
+                    status: payload.status,
+                    items: payload.items,
+                    statusTimeline: payload.statusTimeline
+                }
+
+                await DB.collection('stock_orders').doc(payload.id).update(obj);
+            } catch (error) {
+                throw error;
+            }
         }
+
     }
 }
 
-export default companies;
+export default stock_orders;
