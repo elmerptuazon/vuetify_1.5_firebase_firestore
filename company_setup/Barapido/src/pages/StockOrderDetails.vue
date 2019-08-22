@@ -96,7 +96,10 @@
               ></v-select>
               <div class="text-xs-center">
                 <v-btn
-                  v-if="item.status === 'paid'"
+                  v-if="
+                    item.status === 'paid' ||
+                      item.status === 'partially shipped'
+                  "
                   @click="shipmentDialog = true"
                   >Ship this Stock Order</v-btn
                 >
@@ -121,27 +124,15 @@
     <div class="mb-2"></div>
     <v-card>
       <v-card-title class="title">Shipment Details</v-card-title>
-
-      <v-container fluid grid-list-lg>
-        <v-layout row wrap>
-          <v-flex xs12 v-for="item in shipmentList" :key="item.trackingNumber">
-            <v-card class="mt-2" color="white">
-              <v-layout class="mt-0 pt-0" align-center>
-                <v-flex xs4>
-                  <div class="body-2">
-                    {{ item.trackingNumber }}
-                  </div>
-                </v-flex>
-              </v-layout>
-            </v-card>
-          </v-flex>
-        </v-layout>
-      </v-container>
+      <ShipmentDetails :stockOrderId="item.id" />
     </v-card>
-    <v-dialog v-model="shipmentDialog" max-width="800">
+
+    <v-dialog v-model="shipmentDialog" max-width="900">
       <v-card>
         <v-container grid-list-md>
-          <v-card-title>Shipment Details</v-card-title>
+          <v-card-title class="title">
+            Create Shipment
+          </v-card-title>
           <v-divider></v-divider>
           <v-card-text>
             <v-layout wrap>
@@ -149,10 +140,11 @@
                 <v-radio-group v-model="shipmentType" row>
                   <v-radio label="Full Shipment" value="Full"></v-radio>
                   <v-radio label="Partial Shipment" value="Partial"></v-radio>
-                  <ShipmentDetails
+                  <PartialShipment
                     v-if="shipmentType == 'Partial'"
                     :items="item.items"
                     :loading="loading"
+                    @itemsToShip="SetItemsToShip"
                   />
                 </v-radio-group>
               </v-flex>
@@ -176,7 +168,6 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
 import mixins from "@/mixins";
 import { DB } from "@/config/firebase";
 import userPlaceholder from "@/assets/placeholder.png";
@@ -184,6 +175,7 @@ import AccountData from "@/components/AccountData";
 import Toast from "@/components/Toast";
 import StockOrderItems from "@/components/StockOrderItems";
 import ShipmentDetails from "@/components/ShipmentDetails";
+import PartialShipment from "@/components/PartialShipment";
 import { async } from "q";
 
 export default {
@@ -191,6 +183,7 @@ export default {
     loading: false,
     item: {},
     status: ["Processing", "Paid", "Cancelled"],
+    itemsToShip: [],
     shipmentDialog: false,
     shipmentType: "Full",
     shipmentDetails: null,
@@ -227,6 +220,19 @@ export default {
     this.loading = false;
   },
   methods: {
+    SetItemsToShip(items) {
+      this.itemsToShip = items.map(item => {
+        const itemToShip = {
+          attributes: item.attributes,
+          qtyToShip: item.qtyToShip,
+          productName: item.name,
+          productId: item.productId
+        };
+        return itemToShip;
+      });
+
+      console.log(this.itemsToShip);
+    },
     async updateStatus(status) {
       try {
         if (this.item.statusTimeline) {
@@ -255,78 +261,231 @@ export default {
       }
     },
     async SubmitShipment() {
-      if (this.shipmentType === "Full") {
-        //pass shipment details to vuex that inserts to database
-        const itemsToShip = this.item.items.map(item => {
-          //console.log(item);
-          const itemToShip = {
-            attributes: item.attributes,
-            qtyToShip: item.qty - item.shippedQty,
-            productName: item.name
-          };
-          return itemToShip;
-        });
-        console.log(itemsToShip);
+      const response = await this.$swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Submit it!"
+      });
+      if (response.value) {
+        if (this.shipmentType === "Full") {
+          //pass shipment details to vuex that inserts to database
+          try {
+            const itemsToShip = this.item.items.map(item => {
+              //console.log(item);
+              const itemToShip = {
+                attributes: item.attributes,
+                qtyToShip: item.qty - item.shippedQty,
+                productName: item.name,
+                productId: item.productId
+              };
+              return itemToShip;
+            });
+            this.shipmentDetails = {
+              stockOrder: {
+                stockOrderReference: this.item.stockOrderReference,
+                stockOrderId: this.item.id
+              },
+              userDetails: {
+                firstName: this.item.user.firstName,
+                lastName: this.item.user.lastName,
+                middleInitial: this.item.user.middleInitial,
+                email: this.item.user.email,
+                contact: this.item.user.contact,
+                userId: this.item.user.id,
+                address: this.item.user.address
+              },
+              dateSubmitted: Date.now(),
+              itemsToShip: itemsToShip,
+              type: "Full Shipment",
+              status: "Pending"
+            };
+            //call vuex and pass this.shipmentDetails
+            const response = await this.$store.dispatch(
+              "shipment/SubmitShipment",
+              this.shipmentDetails
+            );
+            //console.log(response);
+            //after saving the Shipment Details, Update the Stock Order Values and Status
+            const remainingStockOrderItems = this.item.items.map(item => {
+              const updatedStockOrder = {
+                attributes: item.attributes,
+                price: item.price,
+                productId: item.productId,
+                qty: item.qty,
+                unique: item.unique,
+                resellerPrice: item.resellerPrice,
+                shippedQty: item.qty - item.shippedQty + item.shippedQty
+              };
+              return updatedStockOrder;
+            });
+            console.log(remainingStockOrderItems);
+            this.item.statusTimeline.push({
+              status: "shipped",
+              date: Date.now()
+            });
+            const stockOrderUpdatedData = {
+              status: "shipped",
+              items: remainingStockOrderItems,
+              statusTimeline: this.item.statusTimeline,
+              id: this.item.id
+            };
 
-        this.shipmentDetails = {
-          stockOrderReference: this.item.stockOrderReference,
-          userDetails: {
-            firstName: this.item.user.firstName,
-            lastName: this.item.user.lastName,
-            middleInitial: this.item.user.middleInitial,
-            email: this.item.user.email,
-            contact: this.item.user.contact,
-            userId: this.item.user.id,
-            address: this.item.user.address
-          },
-          dateSubmitted: Date.now(),
-          itemsToShip: itemsToShip,
-          type: "Full Shipment",
-          status: "Pending"
-        };
-        //call vuex and pass this
-        const response = await this.$store.dispatch(
-          "shipment/SubmitShipment",
-          this.shipmentDetails
-        );
-        console.log(response);
-        //after saving the Shipment Details, Update the Stock Order Values and Status
+            const stockOrderUpdateResponse = await this.$store.dispatch(
+              "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+              stockOrderUpdatedData
+            );
 
-        const remainingStockOrderItems = this.item.items.map(item => {
-          const updatedStockOrder = {
-            attributes: item.attributes,
-            price: item.price,
-            productId: item.productId,
-            qty: item.qty,
-            unique: item.unique,
-            resellerPrice: item.resellerPrice,
-            shippedQty: item.qty - item.shippedQty + item.shippedQty
-          };
-          return updatedStockOrder;
-        });
-        console.log(remainingStockOrderItems);
-        this.item.statusTimeline.push({
-          status: "Shipped",
-          date: Date.now()
-        });
-        const stockOrderUpdatedData = {
-          status: "Shipped",
-          items: remainingStockOrderItems,
-          statusTimeline: this.item.statusTimeline,
-          id: this.item.id
-        };
+            //console.log(stockOrderUpdateResponse);
+            this.shipmentDialog = false;
+            this.$swal.fire({
+              type: "success",
+              title: "Success",
+              text: "Shipment has been recorded!"
+            });
+          } catch (error) {
+            this.$swal.fire({
+              type: "error",
+              title: "Failed",
+              text: `Shipment creation has failed due to: ${error}`
+            });
+          }
+        } else {
+          //get shipment details from component, then pass the details to vuex that inserts to database
+          if (this.itemsToShip.length < 1) {
+            this.$swal.fire({
+              type: "info",
+              title: "Items to Ship",
+              text: "Please select an item and indicate how many items to ship."
+            });
+            return;
+          }
+          try {
+            this.shipmentDetails = {
+              stockOrder: {
+                stockOrderReference: this.item.stockOrderReference,
+                stockOrderId: this.item.id
+              },
+              userDetails: {
+                firstName: this.item.user.firstName,
+                lastName: this.item.user.lastName,
+                middleInitial: this.item.user.middleInitial,
+                email: this.item.user.email,
+                contact: this.item.user.contact,
+                userId: this.item.user.id,
+                address: this.item.user.address
+              },
+              dateSubmitted: Date.now(),
+              itemsToShip: this.itemsToShip,
+              type: "Partial Shipment",
+              status: "Pending"
+            };
+            //call vuex and pass this.shipmentDetails
+            const response = await this.$store.dispatch(
+              "shipment/SubmitShipment",
+              this.shipmentDetails
+            );
+            //after saving the Shipment Details, Update the Stock Order Values and Status
+            const remainingStockOrderItems = this.item.items.map(item => {
+              const updatedIndex = this.itemsToShip.findIndex(
+                shippedItem => shippedItem.productId === item.productId
+              );
+              if (updatedIndex === -1) {
+                const updatedStockOrder = {
+                  attributes: item.attributes,
+                  price: item.price,
+                  productId: item.productId,
+                  qty: item.qty,
+                  unique: item.unique,
+                  resellerPrice: item.resellerPrice,
+                  shippedQty: item.shippedQty
+                };
+                return updatedStockOrder;
+              } else {
+                const shippedQty = this.itemsToShip[updatedIndex].qtyToShip;
+                const updatedStockOrder = {
+                  attributes: item.attributes,
+                  price: item.price,
+                  productId: item.productId,
+                  qty: item.qty,
+                  unique: item.unique,
+                  resellerPrice: item.resellerPrice,
+                  shippedQty: item.shippedQty + shippedQty
+                };
+                return updatedStockOrder;
+              }
+            });
 
-        const stockOrderUpdateResponse = await this.$store.dispatch(
-          "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-          stockOrderUpdatedData
-        );
+            //check if there will be succeeding deliveries
+            const hasSucceedingDeliveries = Object.keys(
+              remainingStockOrderItems
+            ).reduce(function(previous, key) {
+              return (
+                previous +
+                (remainingStockOrderItems[key].qty -
+                  remainingStockOrderItems[key].shippedQty)
+              );
+            }, 0);
 
-        console.log(stockOrderUpdateResponse);
-        this.shipmentDialog = false;
-      }
-      //console.log(this.shipmentList);
-      else {
-        //get shipment details from component, then pass the details to vuex that inserts to database
+            //console.log(`hasSucceedingDeliveries ${hasSucceedingDeliveries}`);
+            if (hasSucceedingDeliveries < 1) {
+              this.item.statusTimeline.push({
+                status: "shipped",
+                date: Date.now()
+              });
+              const stockOrderUpdatedData = {
+                status: "shipped",
+                items: remainingStockOrderItems,
+                statusTimeline: this.item.statusTimeline,
+                id: this.item.id
+              };
+
+              const stockOrderUpdateResponse = await this.$store.dispatch(
+                "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+                stockOrderUpdatedData
+              );
+
+              this.shipmentDialog = false;
+              this.$swal.fire({
+                type: "success",
+                title: "Success",
+                text: "Shipment has been recorded!"
+              });
+            } else {
+              this.item.statusTimeline.push({
+                status: "partially shipped",
+                date: Date.now()
+              });
+              const stockOrderUpdatedData = {
+                status: "partially shipped",
+                items: remainingStockOrderItems,
+                statusTimeline: this.item.statusTimeline,
+                id: this.item.id
+              };
+
+              const stockOrderUpdateResponse = await this.$store.dispatch(
+                "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+                stockOrderUpdatedData
+              );
+
+              this.shipmentDialog = false;
+              this.$swal.fire({
+                type: "success",
+                title: "Success",
+                text: "Partial shipment has been recorded!"
+              });
+            }
+          } catch (error) {
+            this.$swal.fire({
+              type: "error",
+              title: "Failed",
+              text: `Partial shipment creation has failed due to: ${error}`
+            });
+          }
+        }
       }
     }
   },
@@ -334,16 +493,14 @@ export default {
   computed: {
     userPlaceholder() {
       return userPlaceholder;
-    },
-    ...mapState("shipment", {
-      shipmentList: state => state.shipmentList
-    })
+    }
   },
   components: {
     AccountData,
     Toast,
     StockOrderItems,
-    ShipmentDetails
+    ShipmentDetails,
+    PartialShipment
   },
   watch: {
     selectedStatus(val) {

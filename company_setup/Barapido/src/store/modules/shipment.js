@@ -13,21 +13,46 @@ const shipment = {
     getters: {
     },
     mutations: {
-        SetShipment(state, payload) {
+        AddShipment(state, payload) {
             state.shipmentList.push(payload);
-        }
+        },
+        SetShipments(state, payload) {
+            state.shipmentList = payload;
+        },
+        ClearShipmentList(state, payload) {
+            state.shipmentList = [];
+        },
     },
     actions: {
         async SubmitShipment({ commit }, payload) {
             try {
                 payload.trackingNumber = GenerateTrackingNumber();
                 const response = await DB.collection('shipment').add(payload);
-                commit('SetShipment', payload)
+                commit('AddShipment', payload)
                 return response;
             } catch (error) {
                 throw error;
             }
         },
+
+        async GetShipments({ commit }, payload) {
+            try {
+                commit('ClearShipmentList');
+                const shipmentSnapshot = await DB.collection('shipment').where("stockOrder.stockOrderId", "==", payload).get();
+                console.log(shipmentSnapshot)
+                if (!shipmentSnapshot.empty) {
+                    const shipmentList = shipmentSnapshot.docs.map((shipment) => {
+                        return shipment.data();
+                    })
+                    commit('SetShipments', shipmentList);
+                }
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
+
+        }
 
     }
 }
