@@ -130,11 +130,15 @@ export default {
     this.loading = false;
   },
   methods: {
-    view(item) {
+    async view(item) {
       console.log(item);
+      await this.$store.dispatch(
+        "stock_orders/POPULATE_STOCK_ORDER_ITEMS",
+        item
+      );
       this.$router.push({
         name: "StockOrderDetails",
-        params: { id: item.id, item }
+        params: { id: item.id }
       });
     },
 

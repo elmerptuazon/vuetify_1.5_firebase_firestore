@@ -13,10 +13,11 @@
             <v-img :src="props.item.image" contain width="50"></v-img>
           </v-avatar>
         </td>
-        <td class="text-xs-center">{{ props.item.name }}</td>
-        <td class="text-xs-center">{{ props.item.attributes | capitalize }}</td>
-        <td class="text-xs-center">{{ props.item.resellerPrice }}</td>
+        <td class="text-xs-left">{{ props.item.name }}</td>
+        <td class="text-xs-left">{{ props.item.attributes | capitalize }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
+        <td class="text-xs-center">{{ props.item.shippedQty }}</td>
+        <td class="text-xs-center">{{ props.item.remainingQty }}</td>
         <td class="text-xs-center">{{ props.item.total | currency("P") }}</td>
       </tr>
     </template>
@@ -34,7 +35,7 @@
         </td>
       </tr> -->
       <tr>
-        <td colspan="6" class="text-xs-right">
+        <td colspan="7" class="text-xs-right">
           <strong>Total: {{ total | currency("P") }}</strong>
         </td>
       </tr>
@@ -65,13 +66,18 @@ export default {
         align: "center"
       },
       {
-        text: "Price",
-        value: "resellerPrice",
+        text: "Order Qty",
+        value: "qty",
         align: "center"
       },
       {
-        text: "Qty",
-        value: "qty",
+        text: "Shipped Qty",
+        value: "shippedQty",
+        align: "center"
+      },
+      {
+        text: "Remaining Qty",
+        value: "remainingQty",
         align: "center"
       },
       {
@@ -94,6 +100,8 @@ export default {
 
         return {
           qty: item.qty,
+          shippedQty: item.shippedQty,
+          remainingQty: item.qty - item.shippedQty,
           price: item.resellerPrice,
           total: item.qty * item.resellerPrice,
           name: item.name,

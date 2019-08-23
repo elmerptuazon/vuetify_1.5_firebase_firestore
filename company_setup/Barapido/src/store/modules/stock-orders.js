@@ -3,7 +3,8 @@ import { DB, AUTH } from '@/config/firebase';
 const stock_orders = {
     namespaced: true,
     state: {
-        companies: []
+        companies: [],
+        stockOrder: {}
     },
     getters: {
         GET_COMPANIES: state => state.companies
@@ -11,6 +12,16 @@ const stock_orders = {
     mutations: {
         SET_COMPANIES(state, payload) {
             state.companies = payload;
+        },
+        SET_STOCK_ORDER(state, payload) {
+            state.stockOrder = payload
+        },
+        UPDATE_STOCK_ORDER(state, payload) {
+            Object.keys(payload).forEach((key) => {
+                state.stockOrder[key] = payload[key];
+            });
+            // key: the name of the object key
+            // index: the ordinal position of the key within the object 
         }
     },
     actions: {
@@ -71,7 +82,7 @@ const stock_orders = {
             }
         },
 
-        async UPDATE_STATUS({ }, payload) {
+        async UPDATE_STATUS({ commit }, payload) {
             try {
 
                 const obj = {
@@ -85,11 +96,12 @@ const stock_orders = {
                 }
 
                 await DB.collection('stock_orders').doc(payload.id).update(obj);
+                commit('UPDATE_STOCK_ORDER', obj)
             } catch (error) {
                 throw error;
             }
         },
-        async UPDATE_STOCK_ORDER_DETAILS({ }, payload) {
+        async UPDATE_STOCK_ORDER_DETAILS({ commit, dispatch, state }, payload) {
             try {
                 const obj = {
                     status: payload.status,
@@ -98,11 +110,29 @@ const stock_orders = {
                 }
 
                 await DB.collection('stock_orders').doc(payload.id).update(obj);
+                commit('UPDATE_STOCK_ORDER', obj)
+                dispatch('POPULATE_STOCK_ORDER_ITEMS', state.stockOrder)
             } catch (error) {
                 throw error;
             }
+        },
+        async POPULATE_STOCK_ORDER_ITEMS({ commit }, payload) {
+            let stockOrder = payload
+            const items = [];
+            for (const product of payload.items) {
+                const data = (await DB.collection("products")
+                    .doc(product.productId)
+                    .get()).data();
+                product.downloadURL = data.downloadURL;
+                product.name = data.name;
+                if (typeof product.shippedQty === "undefined") {
+                    product.shippedQty = 0;
+                }
+                items.push(product);
+            }
+            stockOrder.items = items;
+            commit('SET_STOCK_ORDER', stockOrder)
         }
-
     }
 }
 

@@ -48,8 +48,8 @@ function executeCommand(cmd) {
             console.log(`Error: ${e}`);
         }
         try {
-            let moduleSource = `company_setup/${process.argv[2]}/src/store/modules`;
-            let moduleDestination = 'src/store/modules'
+            let moduleSource = `company_setup/${process.argv[2]}/src/store`;
+            let moduleDestination = 'src/store'
             await fs.copy(moduleSource, moduleDestination)
             console.log('Store Modules update success!')
         } catch (e) {
