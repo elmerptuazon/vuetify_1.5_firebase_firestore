@@ -3,8 +3,7 @@ import { DB, AUTH } from '@/config/firebase';
 const stock_orders = {
     namespaced: true,
     state: {
-        companies: [],
-        stockOrder: {}
+        companies: []
     },
     getters: {
         GET_COMPANIES: state => state.companies
@@ -12,16 +11,6 @@ const stock_orders = {
     mutations: {
         SET_COMPANIES(state, payload) {
             state.companies = payload;
-        },
-        SET_STOCK_ORDER(state, payload) {
-            state.stockOrder = payload
-        },
-        UPDATE_STOCK_ORDER(state, payload) {
-            Object.keys(payload).forEach((key) => {
-                state.stockOrder[key] = payload[key];
-            });
-            // key: the name of the object key
-            // index: the ordinal position of the key within the object 
         }
     },
     actions: {
@@ -112,24 +101,8 @@ const stock_orders = {
             } catch (error) {
                 throw error;
             }
-        },
-        async POPULATE_STOCK_ORDER_ITEMS({ commit }, payload) {
-            let stockOrder = payload
-            const items = [];
-            for (const product of payload.items) {
-                const data = (await DB.collection("products")
-                    .doc(product.productId)
-                    .get()).data();
-                product.downloadURL = data.downloadURL;
-                product.name = data.name;
-                if (typeof product.shippedQty === "undefined") {
-                    product.shippedQty = 0;
-                }
-                items.push(product);
-            }
-            stockOrder.items = items;
-            commit('SET_STOCK_ORDER', stockOrder)
         }
+
     }
 }
 
