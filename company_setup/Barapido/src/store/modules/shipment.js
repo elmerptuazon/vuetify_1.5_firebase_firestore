@@ -14,7 +14,7 @@ const shipment = {
     },
     mutations: {
         AddShipment(state, payload) {
-            state.shipmentList.push(payload);
+            state.shipmentList.unshift(payload);
         },
         SetShipments(state, payload) {
             state.shipmentList = payload;
@@ -38,7 +38,7 @@ const shipment = {
         async GetShipments({ commit }, payload) {
             try {
                 commit('ClearShipmentList');
-                const shipmentSnapshot = await DB.collection('shipment').where("stockOrder.stockOrderId", "==", payload).get();
+                const shipmentSnapshot = await DB.collection('shipment').where("stockOrder.stockOrderId", "==", payload).orderBy("dateSubmitted", "desc").get();
                 console.log(shipmentSnapshot)
                 if (!shipmentSnapshot.empty) {
                     const shipmentList = shipmentSnapshot.docs.map((shipment) => {

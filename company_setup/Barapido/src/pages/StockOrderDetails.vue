@@ -20,18 +20,18 @@
                     <v-list-tile avatar>
                       <v-list-tile-avatar>
                         <v-img
-                          v-if="item.user.downloadURL"
-                          :src="item.user.downloadURL"
+                          v-if="stockOrder.user.downloadURL"
+                          :src="stockOrder.user.downloadURL"
                         ></v-img>
                         <v-img v-else :src="userPlaceholder"></v-img>
                       </v-list-tile-avatar>
 
                       <v-list-tile-content>
                         <v-list-tile-title>
-                          {{ item.user.firstName }}
-                          {{ item.user.middleInitial || "" }}
-                          {{ item.user.lastName }} -
-                          {{ item.user.agentId }}</v-list-tile-title
+                          {{ stockOrder.user.firstName }}
+                          {{ stockOrder.user.middleInitial || "" }}
+                          {{ stockOrder.user.lastName }} -
+                          {{ stockOrder.user.agentId }}</v-list-tile-title
                         >
                       </v-list-tile-content>
                     </v-list-tile>
@@ -46,7 +46,7 @@
                           >Reference Number</v-list-tile-sub-title
                         >
                         <v-list-tile-title>{{
-                          item.stockOrderReference
+                          stockOrder.stockOrderReference
                         }}</v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -55,10 +55,12 @@
                       ><v-list-tile-content>
                         <v-list-tile-sub-title>Address</v-list-tile-sub-title>
                         <v-list-tile-title
-                          >{{ item.user.address.house }}
-                          {{ item.user.address.streetName }},
-                          {{ item.user.address.citymun }},
-                          {{ item.user.address.province }}</v-list-tile-title
+                          >{{ stockOrder.user.address.house }}
+                          {{ stockOrder.user.address.streetName }},
+                          {{ stockOrder.user.address.citymun }},
+                          {{
+                            stockOrder.user.address.province
+                          }}</v-list-tile-title
                         >
                       </v-list-tile-content>
                     </v-list-tile>
@@ -68,7 +70,7 @@
                           >Order Date</v-list-tile-sub-title
                         >
                         <v-list-tile-title>{{
-                          item.submittedAt | momentize("DD-MMM-YYYY")
+                          stockOrder.submittedAt | momentize("DD-MMM-YYYY")
                         }}</v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -77,7 +79,7 @@
                         <v-list-tile-sub-title>Status</v-list-tile-sub-title>
                         <v-list-tile-title>
                           <span class="primary--text">{{
-                            item.status | uppercase
+                            stockOrder.status | uppercase
                           }}</span></v-list-tile-title
                         >
                       </v-list-tile-content>
@@ -97,8 +99,8 @@
               <div class="text-xs-center">
                 <v-btn
                   v-if="
-                    item.status === 'paid' ||
-                      item.status === 'partially shipped'
+                    stockOrder.status === 'paid' ||
+                      stockOrder.status === 'partially shipped'
                   "
                   @click="shipmentDialog = true"
                   >Ship this Stock Order</v-btn
@@ -111,7 +113,7 @@
         <v-card>
           <v-card-title class="title">Order Details</v-card-title>
           <v-divider></v-divider>
-          <StockOrderItems :items="item.items" :loading="loading" />
+          <StockOrderItems :items="stockOrder.items" :loading="loading" />
         </v-card>
       </v-card-text>
       <v-divider></v-divider>
@@ -124,7 +126,7 @@
     <div class="mb-2"></div>
     <v-card>
       <v-card-title class="title">Shipment Details</v-card-title>
-      <ShipmentDetails :stockOrderId="item.id" />
+      <ShipmentDetails :stockOrderId="stockOrder.id" />
     </v-card>
 
     <v-dialog v-model="shipmentDialog" max-width="900">
@@ -142,7 +144,7 @@
                   <v-radio label="Partial Shipment" value="Partial"></v-radio>
                   <PartialShipment
                     v-if="shipmentType == 'Partial'"
-                    :items="item.items"
+                    :items="stockOrder.items"
                     :loading="loading"
                     @itemsToShip="SetItemsToShip"
                   />
@@ -177,6 +179,7 @@ import StockOrderItems from "@/components/StockOrderItems";
 import ShipmentDetails from "@/components/ShipmentDetails";
 import PartialShipment from "@/components/PartialShipment";
 import { async } from "q";
+import { mapState } from "vuex";
 
 export default {
   data: () => ({
@@ -193,24 +196,9 @@ export default {
   async created() {
     this.loading = true;
     try {
-      const { id, item } = this.$route.params;
+      const id = this.$route.params;
 
-      if (id) {
-        this.item = item;
-        const items = [];
-        for (const product of item.items) {
-          const data = (await DB.collection("products")
-            .doc(product.productId)
-            .get()).data();
-          product.downloadURL = data.downloadURL;
-          product.name = data.name;
-          if (typeof product.shippedQty === "undefined") {
-            product.shippedQty = 0;
-          }
-          items.push(product);
-        }
-        this.item.items = items;
-      } else {
+      if (!id) {
         this.$router.push({ name: "StockOrders" });
       }
     } catch (error) {
@@ -235,22 +223,23 @@ export default {
     },
     async updateStatus(status) {
       try {
-        if (this.item.statusTimeline) {
-          this.item.statusTimeline.push({
+        let statusTimeline = this.stockOrder.statusTimeline;
+        if (this.stockOrder.statusTimeline) {
+          statusTimeline.push({
             status: status,
             date: Date.now()
           });
         } else {
-          this.item.statusTimeline = [{ status: status, date: Date.now() }];
+          statusTimeline = [{ status: status, date: Date.now() }];
         }
 
         await this.$store.dispatch("stock_orders/UPDATE_STATUS", {
           status: status,
-          statusTimeline: this.item.statusTimeline,
+          statusTimeline: statusTimeline,
           id: this.$route.params.id
         });
 
-        this.item.status = status;
+        //this.stockOrder.status = status;
         this.$refs.toast.show(
           "success",
           "Order has been successfully marked as " + status
@@ -274,7 +263,7 @@ export default {
         if (this.shipmentType === "Full") {
           //pass shipment details to vuex that inserts to database
           try {
-            const itemsToShip = this.item.items.map(item => {
+            const itemsToShip = this.stockOrder.items.map(item => {
               //console.log(item);
               const itemToShip = {
                 attributes: item.attributes,
@@ -286,17 +275,17 @@ export default {
             });
             this.shipmentDetails = {
               stockOrder: {
-                stockOrderReference: this.item.stockOrderReference,
-                stockOrderId: this.item.id
+                stockOrderReference: this.stockOrder.stockOrderReference,
+                stockOrderId: this.stockOrder.id
               },
               userDetails: {
-                firstName: this.item.user.firstName,
-                lastName: this.item.user.lastName,
-                middleInitial: this.item.user.middleInitial,
-                email: this.item.user.email,
-                contact: this.item.user.contact,
-                userId: this.item.user.id,
-                address: this.item.user.address
+                firstName: this.stockOrder.user.firstName,
+                lastName: this.stockOrder.user.lastName,
+                middleInitial: this.stockOrder.user.middleInitial,
+                email: this.stockOrder.user.email,
+                contact: this.stockOrder.user.contact,
+                userId: this.stockOrder.user.id,
+                address: this.stockOrder.user.address
               },
               dateSubmitted: Date.now(),
               itemsToShip: itemsToShip,
@@ -310,7 +299,7 @@ export default {
             );
             //console.log(response);
             //after saving the Shipment Details, Update the Stock Order Values and Status
-            const remainingStockOrderItems = this.item.items.map(item => {
+            const remainingStockOrderItems = this.stockOrder.items.map(item => {
               const updatedStockOrder = {
                 attributes: item.attributes,
                 price: item.price,
@@ -323,15 +312,17 @@ export default {
               return updatedStockOrder;
             });
             console.log(remainingStockOrderItems);
-            this.item.statusTimeline.push({
+            let statusTimeline = this.stockOrder.statusTimeline;
+
+            statusTimeline.push({
               status: "shipped",
               date: Date.now()
             });
             const stockOrderUpdatedData = {
               status: "shipped",
               items: remainingStockOrderItems,
-              statusTimeline: this.item.statusTimeline,
-              id: this.item.id
+              statusTimeline: statusTimeline,
+              id: this.stockOrder.id
             };
 
             const stockOrderUpdateResponse = await this.$store.dispatch(
@@ -366,17 +357,17 @@ export default {
           try {
             this.shipmentDetails = {
               stockOrder: {
-                stockOrderReference: this.item.stockOrderReference,
-                stockOrderId: this.item.id
+                stockOrderReference: this.stockOrder.stockOrderReference,
+                stockOrderId: this.stockOrder.id
               },
               userDetails: {
-                firstName: this.item.user.firstName,
-                lastName: this.item.user.lastName,
-                middleInitial: this.item.user.middleInitial,
-                email: this.item.user.email,
-                contact: this.item.user.contact,
-                userId: this.item.user.id,
-                address: this.item.user.address
+                firstName: this.stockOrder.user.firstName,
+                lastName: this.stockOrder.user.lastName,
+                middleInitial: this.stockOrder.user.middleInitial,
+                email: this.stockOrder.user.email,
+                contact: this.stockOrder.user.contact,
+                userId: this.stockOrder.user.id,
+                address: this.stockOrder.user.address
               },
               dateSubmitted: Date.now(),
               itemsToShip: this.itemsToShip,
@@ -389,7 +380,7 @@ export default {
               this.shipmentDetails
             );
             //after saving the Shipment Details, Update the Stock Order Values and Status
-            const remainingStockOrderItems = this.item.items.map(item => {
+            const remainingStockOrderItems = this.stockOrder.items.map(item => {
               const updatedIndex = this.itemsToShip.findIndex(
                 shippedItem => shippedItem.productId === item.productId
               );
@@ -432,15 +423,18 @@ export default {
 
             //console.log(`hasSucceedingDeliveries ${hasSucceedingDeliveries}`);
             if (hasSucceedingDeliveries < 1) {
-              this.item.statusTimeline.push({
+              let statusTimeline = this.stockOrder.statusTimeline;
+
+              statusTimeline.push({
                 status: "shipped",
                 date: Date.now()
               });
+
               const stockOrderUpdatedData = {
                 status: "shipped",
                 items: remainingStockOrderItems,
-                statusTimeline: this.item.statusTimeline,
-                id: this.item.id
+                statusTimeline: statusTimeline,
+                id: this.stockOrder.id
               };
 
               const stockOrderUpdateResponse = await this.$store.dispatch(
@@ -455,15 +449,18 @@ export default {
                 text: "Shipment has been recorded!"
               });
             } else {
-              this.item.statusTimeline.push({
+              let statusTimeline = this.stockOrder.statusTimeline;
+
+              statusTimeline.push({
                 status: "partially shipped",
                 date: Date.now()
               });
+
               const stockOrderUpdatedData = {
                 status: "partially shipped",
                 items: remainingStockOrderItems,
-                statusTimeline: this.item.statusTimeline,
-                id: this.item.id
+                statusTimeline: statusTimeline,
+                id: this.stockOrder.id
               };
 
               const stockOrderUpdateResponse = await this.$store.dispatch(
@@ -493,7 +490,10 @@ export default {
   computed: {
     userPlaceholder() {
       return userPlaceholder;
-    }
+    },
+    ...mapState("stock_orders", {
+      stockOrder: state => state.stockOrder
+    })
   },
   components: {
     AccountData,
