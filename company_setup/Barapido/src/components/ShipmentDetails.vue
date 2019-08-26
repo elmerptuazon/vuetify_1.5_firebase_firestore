@@ -51,6 +51,7 @@
                             <v-list-tile-title
                               >{{ shipment.userDetails.address.house }}
                               {{ shipment.userDetails.address.streetName }},
+                              {{ shipment.userDetails.address.barangay }},
                               {{ shipment.userDetails.address.citymun }},
                               {{
                                 shipment.userDetails.address.province

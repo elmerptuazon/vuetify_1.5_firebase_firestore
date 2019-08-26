@@ -57,6 +57,7 @@
                         <v-list-tile-title
                           >{{ stockOrder.user.address.house }}
                           {{ stockOrder.user.address.streetName }},
+                          {{ stockOrder.user.address.barangay }},
                           {{ stockOrder.user.address.citymun }},
                           {{
                             stockOrder.user.address.province
