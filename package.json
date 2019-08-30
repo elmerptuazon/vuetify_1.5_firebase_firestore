@@ -9,6 +9,7 @@
     "start": "npm run dev",
     "build": "node build/build.js",
     "test-Barapido": "cross-env NODE_ENV=test node config/companySetup.js Barapido",
+    "prod-Barapido": "node config/companySetup.js Barapido",
     "test-EverBilena": "cross-env NODE_ENV=test node config/companySetup.js EverBilena",
     "setup": "node config/manualCompanySetup.js"
   },
