@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-card>
       <v-card-title>
         <div class="headline">New Registrations</div>
@@ -15,7 +15,7 @@
       <v-data-table
         v-model="selected"
         :headers="headers"
-        :items="items"
+        :items="sortedItems"
         item-key="id"
         class="elevation-1"
         :loading="loading"
@@ -46,10 +46,13 @@
             <td class="text-xs-left">{{ props.item.firstName }}</td>
             <td class="text-xs-left">{{ props.item.middleInitial || "" }}</td>
             <td class="text-xs-left">{{ props.item.lastName }}</td>
+            <td class="text-xs-left">
+              {{ props.item.birthday | momentize("MMMM D, YYYY") }}
+            </td>
             <td class="text-xs-left">{{ props.item.address.citymun }}</td>
             <td class="text-xs-left">{{ props.item.address.province }}</td>
             <td class="text-xs-left">
-              {{ props.item.createdAt | momentize("D-MMM-YYYY") }}
+              {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-left">
               <span
@@ -105,7 +108,7 @@ export default {
     search: null,
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     pagination: {
-      sortBy: "position"
+      sortBy: ""
     },
     selected: [],
     headers: [
@@ -126,6 +129,10 @@ export default {
       {
         text: "Last name",
         value: "lastName"
+      },
+      {
+        text: "Birth Date",
+        value: "birthday"
       },
       {
         text: "City",
@@ -195,6 +202,12 @@ export default {
     },
     userPlaceholder() {
       return userPlaceholder || "";
+    },
+    sortedItems() {
+      const sorter = (a, b) =>
+        a.position - b.position || b.createdAt - a.createdAt;
+
+      return this.items.sort(sorter);
     }
   },
   components: {

@@ -41,7 +41,7 @@
 import XLSX from 'xlsx';
 import axios from 'axios';
 import vue2Dropzone from 'vue2-dropzone'
-import 'vue2-dropzone/dist/vue2Dropzone.css'
+import 'vue2-dropzone/dist/vue2Dropzone.min.css'
 import {DB, STORAGE} from '@/config/firebase';
 import { downScaleImage } from '@/helpers/helpers';
 const productsCollection = DB.collection('products');

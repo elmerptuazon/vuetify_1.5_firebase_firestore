@@ -10,5 +10,5 @@ module.exports = merge(devEnv, {
   storageBucket: '"barapido-dev.appspot.com"',
   messagingSenderId: '"313662518566"',
   appId: '"1:313662518566:web:c93134d584700bf6"',
-  primaryColor: '"#CE93D8"',
+  primaryColor: '"#16A2AF"',
 })
