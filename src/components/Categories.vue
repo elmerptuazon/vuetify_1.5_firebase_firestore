@@ -2,18 +2,31 @@
 	<div>
 		<v-card>
 			<v-card-title>
-				<div class="headline">Categories</div>
-				<v-spacer></v-spacer>
-				<v-text-field
-				append-icon="search"
-				label="Search category..."
-				single-line
-				hide-details
-				v-model="search"
-				></v-text-field>
-				<v-btn icon dark class="red white--text" @click="$emit('deleteCategories')" :disabled="disableDeleteButton">
-					<v-icon>delete_forever</v-icon>
-				</v-btn>
+				<v-layout row align-baseline justify-start wrap>
+					<v-flex md2 align-content-end>
+						<div class="headline">Categories</div>
+					</v-flex>
+
+					<v-flex md6 xs10>
+						<v-text-field
+						append-icon="search"
+						label="Search category..."
+						hide-details
+						v-model="search"
+						></v-text-field>
+					</v-flex>
+
+					<v-flex md2 :class="{'mt-4' : $vuetify.breakpoint.smAndDown, 'offset-md1' : $vuetify.breakpoint.mdAndUp}">
+						<v-btn 
+							dark 
+							class="primary white--text" 
+							@click="addCategoryDialog = true" 
+						>
+							<v-icon class="mr-2">add</v-icon>
+							<span>Add Category</span>
+						</v-btn>
+					</v-flex>
+				</v-layout>
 			</v-card-title>
 			<v-data-table
 			v-model="selected"
@@ -125,17 +138,7 @@
 <sweet-modal :icon="modal.icon" ref="modal" blocking>
 	{{modal.text}}
 </sweet-modal>
-<v-btn
-color="primary"
-dark
-fab
-bottom
-right
-fixed
-@click="addCategoryDialog = true"
->
-<v-icon>add</v-icon>
-</v-btn>
+
 <v-dialog max-width="500px" v-model="addCategoryDialog" persistent>
 	<v-card>
 		<v-card-title>
@@ -385,7 +388,7 @@ export default {
 				newCategoryData.downloadURL = downloadURL;
 				newCategoryData.pictureName = response.id;
 				await categoriesCollection.add(newCategoryData);
-				
+
 				this.items.push(newCategoryData);
 				console.log('new data', newCategoryData)
 				this.addCategoryButtonDisabled = false;
