@@ -10,14 +10,14 @@
 				<!--<v-btn icon class="red white--text" @click="deleteProducts" :disabled="disableActionButtons">
 					<v-icon>delete_forever</v-icon>
 				</v-btn>-->
-				<v-btn icon class="grey darken-2 white--text" @click="archiveProducts" :disabled="disableActionButtons">
+				<!-- <v-btn class="grey darken-2 white--text" @click="archiveProducts" :disabled="disableActionButtons">
 					<v-icon>archive</v-icon>
-				</v-btn>
-				<v-btn icon color="primary" @click.native="showEdit = !showEdit">
+				</v-btn> -->
+				<!-- <v-btn icon color="primary" @click.native="showEdit = !showEdit">
 					<v-icon>{{ showEdit ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
-				</v-btn>
+				</v-btn> -->
 			</v-card-title>
-			<v-slide-y-transition>
+			<!-- <v-slide-y-transition>
 				<div v-show="showEdit">
 					<v-card-text>
 						<div class="text-xs-center mb-3">
@@ -40,7 +40,7 @@
 						<v-btn class="primary white--text" :disabled="saveButtonDisabled" :loading="saveButtonDisabled" @click.native="update">Save</v-btn>
 					</v-card-actions>
 				</div>
-			</v-slide-y-transition>
+			</v-slide-y-transition> -->
 		</v-card>
 		<div class="mt-3"></div>
 		<Products :categoryId="$route.params.id" :items="items" :category="category" ref="productsRef" @selected="toggleActionButtons" @itemUpdated="itemUpdated" />
