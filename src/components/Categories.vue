@@ -366,12 +366,10 @@ export default {
 			this.addCategoryButtonDisabled = true;
 
 			try {
-				const snapshot = await storageRef.child('catalogues/' + name).put(file, metadata);
-				const downloadURL = await snapshot.ref.getDownloadURL();
+				
 				const newCategoryData = {
 					active: 1,
-					created: Date.now(),
-					downloadURL: downloadURL,
+					created: Date.now(),	
 					promotion: this.newCategory.promotion,
 					name,
 					pictureName: name,
@@ -380,8 +378,14 @@ export default {
 				};
 
 				const response = await categoriesCollection.add(newCategoryData);
-
 				newCategoryData.id = response.id;
+				
+				const snapshot = await storageRef.child('catalogues/' + response.id).put(file, metadata);
+				const downloadURL = await snapshot.ref.getDownloadURL();
+				newCategoryData.downloadURL = downloadURL;
+				newCategoryData.pictureName = response.id;
+				await categoriesCollection.add(newCategoryData);
+				
 				this.items.push(newCategoryData);
 				console.log('new data', newCategoryData)
 				this.addCategoryButtonDisabled = false;
@@ -422,7 +426,7 @@ export default {
 				if (this.$refs.editCategoryFile.files.length > 0) {
 					try {
 						await storageRef
-							.child("catalogues/" + this.category.pictureName)
+							.child("catalogues/" + this.category.id)
 							.delete();
 					} catch (e) {
 						console.log("deletingError: ", e.message);
@@ -431,11 +435,11 @@ export default {
 					//const rescaledImage = await downScaleImageFromFile(file);
 					const metadata = { contentType: file.type };
 					const snapshot = await storageRef
-						.child("catalogues/" + newData.name)
+						.child("catalogues/" + this.category.id)
 						.put(file, metadata);
 
 					const downloadURL = await snapshot.ref.getDownloadURL();
-					newData.pictureName = this.category.categoryName;
+					newData.pictureName = this.category.id;
 					newData.downloadURL = downloadURL;
 				}
 				await categoriesCollection.doc(this.category.id).update(newData);
