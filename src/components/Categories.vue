@@ -178,9 +178,65 @@ fixed
 		</v-card>
 	</v-dialog>
 
-	<v-dialog>
-
-	</v-dialog>
+	<v-dialog max-width="500px" v-model="editCategoryDialog" persistent>
+      <v-card>
+        <v-card-title>
+          <div class="title">Edit Category Details</div>
+        </v-card-title>
+        <v-card-text>
+          <input
+            type="file"
+            ref="editCategoryFile"
+            value="upload"
+            accept=".png, .jpg, .jpeg"
+            @change="validateFile"
+          />
+          <v-avatar v-if="category.downloadURL" size="100px" tile>
+            <v-img
+              contain
+              :src="category.downloadURL"
+              :alt="category.categoryName"
+              :lazy-src="require('@/assets/no-image.png')"
+            >
+              <v-layout
+                slot="placeholder"
+                fill-height
+                align-center
+                justify-center
+                ma-0
+              >
+                <v-progress-circular
+                  indeterminate
+                  color="grey lighten-5"
+                ></v-progress-circular>
+              </v-layout>
+            </v-img>
+          </v-avatar>
+          <v-text-field
+            label="Name"
+            v-model="category.categoryName"
+          ></v-text-field>
+          <!-- <v-checkbox color="primary" label="This category is a promotion" v-model="category.promotion"></v-checkbox> -->
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            flat
+            @click.native="editCategoryDialog = false"
+            :disabled="categoryButtonDisabled"
+            >Cancel</v-btn
+          >
+          <v-btn
+            color="primary"
+            class="white--text"
+            :loading="categoryButtonDisabled"
+            :disabled="categoryButtonDisabled"
+            @click="editCategory"
+            >Save</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 </div>
 </template>
 
@@ -244,12 +300,19 @@ export default {
 			name: null,
 			promotion: false
 		},
+		category: {
+			categoryName: null,
+			downloadURL: null,
+			totalProducts: null
+		},
 		statusButtonLoading: false,
 		positions: [],
 		selectedPosition: null,
 		updatePositionDialog: false,
 		selectedCategory: {},
-		disableDeleteButton: true
+		disableDeleteButton: true,
+		editCategoryDialog: false,
+		categoryButtonDisabled: false,
 	}),
 	methods: {
 		toggleAll () {
@@ -330,6 +393,64 @@ export default {
 				this.addCategoryButtonDisabled = false;
 				this.addCategoryDialog = false;
 				this.notify('error', 'An error occurred');
+			}
+		},
+		openEditDialog(item) {
+			this.editCategoryDialog = true;
+			console.log("ITEMS", item);
+			this.category = {
+				categoryName: item.name,
+				downloadURL: item.downloadURL,
+				pictureName: item.pictureName,
+				totalProducts: item.totalProducts,
+				id: item.id
+			};
+		},
+		async editCategory() {
+			if (!this.category.categoryName) {
+				this.notify("error", "Category name is Required.");
+				return false;
+			}
+
+			try {
+				this.categoryButtonDisabled = true;
+				const newData = {
+					name: this.category.categoryName,
+					downloadURL: this.category.downloadURL
+				};
+
+				if (this.$refs.editCategoryFile.files.length > 0) {
+					try {
+						await storageRef
+							.child("catalogues/" + this.category.pictureName)
+							.delete();
+					} catch (e) {
+						console.log("deletingError: ", e.message);
+					}
+					const file = this.$refs.editCategoryFile.files[0];
+					//const rescaledImage = await downScaleImageFromFile(file);
+					const metadata = { contentType: file.type };
+					const snapshot = await storageRef
+						.child("catalogues/" + newData.name)
+						.put(file, metadata);
+
+					const downloadURL = await snapshot.ref.getDownloadURL();
+					newData.pictureName = this.category.categoryName;
+					newData.downloadURL = downloadURL;
+				}
+				await categoriesCollection.doc(this.category.id).update(newData);
+				
+				const index = this.items.findIndex(i => i.id === this.category.id);
+				this.items[index].name = newData.name;
+				this.items[index].downloadURL = newData.downloadURL;
+				
+				this.categoryButtonDisabled = false;
+				this.editCategoryDialog = false;
+
+				this.notify("success", "Category has been successfully updated");
+			} catch (error) {
+				this.notify("error", "An error occurred");
+				console.log(error);
 			}
 		},
 		changeStatus (item) {
