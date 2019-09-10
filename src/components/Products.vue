@@ -20,7 +20,7 @@
 						<v-btn 
 							dark 
 							class="primary white--text" 
-							@click="addProductDialog = true"
+							@click="OpenDialog"
 						>
 							<v-icon class="mr-2">add</v-icon>
 							<span>Add a Product</span>
@@ -117,11 +117,11 @@
                   slot="activator"
                   icon
                   class="grey darken-2 white--text"
-                  @click.stop="openUploadImagesDialog(props.item)"
+                  @click.stop="viewItemDetails(props.item)"
                 >
-                  <v-icon>add_photo_alternate</v-icon>
+                  <v-icon>edit</v-icon>
                 </v-btn>
-                <span>Add image variants</span>
+                <span>Edit Product Details</span>
               </v-tooltip>
               <v-tooltip left>
                 <v-btn
@@ -150,28 +150,85 @@
     <v-dialog max-width="500px" v-model="addProductDialog" persistent>
       <v-card>
         <v-card-title>
-          <div class="title">Add product</div>
+          <div class="title">{{ dialogText }}</div>
         </v-card-title>
         <v-card-text>
-          <input type="file" ref="productFile" value="upload" />
-          <v-text-field label="Name" v-model="newProduct.name"></v-text-field>
-          <v-textarea
-            label="Description"
-            v-model="newProduct.description"
-          ></v-textarea>
-          <!-- <v-checkbox color="primary" label="This product is on sale" v-model="newProduct.sale.status"></v-checkbox> -->
-          <v-text-field
-            label="Percentage"
-            v-model="newProduct.sale.percentage"
-            v-show="newProduct.sale.status"
-          ></v-text-field>
-          <!-- <v-checkbox color="primary" label="This product is a promotion" v-model="newProduct.promotion"></v-checkbox> -->
+          <v-form ref="form" lazy-validation>
+            Product Image
+            <br />
+            <input
+              type="file"
+              ref="productFile"
+              value="upload"
+              accept=".png, .jpg, .jpeg"
+              @change="validateFile"
+            />
+            <v-avatar v-if="product.downloadURL" size="100px" tile>
+              <v-img
+                contain
+                :src="product.downloadURL"
+                :alt="product.name"
+                :lazy-src="require('@/assets/no-image.png')"
+              >
+                <v-layout
+                  slot="placeholder"
+                  fill-height
+                  align-center
+                  justify-center
+                  ma-0
+                >
+                  <v-progress-circular
+                    indeterminate
+                    color="grey lighten-5"
+                  ></v-progress-circular>
+                </v-layout>
+              </v-img>
+            </v-avatar>
+            <v-text-field
+              label="Product Code*"
+              :rules="basicRules"
+              v-model="product.code"
+            ></v-text-field>
+            <v-text-field
+              label="Name*"
+              :rules="basicRules"
+              v-model="product.name"
+            ></v-text-field>
+            <v-textarea
+              label="Description*"
+              :rules="basicRules"
+              v-model="product.description"
+            ></v-textarea>
+            <!-- <v-text-field
+              label="Color"
+              v-model="product.attributes.color"
+            ></v-text-field> -->
+            <v-text-field
+              label="Price*"
+              :rules="numberRules"
+              v-model="product.price"
+            ></v-text-field>
+            <v-text-field
+              label="Reseller Price*"
+              :rules="numberRules"
+              v-model="product.resellerPrice"
+            ></v-text-field>
+            <v-text-field
+              label="Percentage"
+              v-model="product.sale.percentage"
+              v-show="product.sale.status"
+            ></v-text-field>
+            <v-checkbox
+              v-model="product.isOutofStock"
+              :label="'Out of stock?'"
+            ></v-checkbox>
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
             flat
-            @click.native="addProductDialog = false"
+            @click.prevent="addProductDialog = false"
             :disabled="addProductButtonDisabled"
             >Cancel</v-btn
           >
@@ -180,7 +237,7 @@
             class="white--text"
             :loading="addProductButtonDisabled"
             :disabled="addProductButtonDisabled"
-            @click="addProduct"
+            @click="saveProduct"
             >Save</v-btn
           >
         </v-card-actions>
@@ -277,7 +334,24 @@ export default {
     statusButtonLoading: false,
     selectedProduct: {},
     uploadImagesDialog: false,
-    uploadLoading: false
+    uploadLoading: false,
+    product: {
+      //code: null,
+      name: null,
+      description: null,
+      sale: {
+        status: false,
+        percentage: null
+      },
+      price: null,
+      resellerPrice: null,
+      promotion: false,
+      downloadURL: null,
+      isOutofStock: null
+    },
+    addProductDialog: false,
+    dialogText: null,
+    addProductButtonDisabled: false,
   }),
   methods: {
     toggleAll() {
@@ -296,6 +370,31 @@ export default {
       this.modal.icon = icon;
       this.modal.text = text;
       this.$refs.modal.open();
+    },
+    OpenDialog() {
+      this.dialogText = "Add New Product";
+      this.addProductDialog = true;
+      this.product.name = null;
+      this.product.code = null;
+      this.product.description = null;
+      this.product.price = null;
+      this.product.resellerPrice = null;
+      this.product.downloadURL = null;
+      this.product.name = null;
+      this.product.isOutofStock = null;
+    },
+    async viewItemDetails(item) {
+      this.dialogText = "Edit Product Details";
+      this.addProductDialog = true;
+      this.product.name = item.name;
+      this.product.code = item.code;
+      this.product.description = item.description;
+      this.product.price = item.price;
+      this.product.resellerPrice = item.resellerPrice;
+      this.product.downloadURL = item.downloadURL;
+      this.product.pictureName = item.pictureName;
+      this.product.id = item.id;
+      this.product.isOutofStock = item.isOutofStock;
     },
     async addProduct() {
       if (
@@ -469,6 +568,23 @@ export default {
           data: item
         }
       });
+    }, 
+
+    validateFile(el) {
+      if (!el.target.value) {
+        return;
+      }
+
+      const path = el.target.value;
+      const idxDot = path.lastIndexOf(".") + 1;
+      const extFile = path.substr(idxDot, path.length).toLowerCase();
+
+      const acceptedFiles = ["jpg", "jpeg", "png"];
+
+      if (!acceptedFiles.includes(extFile)) {
+        this.$refs.categoryFile.value = "";
+        this.notify("error", "Uploaded file is not an image.");
+      }
     }
   },
   watch: {
