@@ -76,13 +76,47 @@
 					<a @click.prevent="updatePosition(props.item)">{{ props.item.position }}</a>
 				</td>
 				<td class="text-xs-center">
-					<v-btn icon color="primary" dark @click.stop="view(props.item)">
-						<v-icon>remove_red_eye</v-icon>
-					</v-btn>
-					<!-- <v-btn icon class="grey darken-2 white--text" :loading="statusButtonLoading" :disabled="statusButtonLoading" @click.stop="changeStatus(props.item)">
-						<v-icon v-if="props.item.active">archive</v-icon>
-						<v-icon v-else>unarchive</v-icon>
-					</v-btn> -->
+					<v-tooltip left>
+						<v-btn 
+							icon 
+							color="primary" 
+							dark 
+							@click.stop="view(props.item)"
+							slot="activator"
+						>
+							<v-icon>remove_red_eye</v-icon>
+						</v-btn>
+						<span>View Products</span>
+					</v-tooltip>
+
+					<v-tooltip left>
+						<v-btn 
+							icon 
+							color="primary" 
+							dark 
+							@click.stop="openEditDialog(props.item)"
+							slot="activator"
+						>
+							<v-icon>edit</v-icon>
+						</v-btn>
+						<span>Edit Category Details</span>
+					</v-tooltip>
+					
+					<v-tooltip left>
+						<v-btn 
+							icon 
+							class="primary" 
+							:loading="statusButtonLoading" 
+							:disabled="statusButtonLoading" 
+							@click.stop="changeStatus(props.item)"
+							slot="activator"	
+						>
+							<v-icon v-if="props.item.active">archive</v-icon>
+							<v-icon v-else>unarchive</v-icon>
+						</v-btn>
+						<span v-if="props.item.active === 1">Archive Category</span>
+                		<span v-else>Unarchive Category</span>
+					</v-tooltip>
 				</td>
 			</tr>
 		</template>
@@ -142,6 +176,10 @@ fixed
 				@click="savePosition">Save</v-btn>
 			</v-card-actions>
 		</v-card>
+	</v-dialog>
+
+	<v-dialog>
+
 	</v-dialog>
 </div>
 </template>
