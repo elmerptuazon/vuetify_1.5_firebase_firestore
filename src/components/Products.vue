@@ -2,15 +2,31 @@
   <div>
     <v-card>
       <v-card-title>
-        <div class="headline">Products</div>
-        <v-spacer></v-spacer>
-        <v-text-field
-          append-icon="search"
-          label="Search product..."
-          single-line
-          hide-details
-          v-model="search"
-        ></v-text-field>
+        <v-layout row align-baseline justify-start wrap>
+					<v-flex md2 align-content-end>
+						<div class="headline">Products</div>
+					</v-flex>
+
+					<v-flex md6 xs10>
+						<v-text-field
+						append-icon="search"
+						label="Search a product..."
+						hide-details
+						v-model="search"
+						></v-text-field>
+					</v-flex>
+
+					<v-flex md2 :class="{'mt-4' : $vuetify.breakpoint.smAndDown, 'offset-md1' : $vuetify.breakpoint.mdAndUp}">
+						<v-btn 
+							dark 
+							class="primary white--text" 
+							@click="addProductDialog = true"
+						>
+							<v-icon class="mr-2">add</v-icon>
+							<span>Add a Product</span>
+						</v-btn>
+					</v-flex>
+				</v-layout>
       </v-card-title>
       <v-data-table
         v-model="selected"
@@ -26,7 +42,7 @@
       >
         <template slot="headers" slot-scope="props">
           <tr>
-            <th>
+            <!-- <th>
               <v-checkbox
                 primary
                 hide-details
@@ -35,7 +51,7 @@
                 :indeterminate="props.indeterminate"
                 color="pink"
               ></v-checkbox>
-            </th>
+            </th> -->
             <th
               v-for="header in props.headers"
               :key="header.text"
@@ -57,14 +73,14 @@
             @click="props.selected = !props.selected"
             v-bind:class="[props.item.active != 1 ? 'grey--text' : '']"
           >
-            <td>
+            <!-- <td>
               <v-checkbox
                 primary
                 hide-details
                 :input-value="props.selected"
                 color="pink"
               ></v-checkbox>
-            </td>
+            </td> -->
             <td class="text-xs-center pa-2">
               <v-avatar size="100px" tile>
                 <v-img
@@ -130,17 +146,7 @@
     <sweet-modal :icon="modal.icon" ref="modal" blocking>
       {{ modal.text }}
     </sweet-modal>
-    <v-btn
-      color="primary"
-      dark
-      fab
-      bottom
-      right
-      fixed
-      @click="addProductDialog = true"
-    >
-      <v-icon>add</v-icon>
-    </v-btn>
+    
     <v-dialog max-width="500px" v-model="addProductDialog" persistent>
       <v-card>
         <v-card-title>
