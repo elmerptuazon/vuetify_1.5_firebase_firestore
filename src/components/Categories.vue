@@ -29,7 +29,7 @@
 			>
 			<template slot="headers" slot-scope="props">
 				<tr>
-					<th>
+					<!-- <th>
 						<v-checkbox
 						primary
 						hide-details
@@ -38,7 +38,7 @@
 						:indeterminate="props.indeterminate"
 						color="pink"
 						></v-checkbox>
-					</th>
+					</th> -->
 					<th
 					v-for="header in props.headers"
 					:key="header.text"
@@ -52,14 +52,14 @@
 		</template>
 		<template slot="items" slot-scope="props">
 			<tr :active="props.selected" @click="props.selected = !props.selected">
-				<td>
+				<!-- <td>
 					<v-checkbox
 					primary
 					hide-details
 					:input-value="props.selected"
 					color="pink"
 					></v-checkbox>
-				</td>
+				</td> -->
 				<td class="text-xs-center pa-2">
 					<v-avatar size="100px" tile>
 						<v-img contain :src="props.item.downloadURL" :alt="props.item.name" :lazy-src="require('@/assets/no-image.png')">
