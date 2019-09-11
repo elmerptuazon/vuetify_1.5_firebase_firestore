@@ -283,8 +283,10 @@ const uuidv4 = require("uuid/v4");
 
 export default {
   props: ["items", "categoryId", "category"],
-  created() {
+  async created() {
     this.loading = true;
+    await this.$store.dispatch("products/FetchProductList", this.categoryId);
+    this.items = this.$store.getters["products/GetProductsList"];
   },
   data: () => ({
     pagination: {
@@ -336,7 +338,7 @@ export default {
     uploadImagesDialog: false,
     uploadLoading: false,
     product: {
-      //code: null,
+      code: null,
       name: null,
       description: null,
       sale: {
@@ -347,7 +349,8 @@ export default {
       resellerPrice: null,
       promotion: false,
       downloadURL: null,
-      isOutofStock: null
+      isOutofStock: null,
+      id: null
     },
     addProductDialog: false,
     dialogText: null,
@@ -395,6 +398,193 @@ export default {
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.isOutofStock = item.isOutofStock;
+    },
+    async saveProduct() {
+      this.addProductButtonDisabled = true;
+      if (!this.$refs.form.validate()) {
+        this.notify(
+          "Sorry",
+          "One or more mandatory fields are required"
+        );
+        return;
+      }
+      if (this.dialogText == "Add New Product") {
+        if (this.$refs.productFile.files.length === 0) {
+          this.notify("Sorry", "Product image is required.");
+          this.addProductButtonDisabled = false;
+          return;
+        }
+        const exists = await this.$store.dispatch(
+          "products/CheckIfProductExists",
+          {
+            categoryId: this.category.id,
+            code: this.product.code
+          }
+        );
+        if (exists) {
+          this.notify(
+            "Sorry",
+            "Product Code is already existing in the database"
+          );
+          this.addProductButtonDisabled = false;
+          return;
+        } else {
+          
+          this.addProductButtonDisabled = true;
+
+          //try-catch block for saving productData to database
+          try {
+            const productData = {
+              active: 1,
+              categoryId: this.categoryId,
+              code: this.product.code,
+              createdAt: Date.now(),
+              description: this.product.description,
+              name: this.product.name,
+              price: this.product.price,
+              resellerPrice: this.product.resellerPrice,
+              //promotion: this.product.promotion,
+              sale: this.product.sale,
+              isOutofStock: this.product.isOutofStock || null,
+              //uid: null
+            };
+            console.log(productData);
+
+            const responseId = await this.$store.dispatch("products/AddProduct", {
+              productData: productData,
+              categoryId: this.categoryId
+            });
+            productData.id = responseId;
+
+            this.category.totalProducts++;
+
+            await this.$store.dispatch("categories/UPDATE_CATEGORY_BY_KEY", {
+              categoryId: this.categoryId,
+              key: "totalProducts",
+              value: this.category.totalProducts
+            });
+
+          } catch(error) {
+            console.log(error.message);
+            this.notify("error", error.message);
+          }
+
+          // try-catch block for uploading product image
+          try {
+            const file = this.$refs.productFile.files[0];
+            const metadata = { contentType: file.type };
+
+            const snapshot = await storageRef
+              .child("products/" + this.product.id)
+              .put(file, metadata);
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            productData.pictureName = productData.id;
+            productData.downloadURL = downloadURL;
+
+          } catch (error) {
+            console.log(error);
+            this.addProductButtonDisabled = false;
+            this.addProductDialog = false;
+            this.notify("error", "An error occurred");
+          }
+
+          await this.$store.dispatch("products/UpdateProduct", {
+            productId: productData.id,
+            productData: productData
+          });
+
+          this.items = this.$store.getters["products/GetProductsList"];
+          //this.items.push(productData);
+
+          this.addProductButtonDisabled = false;
+          this.addProductDialog = false;
+          this.notify("success", "Product has been successfully added");
+        }
+      //Edit Product Details
+      } else {
+        this.addProductButtonDisabled = true;
+
+        const exists = await this.$store.dispatch(
+          "products/CheckIfProductExists",
+          {
+            categoryId: this.category.id,
+            code: this.product.code
+          }
+        );
+
+        if (exists) {
+          this.notify(
+            "Sorry",
+            "Product Code is already existing in the database"
+          );
+          this.addProductButtonDisabled = false;
+          return;
+        } else {
+          
+          this.addProductButtonDisabled = true;
+
+          //try-catch block for saving productData to database
+          const productData = {
+            active: 1,
+            categoryId: this.categoryId,
+            code: this.product.code,
+            description: this.product.description,
+            name: this.product.name,
+            price: this.product.price,
+            resellerPrice: this.product.resellerPrice,
+            //promotion: this.product.promotion,
+            sale: this.product.sale,
+            isOutofStock: this.product.isOutofStock || null,
+            //uid: null
+            downloadURL: this.product.downloadURL,
+            pictureName: this.product.pictureName,
+            id: this.product.id,
+          };
+          console.log("EDIT PRODUCT DETAILS: ", productData);
+
+          if(this.$refs.productFile.files.length > 0) {
+            try {
+              // storageRef.child("products/" + productData.id)
+              //   .delete()
+              //   .then(() => {console.log("Previous product photo has been deleted")})
+              //   .catch((error) => {console.log(error.message)});
+
+              const file = this.$refs.productFile.files[0];
+              const metadata = { contentType: file.type };
+
+              const snapshot = await storageRef
+                .child("products/" + productData.id)
+                .put(file, metadata);
+              const downloadURL = await snapshot.ref.getDownloadURL();
+              productData.pictureName = productData.id;
+              productData.downloadURL = downloadURL;
+
+            } catch (error) {
+              console.log(error);
+              this.addProductButtonDisabled = false;
+              this.addProductDialog = false;
+              this.notify("error", "An error occurred");
+              return;
+            }
+          }
+          //send productData to DB for product update
+          await this.$store.dispatch("products/UpdateProduct", {
+              productId: productData.id,
+              productData: productData
+          });
+
+          this.items = this.$store.getters["products/GetProductsList"];
+          // const index = this.items.findIndex(item => item.id === productData.id);
+          // this.items[index] = productData;
+          // this.items[index].downloadURL = productData.downloadURL;
+          // this.items[index].pictureName = productData.pictureName;
+          //console.log(this.items);
+          
+          this.addProductButtonDisabled = false;
+          this.addProductDialog = false;
+          this.notify("success", "Product has been successfully updated");
+        }
+      }
     },
     async addProduct() {
       if (
