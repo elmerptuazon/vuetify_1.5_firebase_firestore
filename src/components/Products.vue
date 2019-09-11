@@ -406,6 +406,7 @@ export default {
           "Sorry",
           "One or more mandatory fields are required"
         );
+        this.addProductButtonDisabled = false;
         return;
       }
       if (this.dialogText == "Add New Product") {
@@ -433,23 +434,23 @@ export default {
           this.addProductButtonDisabled = true;
 
           //try-catch block for saving productData to database
-          try {
-            const productData = {
-              active: 1,
-              categoryId: this.categoryId,
-              code: this.product.code,
-              createdAt: Date.now(),
-              description: this.product.description,
-              name: this.product.name,
-              price: this.product.price,
-              resellerPrice: this.product.resellerPrice,
-              //promotion: this.product.promotion,
-              sale: this.product.sale,
-              isOutofStock: this.product.isOutofStock || null,
-              //uid: null
-            };
-            console.log(productData);
+          const productData = {
+            active: 1,
+            categoryId: this.categoryId,
+            code: this.product.code,
+            createdAt: Date.now(),
+            description: this.product.description,
+            name: this.product.name,
+            price: this.product.price,
+            resellerPrice: this.product.resellerPrice,
+            //promotion: this.product.promotion,
+            sale: this.product.sale,
+            isOutofStock: this.product.isOutofStock || null,
+            //uid: null
+          };
+          console.log(productData);
 
+          try {
             const responseId = await this.$store.dispatch("products/AddProduct", {
               productData: productData,
               categoryId: this.categoryId
@@ -467,6 +468,7 @@ export default {
           } catch(error) {
             console.log(error.message);
             this.notify("error", error.message);
+            return;
           }
 
           // try-catch block for uploading product image
@@ -475,7 +477,7 @@ export default {
             const metadata = { contentType: file.type };
 
             const snapshot = await storageRef
-              .child("products/" + this.product.id)
+              .child("products/" + productData.id)
               .put(file, metadata);
             const downloadURL = await snapshot.ref.getDownloadURL();
             productData.pictureName = productData.id;
