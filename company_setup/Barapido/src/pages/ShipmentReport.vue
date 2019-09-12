@@ -31,7 +31,18 @@
         <v-btn @click="GenerateShipmentReport" color="primary"
           >Generate Report</v-btn
         >
-        <v-btn color="success">Export to Excel</v-btn>
+        <v-btn color="success">
+          <download-excel
+            :data="exportData"
+            :fields="json_fields"
+            :before-generate="PrepareDataForDownload"
+            :before-finish="PromptEndOfDownload"
+            worksheet="Shipments"
+            name="Shipments.xls"
+          >
+            Export To excel
+          </download-excel></v-btn
+        >
       </v-card-title>
       <v-divider></v-divider>
       <v-data-table
@@ -157,7 +168,19 @@ export default {
         value: "qtyToShip",
         align: "center"
       }
-    ]
+    ],
+    exportData: [],
+    json_fields: {
+      "Shipment Number": "shipmentNumber",
+      "Order Number": "orderNumber",
+      "Customer Name": "customerName",
+      "Membership Id": "membershipId",
+      "Shipping Address": "shippingAddress",
+      Contact: "contact",
+      Item: "itemName",
+      Price: "itemPrice",
+      Quantity: "qty"
+    }
   }),
   mounted() {
     this.ClearShipmentList();
@@ -168,15 +191,47 @@ export default {
       this.loading = true;
       await this.$store.dispatch("shipment/GetShipmentsByDate", this.date);
       this.loading = false;
-      console.log(this.shipmentList);
     },
-    async ExportToExcel() {
-      let exportData = [];
+    PrepareDataForDownload() {
       for (let shipment of this.shipmentList) {
         for (let item of shipment.itemsToShip) {
-          let data = {};
+          let data = {
+            shipmentNumber: shipment.trackingNumber,
+            orderNumber: shipment.stockOrder.stockOrderReference,
+            customerName:
+              shipment.userDetails.lastName +
+              ", " +
+              shipment.userDetails.firstName +
+              " " +
+              shipment.userDetails.middleInitial,
+            membershipId: shipment.userDetails.agentId,
+            shippingAddress:
+              shipment.userDetails.address.house +
+              "," +
+              shipment.userDetails.address.streetName +
+              "," +
+              shipment.userDetails.address.barangay +
+              "," +
+              shipment.userDetails.address.citymun +
+              "," +
+              shipment.userDetails.address.province +
+              "." +
+              shipment.userDetails.address.zipCode,
+            contact: shipment.userDetails.contact,
+            itemName: item.productName,
+            itemPrice: item.price,
+            qty: item.qtyToShip
+          };
+          this.exportData.push(data);
         }
       }
+    },
+    PromptEndOfDownload() {
+      this.$swal.fire(
+        "Success!",
+        "Download of Shipments in Excel is complete!",
+        "success"
+      );
     }
   },
   computed: {
