@@ -2,7 +2,7 @@
   <v-container fluid>
     <v-card>
       <v-card-title>
-        <div class="headline">Shipment Report</div>
+        <div class="headline">Shipment List Report</div>
         <v-spacer></v-spacer>
         <v-menu
           lazy
@@ -28,7 +28,10 @@
             no-title
           ></v-date-picker>
         </v-menu>
-        <v-btn @click="GenerateShipmentReport">Generate Shipment List</v-btn>
+        <v-btn @click="GenerateShipmentReport" color="primary"
+          >Generate Report</v-btn
+        >
+        <v-btn color="success">Export to Excel</v-btn>
       </v-card-title>
       <v-divider></v-divider>
       <v-data-table
@@ -58,7 +61,16 @@
                   props.item.userDetails.middleInitial
               }}
             </td>
-            <td class="text-xs-left">address dawss</td>
+            <td class="text-xs-center">{{ props.item.userDetails.agentId }}</td>
+            <td class="text-xs-left">
+              {{ props.item.userDetails.address.house }},{{
+                props.item.userDetails.address.streetName
+              }},{{ props.item.userDetails.address.barangay }},{{
+                props.item.userDetails.address.citymun
+              }},{{ props.item.userDetails.address.province }},{{
+                props.item.userDetails.address.zipCode
+              }}
+            </td>
             <td class="text-xs-center">{{ props.item.userDetails.contact }}</td>
           </tr>
         </template>
@@ -72,7 +84,7 @@
             >
               <template slot="items" slot-scope="props">
                 <td class="text-xs-left">{{ props.item.productName }}</td>
-                <td class="text-xs-left">$$$</td>
+                <td class="text-xs-left">{{ props.item.price }}</td>
                 <td class="text-xs-left">{{ props.item.qtyToShip }}</td>
               </template>
             </v-data-table>
@@ -110,6 +122,11 @@ export default {
       {
         text: "Customer Name",
         //value: "attributes",
+        align: "center"
+      },
+      {
+        text: "Membership ID",
+        value: "userDetails.agentId",
         align: "center"
       },
       {
@@ -152,6 +169,14 @@ export default {
       await this.$store.dispatch("shipment/GetShipmentsByDate", this.date);
       this.loading = false;
       console.log(this.shipmentList);
+    },
+    async ExportToExcel() {
+      let exportData = [];
+      for (let shipment of this.shipmentList) {
+        for (let item of shipment.itemsToShip) {
+          let data = {};
+        }
+      }
     }
   },
   computed: {
