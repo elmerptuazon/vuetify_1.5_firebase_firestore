@@ -69,6 +69,16 @@ const prompts = require('prompts');
             console.log(`Error: ${e}`);
         }
 
+        try {
+            let routerSource = `company_setup/${answer.value}/src/router`;
+            let routerDestination = 'src/router'
+            await fs.copy(routerSource, routerDestination)
+            console.log('Router update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
+
+
         let staticSource = `company_setup/${answer.value}/static`;
         let staticgDestination = 'static'
         await fs.copy(staticSource, staticgDestination)
