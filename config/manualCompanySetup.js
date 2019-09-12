@@ -78,7 +78,14 @@ const prompts = require('prompts');
             console.log(`Error: ${e}`);
         }
 
-
+        try {
+            let mainjsSource = `company_setup/${process.argv[2]}/src/mainjs/main.js`;
+            let mainjsDestination = 'src/main.js'
+            await fs.copy(mainjsSource, mainjsDestination)
+            console.log('Main.js update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
         let staticSource = `company_setup/${answer.value}/static`;
         let staticgDestination = 'static'
         await fs.copy(staticSource, staticgDestination)
