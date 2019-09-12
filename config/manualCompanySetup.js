@@ -79,7 +79,7 @@ const prompts = require('prompts');
         }
 
         try {
-            let mainjsSource = `company_setup/${process.argv[2]}/src/mainjs/main.js`;
+            let mainjsSource = `company_setup/${answer.value}/src/mainjs/main.js`;
             let mainjsDestination = 'src/main.js'
             await fs.copy(mainjsSource, mainjsDestination)
             console.log('Main.js update success!')
