@@ -7,7 +7,7 @@
         <v-menu
           lazy
           :close-on-content-click="false"
-          v-model="menu"
+          v-model="fromMenu"
           transition="scale-transition"
           offset-y
           full-width
@@ -17,14 +17,38 @@
         >
           <v-text-field
             slot="activator"
-            label="Date to be Generated"
-            v-model="date"
+            label="Date from"
+            v-model="fromDate"
             prepend-icon="event"
             readonly
           ></v-text-field>
           <v-date-picker
-            v-model="date"
-            @input="menu = false"
+            v-model="fromDate"
+            @input="fromMenu = false"
+            no-title
+          ></v-date-picker>
+        </v-menu>
+        <v-menu
+          lazy
+          :close-on-content-click="false"
+          v-model="toMenu"
+          transition="scale-transition"
+          offset-y
+          full-width
+          :nudge-right="40"
+          max-width="290px"
+          min-width="290px"
+        >
+          <v-text-field
+            slot="activator"
+            label="Date to"
+            v-model="toDate"
+            prepend-icon="event"
+            readonly
+          ></v-text-field>
+          <v-date-picker
+            v-model="toDate"
+            @input="toMenu = false"
             no-title
           ></v-date-picker>
         </v-menu>
@@ -111,8 +135,10 @@ import { mapMutations, mapState } from "vuex";
 
 export default {
   data: () => ({
-    date: new Date().toISOString().substr(0, 10),
-    menu: false,
+    fromDate: new Date().toISOString().substr(0, 10),
+    fromMenu: false,
+    toDate: new Date().toISOString().substr(0, 10),
+    toMenu: false,
     loading: false,
     headers: [
       {
@@ -189,7 +215,19 @@ export default {
     ...mapMutations("shipment", ["ClearShipmentList"]),
     async GenerateShipmentReport() {
       this.loading = true;
-      await this.$store.dispatch("shipment/GetShipmentsByDate", this.date);
+      if (this.fromDate > this.toDate) {
+        this.$swal.fire(
+          "Please Try Again!",
+          "Date From should always be less than or equal to Date To field.",
+          "info"
+        );
+        return;
+      }
+      let dateRange = {
+        fromDate: this.fromDate,
+        toDate: this.toDate
+      };
+      await this.$store.dispatch("shipment/GetShipmentsByDate", dateRange);
       this.loading = false;
     },
     PrepareDataForDownload() {
