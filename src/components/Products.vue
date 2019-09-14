@@ -168,7 +168,7 @@
         </v-card-title>
         <v-card-text>
           <v-form ref="form" lazy-validation>
-            Product Image
+            Product Thumbnail
             <br />
             <input
               type="file"
@@ -282,7 +282,10 @@
                   <!-- <v-spacer/> -->
                   <v-layout row align-center justify-center>
                     <v-flex xs12>
-                      <v-btn small class="primary" dark><v-icon>delete_forever</v-icon><span>Delete</span></v-btn>
+                      <v-btn small class="primary" dark @click="deleteImgVariant(index)">
+                        <v-icon>delete_forever</v-icon>
+                        <span>Delete</span>
+                      </v-btn>
                     </v-flex>
                   </v-layout>
                   <!-- <v-btn small class="primary" dark><v-icon>zoom_in</v-icon><span>Enlarge</span></v-btn> -->
@@ -296,6 +299,7 @@
               <vue-dropzone
               ref="dropzoneRef"
               id="dropzone"
+              duplicateCheck
               :options="dropzoneOptions"
               @vdropzone-file-added="fileAdded"
               @vdropzone-removed-file="fileRemoved"
@@ -310,14 +314,14 @@
           <v-btn
             flat
             color="grey darken-2"
-            @click="uploadImagesDialog = false"
+            @click="uploadImagesDialog = false; uploadLoading = false"
           >CANCEL
           </v-btn>
           <v-btn
             color="primary"
             :loading="uploadLoading"
             :disabled="uploadLoading || !images.length"
-            @click="upload"
+            @click.stop="upload"
             >Upload</v-btn
           >
         </v-card-actions>
@@ -698,7 +702,7 @@ export default {
     },
 
     fileAdded(file) {
-			this.images.push(file);
+      this.images.push(file);
     },
     
 		fileRemoved(file) {
@@ -712,6 +716,7 @@ export default {
     showDuplicateImage(file) {
       console.log("Duplicate image added");
       this.notify("warning", `"${file.name}" already exists, please try again.`);
+      this.fileRemoved(file);
       this.$refs.dropzoneRef.removeFile(file);
     },
 
@@ -727,23 +732,30 @@ export default {
 
     async upload() {
       //const files = this.$refs.file.files;
-      const files = this.images;
+      this.uploadLoading = true;
+      let files = this.images;
       const uploads = [];
 
       const product = this.selectedProduct;
 
-      files.forEach(file => {
-        uploads.push(
+      for(let i = 0; i < files.length; i++) {
+        let file = files[i];
+        const rescaledImage = await downScaleImageFromFile(file);
+        await uploads.push(
           storageRef
             .child(`variants/${product.id}/${uuidv4()}`)
-            .put(file)
+            .putString(rescaledImage, 'data_url')
             .then(snapshot => {
               return snapshot.ref
                 .getDownloadURL()
                 .then(downloadURL => downloadURL);
             })
+            .catch((error) => {
+              this.notify("error", error.message);
+              this.uploadLoading = false;
+            })
         );
-      });
+      }
 
       this.uploadLoading = true;
 
@@ -770,15 +782,17 @@ export default {
         }
         this.notify("success", "Variant images has been successfully uploaded");
         this.uploadImagesDialog = false;
+        this.uploadLoading = false;
+        this.images = [];
+        this.$refs.dropzoneRef.removeAllFiles(true);
       } catch (error) {
+        this.notify("error", error.message);
         console.log(error);
+        this.uploadLoading = false;
       }
-
-      this.uploadLoading = false;
-      this.images = [];
-      this.$refs.dropzoneRef.removeAllFiles(true);
     },
 
+    
     view(item) {
       this.$router.push({
         name: "ViewCategory",
