@@ -23,7 +23,7 @@
 							@click="OpenDialog"
 						>
 							<v-icon class="mr-2">add</v-icon>
-							<span>Add a Product</span>
+							<span>Add Product</span>
 						</v-btn>
 					</v-flex>
 				</v-layout>
@@ -116,18 +116,32 @@
                 <v-btn
                   slot="activator"
                   icon
-                  class="grey darken-2 white--text"
+                  class="primary white--text"
                   @click.stop="viewItemDetails(props.item)"
                 >
                   <v-icon>edit</v-icon>
                 </v-btn>
                 <span>Edit Product Details</span>
               </v-tooltip>
+
               <v-tooltip left>
                 <v-btn
                   slot="activator"
                   icon
-                  class="grey darken-2 white--text"
+                  dark
+                  class="primary white--text"
+                  @click.stop="openUploadImagesDialog(props.item)"
+                >
+                  <v-icon>add_photo_alternate</v-icon>
+                </v-btn>
+                <span>Add Product Photo Variants</span>
+              </v-tooltip>
+
+              <v-tooltip left>
+                <v-btn
+                  slot="activator"
+                  icon
+                  class="primary white--text"
                   :loading="statusButtonLoading"
                   :disabled="statusButtonLoading"
                   @click.stop="changeStatus(props.item)"
@@ -244,26 +258,65 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog max-width="400" v-model="uploadImagesDialog" persistent>
+    <v-dialog max-width="800" v-model="uploadImagesDialog" persistent>
       <v-card>
-        <v-card-title>
-          <div class="headline">Upload Photos</div>
+        <v-card-title class="primary white--text headline">
+          <div>Upload Photos</div>
           <v-spacer></v-spacer>
-          <v-btn @click="uploadImagesDialog = false" flat icon>
+          <v-btn color ="white" @click="uploadImagesDialog = false" flat icon>
             <v-icon>close</v-icon>
           </v-btn>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
-          <p>*Images will be seen in the carousel</p>
-          <input type="file" ref="file" multiple="multiple" />
+          <p class="text-center font-italic">*Images will be seen in the carousel*</p>
+          <v-layout v-if="!selectedProduct.photos" row my-3>
+            <div class="subheading font-italic grey--text darken-2">*No Product Pictures Yet..*</div>
+          </v-layout>
+
+          <v-layout v-else row wrap align-baseline justify-start mb-3>
+            <v-flex xs4 v-for="(image, index) in selectedProduct.photos" :key="index" mt-3>
+              <v-card width="210px">
+                <v-img :src="image"/>
+                <v-card-actions>
+                  <!-- <v-spacer/> -->
+                  <v-layout row align-center justify-center>
+                    <v-flex xs12>
+                      <v-btn small class="primary" dark><v-icon>delete_forever</v-icon><span>Delete</span></v-btn>
+                    </v-flex>
+                  </v-layout>
+                  <!-- <v-btn small class="primary" dark><v-icon>zoom_in</v-icon><span>Enlarge</span></v-btn> -->
+                </v-card-actions>
+              </v-card>
+            </v-flex>
+          </v-layout>
+          <v-divider/>
+          <v-layout row align-center justify-center mt-4>
+            <v-flex xs12>
+              <vue-dropzone
+              ref="dropzoneRef"
+              id="dropzone"
+              :options="dropzoneOptions"
+              @vdropzone-file-added="fileAdded"
+              @vdropzone-removed-file="fileRemoved"
+              @vdropzone-duplicate-file="showDuplicateImage"
+              @vdropzone-error="ErrorInUpload"
+              />
+            </v-flex>
+          </v-layout>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
+            flat
+            color="grey darken-2"
+            @click="uploadImagesDialog = false"
+          >CANCEL
+          </v-btn>
+          <v-btn
             color="primary"
             :loading="uploadLoading"
-            :disabled="uploadLoading"
+            :disabled="uploadLoading || !images.length"
             @click="upload"
             >Upload</v-btn
           >
@@ -275,6 +328,8 @@
 
 <script>
 import mixins from "@/mixins";
+import vue2Dropzone from 'vue2-dropzone'
+import 'vue2-dropzone/dist/vue2Dropzone.min.css'
 import { DB, STORAGE } from "@/config/firebase";
 import { downScaleImageFromFile } from "@/helpers/helpers";
 const productsCollection = DB.collection("products");
@@ -355,6 +410,13 @@ export default {
     addProductDialog: false,
     dialogText: null,
     addProductButtonDisabled: false,
+    dropzoneOptions: {
+			autoProcessQueue: false,
+			url: '/',
+			acceptedFiles: 'image/*',
+			addRemoveLinks: true
+    },
+    images: [],
   }),
   methods: {
     toggleAll() {
@@ -409,6 +471,7 @@ export default {
         this.addProductButtonDisabled = false;
         return;
       }
+      //Adding a New Product
       if (this.dialogText == "Add New Product") {
         if (this.$refs.productFile.files.length === 0) {
           this.notify("Sorry", "Product image is required.");
@@ -588,61 +651,7 @@ export default {
         }
       }
     },
-    async addProduct() {
-      if (
-        !this.newProduct.name ||
-        !this.newProduct.description ||
-        this.$refs.productFile.files.length < 1
-      ) {
-        console.log("some missing");
-        return false;
-      }
-
-      const file = this.$refs.productFile.files[0];
-      const name = this.newProduct.name;
-      const metadata = { contentType: file.type };
-      this.addProductButtonDisabled = true;
-
-      try {
-        const snapshot = await storageRef
-          .child("products/" + name)
-          .put(file, metadata);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        const newProductData = {
-          active: 1,
-          categoryId: this.categoryId,
-          createdAt: Date.now(),
-          downloadURL: downloadURL,
-          promotion: this.newProduct.promotion,
-          sale: this.newProduct.sale,
-          name,
-          description: this.newProduct.description,
-          pictureName: name,
-          uid: null
-        };
-
-        const response = await productsCollection.add(newProductData);
-
-        newProductData.id = response.id;
-        this.items.push(newProductData);
-        this.addProductButtonDisabled = false;
-        this.addProductDialog = false;
-
-        this.category.totalProducts++;
-        await this.$store.dispatch("categories/UPDATE_CATEGORY_BY_KEY", {
-          categoryId: this.category.id,
-          key: "totalProducts",
-          value: this.category.totalProducts
-        });
-
-        this.notify("success", "Product has been successfully added");
-      } catch (error) {
-        console.log(error);
-        this.addProductButtonDisabled = false;
-        this.addProductDialog = false;
-        this.notify("error", "An error occurred");
-      }
-    },
+    
     async changeStatus(item) {
       let text = "";
       if (item.active === 1) {
@@ -688,26 +697,42 @@ export default {
       console.log(product);
     },
 
+    fileAdded(file) {
+			this.images.push(file);
+    },
+    
+		fileRemoved(file) {
+			console.log(file)
+			const i = this.images.findIndex((image) => image.name === file.name);
+			if (i >= 0) {
+				this.images.splice(i, 1);
+			}
+    },
+
+    showDuplicateImage(file) {
+      console.log("Duplicate image added");
+      this.notify("warning", `"${file.name}" already exists, please try again.`);
+      this.$refs.dropzoneRef.removeFile(file);
+    },
+
+    ErrorInUpload(file) {
+      if(file.accepted === false) {
+        this.notify("warning", `"${file.name}" is an invalid file. Please upload images only.`);
+      }
+      else this.notify("warning", "Error was encountered during the upload. Please try again.");
+      console.log(file.status);
+
+      this.$refs.dropzoneRef.removeFile(file);
+    },
+
     async upload() {
-      const files = this.$refs.file.files;
+      //const files = this.$refs.file.files;
+      const files = this.images;
       const uploads = [];
 
       const product = this.selectedProduct;
 
-      // Array.from(files).forEach((file) => {
-      // 	uploads.push(
-      // 		downScaleImageFromFile(file, 200)
-      // 		.then((data_url) => {
-      // 			return storageRef.child(`variants/${product.id}/${uuidv4()}`).putString(data_url, 'data_url')
-      // 			.then((snapshot) => {
-      // 				return snapshot.ref.getDownloadURL()
-      // 				.then(downloadURL => downloadURL)
-      // 			})
-      // 		})
-      // 	);
-      // });
-
-      Array.from(files).forEach(file => {
+      files.forEach(file => {
         uploads.push(
           storageRef
             .child(`variants/${product.id}/${uuidv4()}`)
@@ -750,6 +775,8 @@ export default {
       }
 
       this.uploadLoading = false;
+      this.images = [];
+      this.$refs.dropzoneRef.removeAllFiles(true);
     },
 
     view(item) {
@@ -796,6 +823,9 @@ export default {
       this.$emit("selected", val);
     }
   },
-  mixins: [mixins]
+  mixins: [mixins],
+  components: {
+		vueDropzone: vue2Dropzone
+	}
 };
 </script>
