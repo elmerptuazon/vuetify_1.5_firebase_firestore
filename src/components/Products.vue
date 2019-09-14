@@ -792,6 +792,38 @@ export default {
       }
     },
 
+    async deleteImgVariant(index) {
+      
+      const response = await this.$swal.fire({
+        title: "Are you sure?",
+        text: "Do you want to delete this photo?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if(response.value) {
+        this.notify("warning", "Deleting Image, please do not close this dialog.");
+        let images = this.selectedProduct.photos;
+        const imgPath = await STORAGE.refFromURL(images[index]);
+        console.log(imgPath);
+        console.log("TO BE DELETE: ", imgPath.name);
+        
+        try {
+          await storageRef.child(`variants/${this.selectedProduct.id}/${imgPath.name}`).delete();
+          images.splice(index, 1);
+          await productsCollection.doc(this.selectedProduct.id).update({ photos: images });
+          this.notify("success", "Image has been deleted!");
+          this.selectedProduct.photos = images;
+        }
+        catch(error) {
+          this.notify("error", error.message);
+          return;
+        }
+      }
+    },
     
     view(item) {
       this.$router.push({
