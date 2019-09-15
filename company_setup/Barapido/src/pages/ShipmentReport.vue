@@ -107,6 +107,11 @@
               }}
             </td>
             <td class="text-xs-center">{{ props.item.userDetails.contact }}</td>
+            <td class="text-xs-center">
+              {{
+                props.item.stockOrder.dateSubmitted | momentize("YYYY/MM/DD")
+              }}
+            </td>
           </tr>
         </template>
         <template slot="expand" slot-scope="props">
@@ -132,7 +137,7 @@
 
 <script>
 import { mapMutations, mapState } from "vuex";
-
+import mixins from "@/mixins";
 export default {
   data: () => ({
     fromDate: new Date().toISOString().substr(0, 10),
@@ -175,6 +180,11 @@ export default {
         text: "Contact",
         value: "userDetails.contact",
         align: "center"
+      },
+      {
+        text: "Date Requested",
+        value: "stockOrder.dateSubmitted",
+        align: "center"
       }
     ],
     subHeaders: [
@@ -203,6 +213,7 @@ export default {
       "Membership Id": "membershipId",
       "Shipping Address": "shippingAddress",
       Contact: "contact",
+      "Date Requested": "dateRequested",
       Item: "itemName",
       Price: "itemPrice",
       Quantity: "qty"
@@ -256,6 +267,10 @@ export default {
               "." +
               shipment.userDetails.address.zipCode,
             contact: shipment.userDetails.contact,
+            dateRequested: this.$options.filters.momentize(
+              shipment.stockOrder.dateSubmitted,
+              "YYYY/MM/DD"
+            ),
             itemName: item.productName,
             itemPrice: item.price,
             qty: item.qtyToShip
@@ -276,7 +291,8 @@ export default {
     ...mapState("shipment", {
       shipmentList: state => state.shipmentList
     })
-  }
+  },
+  mixins: [mixins]
 };
 </script>
 
