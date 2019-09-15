@@ -282,7 +282,8 @@ export default {
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
-                stockOrderId: this.stockOrder.id
+                stockOrderId: this.stockOrder.id,
+                dateSubmitted: this.stockOrder.submittedAt
               },
               userDetails: {
                 firstName: this.stockOrder.user.firstName,
@@ -365,7 +366,8 @@ export default {
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
-                stockOrderId: this.stockOrder.id
+                stockOrderId: this.stockOrder.id,
+                dateSubmitted: this.stockOrder.submittedAt
               },
               userDetails: {
                 firstName: this.stockOrder.user.firstName,
