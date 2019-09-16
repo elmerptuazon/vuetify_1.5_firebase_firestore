@@ -215,7 +215,9 @@ export default {
           attributes: item.attributes,
           qtyToShip: item.qtyToShip,
           productName: item.name,
-          productId: item.productId
+          productId: item.productId,
+          price: item.price,
+          qtyToShipPriceTotal: item.price * item.qtyToShip
         };
         return itemToShip;
       });
@@ -270,14 +272,18 @@ export default {
                 attributes: item.attributes,
                 qtyToShip: item.qty - item.shippedQty,
                 productName: item.name,
-                productId: item.productId
+                productId: item.productId,
+                price: item.resellerPrice,
+                qtyToShipPriceTotal:
+                  item.resellerPrice * (item.qty - item.shippedQty)
               };
               return itemToShip;
             });
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
-                stockOrderId: this.stockOrder.id
+                stockOrderId: this.stockOrder.id,
+                dateSubmitted: this.stockOrder.submittedAt
               },
               userDetails: {
                 firstName: this.stockOrder.user.firstName,
@@ -286,7 +292,8 @@ export default {
                 email: this.stockOrder.user.email,
                 contact: this.stockOrder.user.contact,
                 userId: this.stockOrder.user.id,
-                address: this.stockOrder.user.address
+                address: this.stockOrder.user.address,
+                agentId: this.stockOrder.user.agentId
               },
               dateSubmitted: Date.now(),
               itemsToShip: itemsToShip,
@@ -359,7 +366,8 @@ export default {
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
-                stockOrderId: this.stockOrder.id
+                stockOrderId: this.stockOrder.id,
+                dateSubmitted: this.stockOrder.submittedAt
               },
               userDetails: {
                 firstName: this.stockOrder.user.firstName,
@@ -368,7 +376,8 @@ export default {
                 email: this.stockOrder.user.email,
                 contact: this.stockOrder.user.contact,
                 userId: this.stockOrder.user.id,
-                address: this.stockOrder.user.address
+                address: this.stockOrder.user.address,
+                agentId: this.stockOrder.user.agentId
               },
               dateSubmitted: Date.now(),
               itemsToShip: this.itemsToShip,

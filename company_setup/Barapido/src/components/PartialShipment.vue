@@ -204,7 +204,8 @@ export default {
           attributes: item.attributes,
           attributesString: attributes,
           image: item.downloadURL,
-          productId: item.productId
+          productId: item.productId,
+          price: item.resellerPrice
         };
       });
 
