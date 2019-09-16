@@ -207,13 +207,13 @@ export default {
     ],
     exportData: [],
     json_fields: {
+      "Date Requested": "dateRequested",
       "Shipment Number": "shipmentNumber",
       "Order Number": "orderNumber",
       "Customer Name": "customerName",
       "Membership Id": "membershipId",
       "Shipping Address": "shippingAddress",
       Contact: "contact",
-      "Date Requested": "dateRequested",
       Item: "itemName",
       Price: "itemPrice",
       Quantity: "qty"
