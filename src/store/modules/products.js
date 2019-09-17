@@ -73,7 +73,7 @@ const products = {
         
     },
     actions: {
-        async FetchProductList({ commit }, payload) {
+        async FETCH_PRODUCTS({ commit }, payload) {
             try {
                 const querySnapshot = await DB.collection('products')
                 .where("categoryId", "==", payload)
@@ -90,26 +90,26 @@ const products = {
                 throw error;
             }
         },
-        async AddProduct({ commit, dispatch }, payload) {
+        async ADD_PRODUCT({ commit, dispatch }, payload) {
             try {
                 const response = await DB.collection('products').add(payload.productData);
                 console.log("RESPONSE ID: " + response.id);
                 payload.productData.id = response.id;
                 commit('AddProductsList', payload.productData);
-                await dispatch('UpdateProduct', 
-                    {
-                        categoryId: payload.categoryId,
-                        productId: payload.productData.id,
-                        productData: payload.productData
-                    }
-                );
+                // await dispatch('UpdateProduct', 
+                //     {
+                //         categoryId: payload.categoryId,
+                //         productId: payload.productData.id,
+                //         productData: payload.productData
+                //     }
+                // );
                 Promise.resolve();
                 return response.id;
             } catch (error) {
                 throw error;
             }
         },
-        async UpdateProduct({ commit }, payload) {
+        async UPDATE_PRODUCT({ commit }, payload) {
             try {
                 await DB.collection('products')
                     .doc(payload.productId)
@@ -120,60 +120,19 @@ const products = {
                 throw error;
             }
         },
-        async BatchUpdateProduct({ commit }, payload) {
-            try {
-                console.log(payload);
-                const batch = DB.batch();
-
-                payload.productData.forEach(product => {
-                    const ref = DB.collection('catalogues')
-                        .doc(payload.catalogueId)
-                        .collection('categories')
-                        .doc(payload.categoryId)
-                        .collection('products')
-                        .doc(product.id)
-                    batch.update(ref, product);
-                });
-                await batch.commit();
-                commit('BatchUpdateProductList', payload);
-                Promise.resolve();
-            } catch (error) {
-                throw error;
-            }
-        },
-        async BatchAddProduct({ commit }, payload) {
-            try {
-                console.log(payload);
-                const batch = DB.batch();
-
-                payload.productData.forEach(product => {
-                    const ref = DB.collection('catalogues')
-                        .doc(payload.catalogueId)
-                        .collection('categories')
-                        .doc(payload.categoryId)
-                        .collection('products')
-                        .doc()
-                    batch.set(ref, product);
-                });
-                await batch.commit();
-                commit('BatchUpdateProductList', payload);
-                Promise.resolve();
-            } catch (error) {
-                throw error;
-            }
-        },
         async CheckIfProductExists({ }, payload) {
             try {
-                const querySnapshot = await DB.collection('products');
-                let exists = false;
                 //const promises = [];
-                querySnapshot.where("code", "==", payload.code)
+                const snapshot = await DB.collection('products')
+                .where("code", "==", payload.code)
                 .limit(1)
-                .get()
-                .then((productquerySnapshot) => {
-                    if(!productquerySnapshot.empty) exists = true;
-                });
-
+                .get();
+                
+                //if there is no returned doc, it means theres no product  
+                //that exist as same as code being checked
+                if(snapshot.empty) return false;
+                else return true; 
+                
                 // querySnapshot.docs.forEach(product => {
                 //     console.log(product);
                 //     if (exists == false) {
@@ -194,33 +153,21 @@ const products = {
 
                 // console.log(promises);
                 // await Promise.all(promises);
-                return exists;
 
             } catch (error) {
                 throw error;
             }
+           
         },
-        // async GET_CATEGORY_BY_COMPANY({ commit, dispatch }, companyId) {
-        //     try {
-        //         const querySnapshot = await DB.collection('catalogues').where('companyId', '==', companyId).get();
-        //         const categories = querySnapshot.docs.map((doc) => {
-        //             const data = doc.data();
-        //             data.id = doc.id;
-        //             return data;
-        //         });
-        //         return categories;
-        //     } catch (error) {
-        //         throw error;
-        //     }
-        // },
-        // async UPDATE_CATEGORY_BY_KEY({ commit, dispatch }, payload) {
-        //     try {
-        //         const { categoryId, key, value } = payload;
-        //         await DB.collection('catalogues').doc(categoryId).update({ [key]: value });
-        //     } catch (error) {
-        //         throw error;
-        //     }
-        // }
+        async UPDATE_PRODUCT_BY_KEY({ commit, dispatch }, payload) {
+            try {
+                const { productId, key, value } = payload;
+                await DB.collection('products').doc(productId).update({ [key]: value });
+            } catch (error) {
+                throw error;
+            }
+        }
+        
     }
 }
 

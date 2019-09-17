@@ -55,6 +55,7 @@ import mixins from '@/mixins';
 import {DB, STORAGE} from '@/config/firebase';
 import Products from '@/components/Products';
 import { mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 import { downScaleImageFromFile } from '@/helpers/helpers';
 const categoriesCollection = DB.collection('catalogues');
 const productsCollection = DB.collection('products');
@@ -63,7 +64,7 @@ const storageRef = STORAGE.ref('appsell');
 export default {
 	data: () => ({
 		category: {},
-		items: [],
+		//items: [],
 		loading: false,
 		search: null,
 		showEdit: false,
@@ -75,29 +76,31 @@ export default {
 		saveButtonDisabled: false,
 		disableActionButtons: true
 	}),
-	created () {
+	async created () {
 		this.category = Object.assign({}, this.$route.params.data);
-		this.fetchProducts().then((items) => {
-			this.$refs.productsRef.loading = false;
-			this.items = items;
-		});
+		//console.log("CATEGORY: ", this.category)
+		// this.fetchProducts().then((items) => {
+		// 	this.$refs.productsRef.loading = false;
+		// 	this.items = items;
+		// });
+		await this.$store.dispatch('products/FETCH_PRODUCTS', this.category.id);
 	},
 	methods: {
-		fetchProducts () {
-			return new Promise((resolve) => {
-				productsCollection
-				.where('categoryId', '==', this.$route.params.id)
-				.get()
-				.then((productsSnapshot) => {
-					const items = productsSnapshot.docs.map((doc) => {
-						const data = doc.data();
-						data.id = doc.id;
-						return data;
-					});
-					resolve(items);
-				});
-			});
-		},
+		// fetchProducts () {
+		// 	return new Promise((resolve) => {
+		// 		productsCollection
+		// 		.where('categoryId', '==', this.$route.params.id)
+		// 		.get()
+		// 		.then((productsSnapshot) => {
+		// 			const items = productsSnapshot.docs.map((doc) => {
+		// 				const data = doc.data();
+		// 				data.id = doc.id;
+		// 				return data;
+		// 			});
+		// 			resolve(items);
+		// 		});
+		// 	});
+		// },
 		notify (icon, text, blocking=true) {
 			this.modal.icon = icon;
 			this.modal.text = text;
@@ -282,6 +285,10 @@ export default {
 	computed: {
 		...mapGetters({
 			'roles': 'auth/GET_ROLES'
+		}),
+
+		...mapState("products", {
+			items: state => state.productsList
 		})
 	},
 	mixins: [mixins]
