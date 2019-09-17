@@ -23,7 +23,7 @@ const storageRef = STORAGE.ref("appsell");
 
 export default {
   data: () => ({
-    items: [],
+    //items: [],
     loading: false,
     search: null,
     showEdit: false,
@@ -35,8 +35,9 @@ export default {
   }),
   async created() {
     try {
-      const items = await this.$store.dispatch("categories/GET_CATEGORIES");
-      this.items = items;
+      // const items = await this.$store.dispatch("categories/GET_CATEGORIES");
+      // this.items = items;
+      await this.$store.dispatch("categories/FETCH_CATEGORIES");
     } catch (error) {
       console.log(error);
     }
@@ -207,7 +208,11 @@ export default {
   computed: {
     ...mapState("auth", {
       user: state => state.user
-    })
+    }),
+
+    ...mapState("categories", {
+      items: state => state.categoryList
+    }),
   },
   mixins: [mixins]
 };

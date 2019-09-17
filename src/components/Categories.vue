@@ -145,9 +145,11 @@
 			<div class="title">Add category</div>
 		</v-card-title>
 		<v-card-text>
+			<p class="caption grey--text darken-2 font-italic mb-2">Category Thumbnail</p>
 			<input type="file" ref="categoryFile" value="upload" accept=".png, .jpg, .jpeg" @change="validateFile">
+			<v-divider class="mt-2"/>
 			<v-text-field
-			label="Name"
+			label="Category Name"
 			v-model="newCategory.name"
 			></v-text-field>
 			<!-- <v-checkbox color="primary" label="This category is a promotion" v-model="newCategory.promotion"></v-checkbox> -->
@@ -158,7 +160,7 @@
 			<v-btn color="primary"
 			class="white--text"
 			:loading="addCategoryButtonDisabled"
-			:disabled="addCategoryButtonDisabled"
+			:disabled="addCategoryButtonDisabled || !this.newCategory.name"
 			@click="addCategory">Save</v-btn>
 		</v-card-actions>
 	</v-card>
@@ -198,7 +200,7 @@
             <v-img
               contain
               :src="category.downloadURL"
-              :alt="category.categoryName"
+              :alt="category.name"
               :lazy-src="require('@/assets/no-image.png')"
             >
               <v-layout
@@ -216,8 +218,8 @@
             </v-img>
           </v-avatar>
           <v-text-field
-            label="Name"
-            v-model="category.categoryName"
+            label="Category Name"
+            v-model="category.name"
           ></v-text-field>
           <!-- <v-checkbox color="primary" label="This category is a promotion" v-model="category.promotion"></v-checkbox> -->
         </v-card-text>
@@ -244,16 +246,19 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import mixins from '@/mixins';
 import {DB, STORAGE} from '@/config/firebase';
+import { downScaleImageFromFile } from "@/helpers/helpers";
 const categoriesCollection = DB.collection('catalogues');
 const productsCollection = DB.collection('products');
 const storageRef = STORAGE.ref('appsell');
 
 export default {
-	props: ['items'],
-	created () {
+	//props: ['items'],
+	async created () {
 		this.loading = true;
+		await this.$store.dispatch('categories/FETCH_CATEGORIES');
 	},
 	data: () => ({
 		pagination: {
@@ -304,7 +309,7 @@ export default {
 			promotion: false
 		},
 		category: {
-			categoryName: null,
+			name: null,
 			downloadURL: null,
 			totalProducts: null
 		},
@@ -347,8 +352,13 @@ export default {
         	const acceptedFiles = ['jpg', 'jpeg', 'png'];
 
         	if (!acceptedFiles.includes(extFile)) {
-        		this.$refs.categoryFile.value = '';
-        		this.notify('error', 'Uploaded file is not an image.');
+				this.$refs.categoryFile.value = '';
+				this.$swal.fire({
+					type: "error",
+					title: "Error",
+					text: "The uploaded file is not an image file. Please try again."
+				});
+        		//this.notify('error', 'Uploaded file is not an image.');
         	}
 		},
 		async addCategory () {
@@ -359,54 +369,75 @@ export default {
 			const index = this.items.findIndex(i => i.name.toLowerCase() === this.newCategory.name.toLowerCase());
 
 			if (index !== -1) {
-				this.notify('error', 'Category name already exists.');
+				//this.notify('error', 'Category name already exists.');
+				this.$swal.fire({
+					type: "error",
+					title: "Error",
+					text: "Category Name already exists. Please try another name."
+				});
 				return;
 			}
 
 			const file = this.$refs.categoryFile.files[0];
-			const name = this.newCategory.name.trim();
+			//const name = this.newCategory.name.trim();
 			const metadata = { contentType: file.type };
 			this.addCategoryButtonDisabled = true;
 
 			try {
-				
 				const newCategoryData = {
 					active: 1,
 					created: Date.now(),	
 					promotion: this.newCategory.promotion,
-					name,
-					pictureName: name,
+					name: this.newCategory.name,
+					pictureName: null,
+					downloadURL: null,
 					totalProducts: 0,
 					position: this.items.length + 1
 				};
 
-				const response = await categoriesCollection.add(newCategoryData);
-				newCategoryData.id = response.id;
-				
+				const response = await this.$store.dispatch('categories/ADD_CATEGORY', {
+					categoryData: newCategoryData
+				});
+
 				const snapshot = await storageRef.child('catalogues/' + response.id).put(file, metadata);
 				const downloadURL = await snapshot.ref.getDownloadURL();
-				newCategoryData.downloadURL = downloadURL;
 				newCategoryData.pictureName = response.id;
-				await categoriesCollection.add(newCategoryData);
+				newCategoryData.downloadURL = downloadURL;
 
-				this.items.push(newCategoryData);
-				console.log('new data', newCategoryData)
+				await this.$store.dispatch('categories/UPDATE_CATEGORY', {
+					categoryId: response.id,
+					categoryData: newCategoryData
+				});
+				
+				//this.items.push(newCategoryData);
+				//console.log('new data', newCategoryData)
 				this.addCategoryButtonDisabled = false;
 				this.addCategoryDialog = false;
 
-				this.notify('success', 'Category has been successfully added');
+				//this.notify('success', 'Category has been successfully added');
+				this.$swal.fire({
+					type: "success",
+					title: "Success!",
+					text: "Category has been successfully added."
+				});
+				this.$refs.categoryFile.files.value = null;
 			} catch (error) {
 				console.log(error);
 				this.addCategoryButtonDisabled = false;
 				this.addCategoryDialog = false;
-				this.notify('error', 'An error occurred');
+				//this.notify('error', 'An error occurred');
+				this.$swal.fire({
+					type: "error",
+					title: "Error",
+					text: "An error occurred. Please try again."
+				});
+				this.$refs.categoryFile.files.valur = null;
 			}
 		},
 		openEditDialog(item) {
 			this.editCategoryDialog = true;
-			console.log("ITEMS", item);
 			this.category = {
-				categoryName: item.name,
+				name: item.name,
 				downloadURL: item.downloadURL,
 				pictureName: item.pictureName,
 				totalProducts: item.totalProducts,
@@ -414,17 +445,18 @@ export default {
 			};
 		},
 		async editCategory() {
-			if (!this.category.categoryName) {
-				this.notify("error", "Category name is Required.");
+			if (!this.category.name) {
+				//this.notify("error", "Category name is Required.");
+				this.$swal.fire({
+					type: "error",
+					title: "Error",
+					text: "Category name is required!"
+				})
 				return false;
 			}
 
 			try {
 				this.categoryButtonDisabled = true;
-				const newData = {
-					name: this.category.categoryName,
-					downloadURL: this.category.downloadURL
-				};
 
 				if (this.$refs.editCategoryFile.files.length > 0) {
 					try {
@@ -435,28 +467,43 @@ export default {
 						console.log("deletingError: ", e.message);
 					}
 					const file = this.$refs.editCategoryFile.files[0];
-					//const rescaledImage = await downScaleImageFromFile(file);
-					const metadata = { contentType: file.type };
+					const rescaledImage = await downScaleImageFromFile(file);
 					const snapshot = await storageRef
 						.child("catalogues/" + this.category.id)
-						.put(file, metadata);
+						.putString(rescaledImage, 'data_url');
 
 					const downloadURL = await snapshot.ref.getDownloadURL();
-					newData.pictureName = this.category.id;
-					newData.downloadURL = downloadURL;
+					
+					this.category.pictureName = this.category.id;
+					this.category.downloadURL = downloadURL;
 				}
-				await categoriesCollection.doc(this.category.id).update(newData);
 				
-				const index = this.items.findIndex(i => i.id === this.category.id);
-				this.items[index].name = newData.name;
-				this.items[index].downloadURL = newData.downloadURL;
+				//await categoriesCollection.doc(this.category.id).update(updatedCategory);
+				await this.$store.dispatch('categories/UPDATE_CATEGORY', {
+					categoryId: this.category.id,
+					categoryData: this.category,
+				});
+
+				// const index = this.items.findIndex(i => i.id === this.category.id);
+				// this.items[index].name = newData.name;
+				// this.items[index].downloadURL = newData.downloadURL;
 				
 				this.categoryButtonDisabled = false;
 				this.editCategoryDialog = false;
 
-				this.notify("success", "Category has been successfully updated");
+				//this.notify("success", "Category has been successfully updated");
+				this.$swal.fire({
+					type: "success",
+					title: "Success",
+					text: "Category has been successfully updated!"
+				});
 			} catch (error) {
-				this.notify("error", "An error occurred");
+				//this.notify("error", "An error occurred");
+				this.$swal.fire({
+					type: "error",
+					title: "Error",
+					text: "An error occured. Please try again.",
+				});
 				console.log(error);
 			}
 		},
@@ -471,7 +518,13 @@ export default {
 					const itemIndex = this.items.findIndex((i) => i.id === item.id);
 					this.items[itemIndex].active = active;
 					this.statusButtonLoading = false;
-					this.notify('success', text);
+					//this.notify('success', text);
+					this.$swal.fire({
+						type: "success",
+						title: "Success",
+						text: text
+					});
+					
 				});
 			}
 		},
@@ -510,7 +563,12 @@ export default {
 					this.items[index].position = selectedCategoryClone.position;
 				}
 
-				this.notify('success', 'Display position updated');
+				//this.notify('success', 'Display position updated');
+				this.$swal.fire({
+					type: "success",
+					title: "success",
+					text: "Display position updated!"
+				});
 				this.updatePositionDialog = false;
 
 			} catch (error) {
@@ -527,6 +585,11 @@ export default {
 		selected (arr) {
 			this.disableDeleteButton = arr.length > 0 ? false : true;
 		}
+	},
+	computed: {
+		...mapState("categories", {
+			items: state => state.categoryList
+		})
 	},
 	mixins: [mixins]
 }
