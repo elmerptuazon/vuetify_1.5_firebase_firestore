@@ -30,6 +30,10 @@ const categories = {
                         category.pictureName = payload.categoryData.pictureName;
                         category.downloadURL = payload.categoryData.downloadURL;
                     }
+                    if (payload.categoryData.hasOwnProperty('totalProducts')) {
+                        console.log('totalProducts found');
+                        category.totalProducts = payload.categoryData.totalProducts;
+                    }
                 }
                 return category;
             });
