@@ -36,7 +36,7 @@
         :pagination.sync="pagination"
         item-key="name"
         class="elevation-1"
-        :loading="loading"
+        :loading="items.length === 0"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
       >
@@ -343,10 +343,10 @@ const storageRef = STORAGE.ref("appsell");
 const uuidv4 = require("uuid/v4");
 
 export default {
-  props: [/*"items",*/"categoryId", "category"],
+  props: ["items","categoryId", "category"],
   async created() {
-    this.loading = true;
-    await this.$store.dispatch("products/FETCH_PRODUCTS", this.categoryId);
+    //this.loading = true;
+    //await this.$store.dispatch("products/FETCH_PRODUCTS", this.categoryId);
     //this.items = this.$store.getters["products/GetProductsList"];
   },
   data: () => ({
@@ -948,9 +948,9 @@ export default {
   },
   mixins: [mixins],
   computed: {
-    ...mapState("products", {
-      items: state => state.productsList
-    })
+    // ...mapState("products", {
+    //   items: state => state.productsList
+    // })
   },
   components: {
 		vueDropzone: vue2Dropzone
