@@ -307,11 +307,11 @@ const productsCollection = DB.collection("products");
 const storageRef = STORAGE.ref("appsell");
 
 export default {
-  //props: ['items'],
+  props: ["items"],
   async mounted() {
-    this.loading = true;
-    await this.$store.dispatch("categories/FETCH_CATEGORIES");
-    this.loading = false;
+    // this.loading = true;
+    //await this.$store.dispatch("categories/FETCH_CATEGORIES");
+    // this.loading = false;
   },
   data: () => ({
     pagination: {
@@ -680,9 +680,9 @@ export default {
     }
   },
   computed: {
-    ...mapState("categories", {
-      items: state => state.categoryList
-    })
+    // ...mapState("categories", {
+    //   items: state => state.categoryList
+    // })
   },
   mixins: [mixins]
 };
