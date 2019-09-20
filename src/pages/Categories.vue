@@ -1,10 +1,6 @@
 <template>
   <v-container>
-    <Categories
-      :items="items"
-      ref="categoriesRef"
-      @deleteCategories="deleteCategories"
-    />
+    <Categories ref="categoriesRef" @deleteCategories="deleteCategories" />
     <sweet-modal :icon="modal.icon" ref="modal" blocking>
       {{ modal.text }}
     </sweet-modal>
@@ -37,11 +33,11 @@ export default {
     try {
       // const items = await this.$store.dispatch("categories/GET_CATEGORIES");
       // this.items = items;
-      await this.$store.dispatch("categories/FETCH_CATEGORIES");
+      //await this.$store.dispatch("categories/FETCH_CATEGORIES");
     } catch (error) {
       console.log(error);
     }
-    this.$refs.categoriesRef.loading = false;
+    //this.$refs.categoriesRef.loading = false;
     console.log(this.user);
     if (!this.user.hasSignedIn) {
       const passwordDialog = await this.$swal.mixin({
@@ -208,11 +204,11 @@ export default {
   computed: {
     ...mapState("auth", {
       user: state => state.user
-    }),
+    })
 
-    ...mapState("categories", {
-      items: state => state.categoryList
-    }),
+    // ...mapState("categories", {
+    //   items: state => state.categoryList
+    // })
   },
   mixins: [mixins]
 };
