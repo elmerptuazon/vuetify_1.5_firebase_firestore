@@ -3,30 +3,32 @@
     <v-card>
       <v-card-title>
         <v-layout row align-baseline justify-start wrap>
-					<v-flex md2 align-content-end>
-						<div class="headline">Products</div>
-					</v-flex>
+          <v-flex md2 align-content-end>
+            <div class="headline">Products</div>
+          </v-flex>
 
-					<v-flex md6 xs10>
-						<v-text-field
-						append-icon="search"
-						label="Search a product..."
-						hide-details
-						v-model="search"
-						></v-text-field>
-					</v-flex>
+          <v-flex md6 xs10>
+            <v-text-field
+              append-icon="search"
+              label="Search a product..."
+              hide-details
+              v-model="search"
+            ></v-text-field>
+          </v-flex>
 
-					<v-flex md2 :class="{'mt-4' : $vuetify.breakpoint.smAndDown, 'offset-md1' : $vuetify.breakpoint.mdAndUp}">
-						<v-btn 
-							dark 
-							class="primary white--text" 
-							@click="OpenDialog"
-						>
-							<v-icon class="mr-2">add</v-icon>
-							<span>Add Product</span>
-						</v-btn>
-					</v-flex>
-				</v-layout>
+          <v-flex
+            md2
+            :class="{
+              'mt-4': $vuetify.breakpoint.smAndDown,
+              'offset-md1': $vuetify.breakpoint.mdAndUp
+            }"
+          >
+            <v-btn dark class="primary white--text" @click="OpenDialog">
+              <v-icon class="mr-2">add</v-icon>
+              <span>Add Product</span>
+            </v-btn>
+          </v-flex>
+        </v-layout>
       </v-card-title>
       <v-data-table
         v-model="selected"
@@ -160,7 +162,7 @@
     <sweet-modal :icon="modal.icon" ref="modal" blocking>
       {{ modal.text }}
     </sweet-modal>
-    
+
     <v-dialog max-width="500px" v-model="addProductDialog" persistent>
       <v-card>
         <v-card-title>
@@ -202,7 +204,9 @@
               label="Product Code*"
               :rules="basicRules"
               v-model="product.code"
-              :disabled="product.code !== '' && dialogText === 'Edit Product Details'"
+              :disabled="
+                product.code !== '' && dialogText === 'Edit Product Details'
+              "
             ></v-text-field>
             <v-text-field
               label="Name*"
@@ -264,48 +268,61 @@
         <v-card-title class="primary white--text headline">
           <div>Upload Photos</div>
           <v-spacer></v-spacer>
-          <v-btn color ="white" @click="uploadImagesDialog = false" flat icon>
+          <v-btn color="white" @click="uploadImagesDialog = false" flat icon>
             <v-icon>close</v-icon>
           </v-btn>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
-          <p class="text-center font-italic">*Images will be seen in the carousel*</p>
+          <p class="text-center font-italic">
+            *Images will be seen in the carousel*
+          </p>
           <v-layout v-if="!selectedProduct.photos" row my-3>
-            <div class="subheading font-italic grey--text darken-2">*No Product Pictures Yet..*</div>
+            <div class="subheading font-italic grey--text darken-2">
+              *No Product Pictures Yet..*
+            </div>
           </v-layout>
 
           <v-layout v-else row wrap align-baseline justify-start mb-3>
-            <v-flex xs4 v-for="(image, index) in selectedProduct.photos" :key="index" mt-3>
+            <v-flex
+              xs4
+              v-for="(image, index) in selectedProduct.photos"
+              :key="index"
+              mt-3
+            >
               <v-card width="210px">
-                <v-img :src="image"/>
+                <v-img :src="image" />
                 <v-card-actions>
+                  <v-spacer></v-spacer>
                   <!-- <v-spacer/> -->
-                  <v-layout row align-center justify-center>
-                    <v-flex xs12>
-                      <v-btn small class="primary" dark @click="deleteImgVariant(index)">
-                        <v-icon>delete_forever</v-icon>
-                        <span>Delete</span>
-                      </v-btn>
-                    </v-flex>
-                  </v-layout>
+
+                  <v-btn
+                    small
+                    class="error"
+                    dark
+                    @click="deleteImgVariant(index)"
+                  >
+                    <v-icon>delete_forever</v-icon>
+                    <span>Delete</span>
+                  </v-btn>
+
                   <!-- <v-btn small class="primary" dark><v-icon>zoom_in</v-icon><span>Enlarge</span></v-btn> -->
                 </v-card-actions>
               </v-card>
             </v-flex>
           </v-layout>
-          <v-divider/>
+          <v-divider />
           <v-layout row align-center justify-center mt-4>
             <v-flex xs12>
               <vue-dropzone
-              ref="dropzoneRef"
-              id="dropzone"
-              duplicateCheck
-              :options="dropzoneOptions"
-              @vdropzone-file-added="fileAdded"
-              @vdropzone-removed-file="fileRemoved"
-              @vdropzone-duplicate-file="showDuplicateImage"
-              @vdropzone-error="ErrorInUpload"
+                ref="dropzoneRef"
+                id="dropzone"
+                duplicateCheck
+                :options="dropzoneOptions"
+                @vdropzone-file-added="fileAdded"
+                @vdropzone-removed-file="fileRemoved"
+                @vdropzone-duplicate-file="showDuplicateImage"
+                @vdropzone-error="ErrorInUpload"
               />
             </v-flex>
           </v-layout>
@@ -315,8 +332,11 @@
           <v-btn
             flat
             color="grey darken-2"
-            @click="uploadImagesDialog = false; uploadLoading = false;"
-          >CANCEL
+            @click="
+              uploadImagesDialog = false;
+              uploadLoading = false;
+            "
+            >CANCEL
           </v-btn>
           <v-btn
             color="primary"
@@ -333,17 +353,17 @@
 
 <script>
 import mixins from "@/mixins";
-import vue2Dropzone from 'vue2-dropzone'
-import 'vue2-dropzone/dist/vue2Dropzone.min.css'
+import vue2Dropzone from "vue2-dropzone";
+import "vue2-dropzone/dist/vue2Dropzone.min.css";
 import { DB, STORAGE } from "@/config/firebase";
 import { downScaleImageFromFile } from "@/helpers/helpers";
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 const productsCollection = DB.collection("products");
 const storageRef = STORAGE.ref("appsell");
 const uuidv4 = require("uuid/v4");
 
 export default {
-  props: ["items","categoryId", "category"],
+  props: ["items", "categoryId", "category"],
   async created() {
     //this.loading = true;
     //await this.$store.dispatch("products/FETCH_PRODUCTS", this.categoryId);
@@ -417,12 +437,12 @@ export default {
     dialogText: null,
     addProductButtonDisabled: false,
     dropzoneOptions: {
-			autoProcessQueue: false,
-			url: '/',
-			acceptedFiles: 'image/*',
-			addRemoveLinks: true
+      autoProcessQueue: false,
+      url: "/",
+      acceptedFiles: "image/*",
+      addRemoveLinks: true
     },
-    images: [],
+    images: []
   }),
   methods: {
     toggleAll() {
@@ -476,10 +496,7 @@ export default {
     async saveProduct() {
       this.addProductButtonDisabled = true;
       if (!this.$refs.form.validate()) {
-        this.notify(
-          "Sorry",
-          "One or more mandatory fields are required"
-        );
+        this.notify("Sorry", "One or more mandatory fields are required");
         this.addProductButtonDisabled = false;
         return;
       }
@@ -503,7 +520,7 @@ export default {
             code: this.product.code
           }
         );
-        
+
         if (exists) {
           //this.notify("Sorry", "Product Code is already existing in the database");
           this.$swal.fire({
@@ -514,7 +531,6 @@ export default {
           this.addProductButtonDisabled = false;
           return;
         } else {
-          
           this.addProductButtonDisabled = true;
 
           const newProduct = {
@@ -528,16 +544,19 @@ export default {
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
             sale: this.product.sale,
-            isOutofStock: this.product.isOutofStock || null,
+            isOutofStock: this.product.isOutofStock || null
             //uid: null
           };
           console.log(newProduct);
 
           //try-catch block for saving productData to database
           try {
-            const productId = await this.$store.dispatch("products/ADD_PRODUCT", {
-              productData: newProduct,
-            });
+            const productId = await this.$store.dispatch(
+              "products/ADD_PRODUCT",
+              {
+                productData: newProduct
+              }
+            );
             newProduct.id = productId;
 
             this.category.totalProducts++;
@@ -546,8 +565,7 @@ export default {
               categoryId: this.categoryId,
               categoryData: this.category
             });
-
-          } catch(error) {
+          } catch (error) {
             console.log(error.message);
             this.$swal.fire({
               type: "error",
@@ -569,7 +587,6 @@ export default {
             const downloadURL = await snapshot.ref.getDownloadURL();
             newProduct.pictureName = newProduct.id;
             newProduct.downloadURL = downloadURL;
-
           } catch (error) {
             console.log(error);
             this.addProductButtonDisabled = false;
@@ -597,11 +614,11 @@ export default {
           this.$swal.fire({
             type: "success",
             title: "Success",
-            text: "Products has been successfully added!"
+            text: "Product has been successfully added!"
           });
         }
 
-      //Edit Product Details
+        //Edit Product Details
       } else {
         this.addProductButtonDisabled = true;
 
@@ -620,16 +637,21 @@ export default {
           //uid: null
           downloadURL: this.product.downloadURL,
           pictureName: this.product.pictureName,
-          id: this.product.id,
+          id: this.product.id
         };
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 
-        if(this.$refs.productFile.files.length > 0) {
+        if (this.$refs.productFile.files.length > 0) {
           try {
-            storageRef.child("products/" + updatedProductData.id)
+            storageRef
+              .child("products/" + updatedProductData.id)
               .delete()
-              .then(() => {console.log("Previous product photo has been deleted")})
-              .catch((error) => {console.log(error.message)});
+              .then(() => {
+                console.log("Previous product photo has been deleted");
+              })
+              .catch(error => {
+                console.log(error.message);
+              });
 
             const file = this.$refs.productFile.files[0];
             const metadata = { contentType: file.type };
@@ -640,7 +662,6 @@ export default {
             const downloadURL = await snapshot.ref.getDownloadURL();
             updatedProductData.pictureName = updatedProductData.id;
             updatedProductData.downloadURL = downloadURL;
-
           } catch (error) {
             console.log(error);
             this.addProductButtonDisabled = false;
@@ -656,8 +677,8 @@ export default {
         }
         //send productData to DB for product update
         await this.$store.dispatch("products/UPDATE_PRODUCT", {
-            productId: updatedProductData.id,
-            productData: updatedProductData
+          productId: updatedProductData.id,
+          productData: updatedProductData
         });
 
         //this.items = this.$store.getters["products/GetProductsList"];
@@ -666,7 +687,7 @@ export default {
         // this.items[index].downloadURL = productData.downloadURL;
         // this.items[index].pictureName = productData.pictureName;
         //console.log(this.items);
-        
+
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
         //this.notify("success", "Product has been successfully updated");
@@ -677,7 +698,7 @@ export default {
         });
       }
     },
-    
+
     async changeStatus(item) {
       let text = "";
       if (item.active === 1) {
@@ -737,27 +758,36 @@ export default {
     fileAdded(file) {
       this.images.push(file);
     },
-    
-		fileRemoved(file) {
-			console.log(file)
-			const i = this.images.findIndex((image) => image.name === file.name);
-			if (i >= 0) {
-				this.images.splice(i, 1);
-			}
+
+    fileRemoved(file) {
+      console.log(file);
+      const i = this.images.findIndex(image => image.name === file.name);
+      if (i >= 0) {
+        this.images.splice(i, 1);
+      }
     },
 
     showDuplicateImage(file) {
       console.log("Duplicate image added");
-      this.notify("warning", `"${file.name}" already exists, please try again.`);
+      this.notify(
+        "warning",
+        `"${file.name}" already exists, please try again.`
+      );
       this.fileRemoved(file);
       this.$refs.dropzoneRef.removeFile(file);
     },
 
     ErrorInUpload(file) {
-      if(file.accepted === false) {
-        this.notify("warning", `"${file.name}" is an invalid file. Please upload images only.`);
-      }
-      else this.notify("warning", "Error was encountered during the upload. Please try again.");
+      if (file.accepted === false) {
+        this.notify(
+          "warning",
+          `"${file.name}" is an invalid file. Please upload images only.`
+        );
+      } else
+        this.notify(
+          "warning",
+          "Error was encountered during the upload. Please try again."
+        );
       console.log(file.status);
 
       this.$refs.dropzoneRef.removeFile(file);
@@ -771,19 +801,19 @@ export default {
 
       const product = this.selectedProduct;
 
-      for(let i = 0; i < files.length; i++) {
+      for (let i = 0; i < files.length; i++) {
         let file = files[i];
         const rescaledImage = await downScaleImageFromFile(file);
         await uploads.push(
           storageRef
             .child(`variants/${product.id}/${uuidv4()}`)
-            .putString(rescaledImage, 'data_url')
+            .putString(rescaledImage, "data_url")
             .then(snapshot => {
               return snapshot.ref
                 .getDownloadURL()
                 .then(downloadURL => downloadURL);
             })
-            .catch((error) => {
+            .catch(error => {
               this.notify("error", error.message);
               this.uploadLoading = false;
             })
@@ -800,7 +830,7 @@ export default {
           product.photos = photos;
 
           //await productsCollection.doc(product.id).update({ photos: photos });
-          await this.$store.dispatch('products/UPDATE_PRODUCT', {
+          await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: product.id,
             productData: product
           });
@@ -814,7 +844,7 @@ export default {
           //console.log("res", res);
           //await productsCollection.doc(product.id).update({ photos: res });
           product.photos = res;
-          await this.$store.dispatch('products/UPDATE_PRODUCT', {
+          await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: product.id,
             productData: product
           });
@@ -848,7 +878,6 @@ export default {
     },
 
     async deleteImgVariant(index) {
-      
       const response = await this.$swal.fire({
         title: "Are you sure?",
         text: "Do you want to delete this photo?",
@@ -859,7 +888,7 @@ export default {
         showCloseButton: true
       });
 
-      if(response.value) {
+      if (response.value) {
         //this.notify("warning", "Deleting Image, please do not close this dialog.");
         this.$swal.fire({
           type: "warning",
@@ -871,13 +900,15 @@ export default {
         const imgPath = await STORAGE.refFromURL(images[index]);
         console.log(imgPath);
         console.log("TO BE DELETE: ", imgPath.name);
-        
+
         try {
-          await storageRef.child(`variants/${this.selectedProduct.id}/${imgPath.name}`).delete();
+          await storageRef
+            .child(`variants/${this.selectedProduct.id}/${imgPath.name}`)
+            .delete();
           images.splice(index, 1);
           this.selectedProduct.photos = images;
           //await productsCollection.doc(this.selectedProduct.id).update({ photos: images });
-          await this.$store.dispatch('products/UPDATE_PRODUCT', {
+          await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: this.selectedProduct.id,
             productData: this.selectedProduct
           });
@@ -888,9 +919,7 @@ export default {
             title: "Success",
             text: "Image has been deleted!"
           });
-          
-        }
-        catch(error) {
+        } catch (error) {
           //this.notify("error", error.message);
           this.$swal.fire({
             type: "error",
@@ -901,7 +930,7 @@ export default {
         }
       }
     },
-    
+
     view(item) {
       this.$router.push({
         name: "ViewCategory",
@@ -910,7 +939,7 @@ export default {
           data: item
         }
       });
-    }, 
+    },
 
     validateFile(el) {
       if (!el.target.value) {
@@ -953,7 +982,7 @@ export default {
     // })
   },
   components: {
-		vueDropzone: vue2Dropzone
-	}
+    vueDropzone: vue2Dropzone
+  }
 };
 </script>
