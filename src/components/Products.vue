@@ -2,15 +2,33 @@
   <div>
     <v-card>
       <v-card-title>
-        <div class="headline">Products</div>
-        <v-spacer></v-spacer>
-        <v-text-field
-          append-icon="search"
-          label="Search product..."
-          single-line
-          hide-details
-          v-model="search"
-        ></v-text-field>
+        <v-layout row align-baseline justify-start wrap>
+          <v-flex md2 align-content-end>
+            <div class="headline">Products</div>
+          </v-flex>
+
+          <v-flex md6 xs10>
+            <v-text-field
+              append-icon="search"
+              label="Search a product..."
+              hide-details
+              v-model="search"
+            ></v-text-field>
+          </v-flex>
+
+          <v-flex
+            md2
+            :class="{
+              'mt-4': $vuetify.breakpoint.smAndDown,
+              'offset-md1': $vuetify.breakpoint.mdAndUp
+            }"
+          >
+            <v-btn dark class="primary white--text" @click="OpenDialog">
+              <v-icon class="mr-2">add</v-icon>
+              <span>Add Product</span>
+            </v-btn>
+          </v-flex>
+        </v-layout>
       </v-card-title>
       <v-data-table
         v-model="selected"
@@ -20,13 +38,13 @@
         :pagination.sync="pagination"
         item-key="name"
         class="elevation-1"
-        :loading="loading"
+        :loading="items.length === 0"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
       >
         <template slot="headers" slot-scope="props">
           <tr>
-            <th>
+            <!-- <th>
               <v-checkbox
                 primary
                 hide-details
@@ -35,7 +53,7 @@
                 :indeterminate="props.indeterminate"
                 color="pink"
               ></v-checkbox>
-            </th>
+            </th> -->
             <th
               v-for="header in props.headers"
               :key="header.text"
@@ -57,14 +75,14 @@
             @click="props.selected = !props.selected"
             v-bind:class="[props.item.active != 1 ? 'grey--text' : '']"
           >
-            <td>
+            <!-- <td>
               <v-checkbox
                 primary
                 hide-details
                 :input-value="props.selected"
                 color="pink"
               ></v-checkbox>
-            </td>
+            </td> -->
             <td class="text-xs-center pa-2">
               <v-avatar size="100px" tile>
                 <v-img
@@ -100,18 +118,32 @@
                 <v-btn
                   slot="activator"
                   icon
-                  class="grey darken-2 white--text"
-                  @click.stop="openUploadImagesDialog(props.item)"
+                  class="primary white--text"
+                  @click.stop="viewItemDetails(props.item)"
                 >
-                  <v-icon>add_photo_alternate</v-icon>
+                  <v-icon>edit</v-icon>
                 </v-btn>
-                <span>Add image variants</span>
+                <span>Edit Product Details</span>
               </v-tooltip>
+
               <v-tooltip left>
                 <v-btn
                   slot="activator"
                   icon
-                  class="grey darken-2 white--text"
+                  dark
+                  class="primary white--text"
+                  @click.stop="openUploadImagesDialog(props.item)"
+                >
+                  <v-icon>add_photo_alternate</v-icon>
+                </v-btn>
+                <span>Add Product Photo Variants</span>
+              </v-tooltip>
+
+              <v-tooltip left>
+                <v-btn
+                  slot="activator"
+                  icon
+                  class="primary white--text"
                   :loading="statusButtonLoading"
                   :disabled="statusButtonLoading"
                   @click.stop="changeStatus(props.item)"
@@ -130,42 +162,92 @@
     <sweet-modal :icon="modal.icon" ref="modal" blocking>
       {{ modal.text }}
     </sweet-modal>
-    <v-btn
-      color="primary"
-      dark
-      fab
-      bottom
-      right
-      fixed
-      @click="addProductDialog = true"
-    >
-      <v-icon>add</v-icon>
-    </v-btn>
+
     <v-dialog max-width="500px" v-model="addProductDialog" persistent>
       <v-card>
         <v-card-title>
-          <div class="title">Add product</div>
+          <div class="title">{{ dialogText }}</div>
         </v-card-title>
         <v-card-text>
-          <input type="file" ref="productFile" value="upload" />
-          <v-text-field label="Name" v-model="newProduct.name"></v-text-field>
-          <v-textarea
-            label="Description"
-            v-model="newProduct.description"
-          ></v-textarea>
-          <!-- <v-checkbox color="primary" label="This product is on sale" v-model="newProduct.sale.status"></v-checkbox> -->
-          <v-text-field
-            label="Percentage"
-            v-model="newProduct.sale.percentage"
-            v-show="newProduct.sale.status"
-          ></v-text-field>
-          <!-- <v-checkbox color="primary" label="This product is a promotion" v-model="newProduct.promotion"></v-checkbox> -->
+          <v-form ref="form" lazy-validation>
+            Product Thumbnail
+            <br />
+            <input
+              type="file"
+              ref="productFile"
+              value="upload"
+              accept=".png, .jpg, .jpeg"
+              @change="validateFile"
+            />
+            <v-avatar v-if="product.downloadURL" size="100px" tile>
+              <v-img
+                contain
+                :src="product.downloadURL"
+                :alt="product.name"
+                :lazy-src="require('@/assets/no-image.png')"
+              >
+                <v-layout
+                  slot="placeholder"
+                  fill-height
+                  align-center
+                  justify-center
+                  ma-0
+                >
+                  <v-progress-circular
+                    indeterminate
+                    color="grey lighten-5"
+                  ></v-progress-circular>
+                </v-layout>
+              </v-img>
+            </v-avatar>
+            <v-text-field
+              label="Product Code*"
+              :rules="basicRules"
+              v-model="product.code"
+              :disabled="
+                product.code !== '' && dialogText === 'Edit Product Details'
+              "
+            ></v-text-field>
+            <v-text-field
+              label="Name*"
+              :rules="basicRules"
+              v-model="product.name"
+            ></v-text-field>
+            <v-textarea
+              label="Description*"
+              :rules="basicRules"
+              v-model="product.description"
+            ></v-textarea>
+            <!-- <v-text-field
+              label="Color"
+              v-model="product.attributes.color"
+            ></v-text-field> -->
+            <v-text-field
+              label="Price*"
+              :rules="numberRules"
+              v-model="product.price"
+            ></v-text-field>
+            <v-text-field
+              label="Reseller Price*"
+              :rules="numberRules"
+              v-model="product.resellerPrice"
+            ></v-text-field>
+            <v-text-field
+              label="Percentage"
+              v-model="product.sale.percentage"
+              v-show="product.sale.status"
+            ></v-text-field>
+            <v-checkbox
+              v-model="product.isOutofStock"
+              :label="'Out of stock?'"
+            ></v-checkbox>
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
             flat
-            @click.native="addProductDialog = false"
+            @click.prevent="closeProductDialog"
             :disabled="addProductButtonDisabled"
             >Cancel</v-btn
           >
@@ -174,34 +256,93 @@
             class="white--text"
             :loading="addProductButtonDisabled"
             :disabled="addProductButtonDisabled"
-            @click="addProduct"
+            @click="saveProduct"
             >Save</v-btn
           >
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog max-width="400" v-model="uploadImagesDialog" persistent>
+    <v-dialog max-width="800" v-model="uploadImagesDialog" persistent>
       <v-card>
-        <v-card-title>
-          <div class="headline">Upload Photos</div>
+        <v-card-title class="primary white--text headline">
+          <div>Upload Photos</div>
           <v-spacer></v-spacer>
-          <v-btn @click="uploadImagesDialog = false" flat icon>
+          <v-btn color="white" @click="uploadImagesDialog = false" flat icon>
             <v-icon>close</v-icon>
           </v-btn>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
-          <p>*Images will be seen in the carousel</p>
-          <input type="file" ref="file" multiple="multiple" />
+          <p class="text-center font-italic">
+            *Images will be seen in the carousel*
+          </p>
+          <v-layout v-if="!selectedProduct.photos" row my-3>
+            <div class="subheading font-italic grey--text darken-2">
+              *No Product Pictures Yet..*
+            </div>
+          </v-layout>
+
+          <v-layout v-else row wrap align-baseline justify-start mb-3>
+            <v-flex
+              xs4
+              v-for="(image, index) in selectedProduct.photos"
+              :key="index"
+              mt-3
+            >
+              <v-card width="210px">
+                <v-img :src="image" />
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <!-- <v-spacer/> -->
+
+                  <v-btn
+                    small
+                    class="error"
+                    dark
+                    @click="deleteImgVariant(index)"
+                  >
+                    <v-icon>delete_forever</v-icon>
+                    <span>Delete</span>
+                  </v-btn>
+
+                  <!-- <v-btn small class="primary" dark><v-icon>zoom_in</v-icon><span>Enlarge</span></v-btn> -->
+                </v-card-actions>
+              </v-card>
+            </v-flex>
+          </v-layout>
+          <v-divider />
+          <v-layout row align-center justify-center mt-4>
+            <v-flex xs12>
+              <vue-dropzone
+                ref="dropzoneRef"
+                id="dropzone"
+                duplicateCheck
+                :options="dropzoneOptions"
+                @vdropzone-file-added="fileAdded"
+                @vdropzone-removed-file="fileRemoved"
+                @vdropzone-duplicate-file="showDuplicateImage"
+                @vdropzone-error="ErrorInUpload"
+              />
+            </v-flex>
+          </v-layout>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
+            flat
+            color="grey darken-2"
+            @click="
+              uploadImagesDialog = false;
+              uploadLoading = false;
+            "
+            >CANCEL
+          </v-btn>
+          <v-btn
             color="primary"
             :loading="uploadLoading"
-            :disabled="uploadLoading"
-            @click="upload"
+            :disabled="uploadLoading || !images.length"
+            @click.stop="upload"
             >Upload</v-btn
           >
         </v-card-actions>
@@ -212,16 +353,21 @@
 
 <script>
 import mixins from "@/mixins";
+import vue2Dropzone from "vue2-dropzone";
+import "vue2-dropzone/dist/vue2Dropzone.min.css";
 import { DB, STORAGE } from "@/config/firebase";
 import { downScaleImageFromFile } from "@/helpers/helpers";
+import { mapState } from "vuex";
 const productsCollection = DB.collection("products");
 const storageRef = STORAGE.ref("appsell");
 const uuidv4 = require("uuid/v4");
 
 export default {
   props: ["items", "categoryId", "category"],
-  created() {
-    this.loading = true;
+  async created() {
+    //this.loading = true;
+    //await this.$store.dispatch("products/FETCH_PRODUCTS", this.categoryId);
+    //this.items = this.$store.getters["products/GetProductsList"];
   },
   data: () => ({
     pagination: {
@@ -271,7 +417,32 @@ export default {
     statusButtonLoading: false,
     selectedProduct: {},
     uploadImagesDialog: false,
-    uploadLoading: false
+    uploadLoading: false,
+    product: {
+      code: null,
+      name: null,
+      description: null,
+      sale: {
+        status: false,
+        percentage: null
+      },
+      price: null,
+      resellerPrice: null,
+      promotion: false,
+      downloadURL: null,
+      isOutofStock: null,
+      id: null
+    },
+    addProductDialog: false,
+    dialogText: null,
+    addProductButtonDisabled: false,
+    dropzoneOptions: {
+      autoProcessQueue: false,
+      url: "/",
+      acceptedFiles: "image/*",
+      addRemoveLinks: true
+    },
+    images: []
   }),
   methods: {
     toggleAll() {
@@ -291,61 +462,243 @@ export default {
       this.modal.text = text;
       this.$refs.modal.open();
     },
-    async addProduct() {
-      if (
-        !this.newProduct.name ||
-        !this.newProduct.description ||
-        this.$refs.productFile.files.length < 1
-      ) {
-        console.log("some missing");
-        return false;
-      }
-
-      const file = this.$refs.productFile.files[0];
-      const name = this.newProduct.name;
-      const metadata = { contentType: file.type };
+    OpenDialog() {
+      this.dialogText = "Add New Product";
+      this.addProductDialog = true;
+      this.product.name = null;
+      this.product.code = null;
+      this.product.description = null;
+      this.product.price = null;
+      this.product.resellerPrice = null;
+      this.product.downloadURL = null;
+      this.product.name = null;
+      this.product.isOutofStock = null;
+      this.$refs.productFile.files.value = null;
+    },
+    async viewItemDetails(item) {
+      this.dialogText = "Edit Product Details";
+      this.addProductDialog = true;
+      this.product.name = item.name;
+      this.product.code = item.code;
+      this.product.description = item.description;
+      this.product.price = item.price;
+      this.product.resellerPrice = item.resellerPrice;
+      this.product.downloadURL = item.downloadURL;
+      this.product.pictureName = item.pictureName;
+      this.product.id = item.id;
+      this.product.isOutofStock = item.isOutofStock;
+      this.$refs.productFile.files.value = null;
+    },
+    closeProductDialog() {
+      this.$refs.productFile.value = null;
+      this.addProductDialog = false;
+    },
+    async saveProduct() {
       this.addProductButtonDisabled = true;
+      if (!this.$refs.form.validate()) {
+        this.notify("Sorry", "One or more mandatory fields are required");
+        this.addProductButtonDisabled = false;
+        return;
+      }
+      //Adding a New Product
+      if (this.dialogText == "Add New Product") {
+        if (this.$refs.productFile.files.length === 0) {
+          //this.notify("Sorry", "Product image is required.");
+          this.$swal.fire({
+            type: "warning",
+            title: "Sorry",
+            text: "Product image is required."
+          });
+          this.addProductButtonDisabled = false;
+          return;
+        }
 
-      try {
-        const snapshot = await storageRef
-          .child("products/" + name)
-          .put(file, metadata);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        const newProductData = {
+        const exists = await this.$store.dispatch(
+          "products/CheckIfProductExists",
+          {
+            categoryId: this.category.id,
+            code: this.product.code
+          }
+        );
+
+        if (exists) {
+          //this.notify("Sorry", "Product Code is already existing in the database");
+          this.$swal.fire({
+            type: "error",
+            title: "Sorry",
+            text: "Product Code is already existing in the database"
+          });
+          this.addProductButtonDisabled = false;
+          return;
+        } else {
+          this.addProductButtonDisabled = true;
+
+          const newProduct = {
+            active: 1,
+            categoryId: this.categoryId,
+            code: this.product.code,
+            createdAt: Date.now(),
+            description: this.product.description,
+            name: this.product.name,
+            price: this.product.price,
+            resellerPrice: this.product.resellerPrice,
+            //promotion: this.product.promotion,
+            sale: this.product.sale,
+            isOutofStock: this.product.isOutofStock || null
+            //uid: null
+          };
+          console.log(newProduct);
+
+          //try-catch block for saving productData to database
+          try {
+            const productId = await this.$store.dispatch(
+              "products/ADD_PRODUCT",
+              {
+                productData: newProduct
+              }
+            );
+            newProduct.id = productId;
+
+            this.category.totalProducts++;
+
+            await this.$store.dispatch("categories/UPDATE_CATEGORY", {
+              categoryId: this.categoryId,
+              categoryData: this.category
+            });
+          } catch (error) {
+            console.log(error.message);
+            this.$swal.fire({
+              type: "error",
+              title: "Error",
+              text: error.message
+            });
+            //this.notify("error", error.message);
+            return;
+          }
+
+          // try-catch block for uploading product image
+          try {
+            const file = this.$refs.productFile.files[0];
+            const metadata = { contentType: file.type };
+
+            const snapshot = await storageRef
+              .child("products/" + newProduct.id)
+              .put(file, metadata);
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            newProduct.pictureName = newProduct.id;
+            newProduct.downloadURL = downloadURL;
+          } catch (error) {
+            console.log(error);
+            this.addProductButtonDisabled = false;
+            this.addProductDialog = false;
+            //this.notify("error", "An error occurred");
+            this.$swal.fire({
+              type: "error",
+              title: "Error",
+              text: "An error occurred!"
+            });
+          }
+
+          await this.$store.dispatch("products/UPDATE_PRODUCT", {
+            productId: newProduct.id,
+            productData: newProduct
+          });
+
+          //this.items = this.$store.getters["products/GetProductsList"];
+          //this.items.push(productData);
+
+          this.addProductButtonDisabled = false;
+          this.addProductDialog = false;
+          this.$refs.productFile.value = null;
+          //this.notify("success", "Product has been successfully added");
+          this.$swal.fire({
+            type: "success",
+            title: "Success",
+            text: "Product has been successfully added!"
+          });
+        }
+
+        //Edit Product Details
+      } else {
+        this.addProductButtonDisabled = true;
+
+        //try-catch block for saving productData to database
+        const updatedProductData = {
           active: 1,
           categoryId: this.categoryId,
-          createdAt: Date.now(),
-          downloadURL: downloadURL,
-          promotion: this.newProduct.promotion,
-          sale: this.newProduct.sale,
-          name,
-          description: this.newProduct.description,
-          pictureName: name,
-          uid: null
+          code: this.product.code,
+          description: this.product.description,
+          name: this.product.name,
+          price: this.product.price,
+          resellerPrice: this.product.resellerPrice,
+          //promotion: this.product.promotion,
+          sale: this.product.sale,
+          isOutofStock: this.product.isOutofStock || null,
+          //uid: null
+          downloadURL: this.product.downloadURL,
+          pictureName: this.product.pictureName,
+          id: this.product.id
         };
+        console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 
-        const response = await productsCollection.add(newProductData);
+        if (this.$refs.productFile.files.length > 0) {
+          try {
+            storageRef
+              .child("products/" + updatedProductData.id)
+              .delete()
+              .then(() => {
+                console.log("Previous product photo has been deleted");
+              })
+              .catch(error => {
+                console.log(error.message);
+              });
 
-        newProductData.id = response.id;
-        this.items.push(newProductData);
-        this.addProductButtonDisabled = false;
-        this.addProductDialog = false;
+            const file = this.$refs.productFile.files[0];
+            const metadata = { contentType: file.type };
 
-        this.category.totalProducts++;
-        await this.$store.dispatch("categories/UPDATE_CATEGORY_BY_KEY", {
-          categoryId: this.category.id,
-          key: "totalProducts",
-          value: this.category.totalProducts
+            const snapshot = await storageRef
+              .child("products/" + updatedProductData.id)
+              .put(file, metadata);
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            updatedProductData.pictureName = updatedProductData.id;
+            updatedProductData.downloadURL = downloadURL;
+          } catch (error) {
+            console.log(error);
+            this.addProductButtonDisabled = false;
+            this.addProductDialog = false;
+            //this.notify("error", "An error occurred");
+            this.$swal.fire({
+              type: "error",
+              title: "Error",
+              text: "An error occurred."
+            });
+            return;
+          }
+        }
+        //send productData to DB for product update
+        await this.$store.dispatch("products/UPDATE_PRODUCT", {
+          productId: updatedProductData.id,
+          productData: updatedProductData
         });
 
-        this.notify("success", "Product has been successfully added");
-      } catch (error) {
-        console.log(error);
+        //this.items = this.$store.getters["products/GetProductsList"];
+        // const index = this.items.findIndex(item => item.id === productData.id);
+        // this.items[index] = productData;
+        // this.items[index].downloadURL = productData.downloadURL;
+        // this.items[index].pictureName = productData.pictureName;
+        //console.log(this.items);
+
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
-        this.notify("error", "An error occurred");
+        //this.notify("success", "Product has been successfully updated");
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: "Product has been successfully updated."
+        });
       }
     },
+
     async changeStatus(item) {
       let text = "";
       if (item.active === 1) {
@@ -379,9 +732,20 @@ export default {
         const itemIndex = this.items.findIndex(i => i.id === item.id);
         this.items[itemIndex].active = active;
         this.statusButtonLoading = false;
-        this.notify("success", successMessage);
+        //this.notify("success", successMessage);
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: successMessage
+        });
       } catch (error) {
-        this.notify("error", "An error occurred");
+        console.log(error);
+        //this.notify("error", "An error occurred");
+        this.$swal.fire({
+          type: "error",
+          title: "Error",
+          text: "An error occurred"
+        });
       }
     },
 
@@ -391,37 +755,70 @@ export default {
       console.log(product);
     },
 
+    fileAdded(file) {
+      this.images.push(file);
+    },
+
+    fileRemoved(file) {
+      console.log(file);
+      const i = this.images.findIndex(image => image.name === file.name);
+      if (i >= 0) {
+        this.images.splice(i, 1);
+      }
+    },
+
+    showDuplicateImage(file) {
+      console.log("Duplicate image added");
+      this.notify(
+        "warning",
+        `"${file.name}" already exists, please try again.`
+      );
+      this.fileRemoved(file);
+      this.$refs.dropzoneRef.removeFile(file);
+    },
+
+    ErrorInUpload(file) {
+      if (file.accepted === false) {
+        this.notify(
+          "warning",
+          `"${file.name}" is an invalid file. Please upload images only.`
+        );
+      } else
+        this.notify(
+          "warning",
+          "Error was encountered during the upload. Please try again."
+        );
+      console.log(file.status);
+
+      this.$refs.dropzoneRef.removeFile(file);
+    },
+
     async upload() {
-      const files = this.$refs.file.files;
+      //const files = this.$refs.file.files;
+      this.uploadLoading = true;
+      let files = this.images;
       const uploads = [];
 
       const product = this.selectedProduct;
 
-      // Array.from(files).forEach((file) => {
-      // 	uploads.push(
-      // 		downScaleImageFromFile(file, 200)
-      // 		.then((data_url) => {
-      // 			return storageRef.child(`variants/${product.id}/${uuidv4()}`).putString(data_url, 'data_url')
-      // 			.then((snapshot) => {
-      // 				return snapshot.ref.getDownloadURL()
-      // 				.then(downloadURL => downloadURL)
-      // 			})
-      // 		})
-      // 	);
-      // });
-
-      Array.from(files).forEach(file => {
-        uploads.push(
+      for (let i = 0; i < files.length; i++) {
+        let file = files[i];
+        const rescaledImage = await downScaleImageFromFile(file);
+        await uploads.push(
           storageRef
             .child(`variants/${product.id}/${uuidv4()}`)
-            .put(file)
+            .putString(rescaledImage, "data_url")
             .then(snapshot => {
               return snapshot.ref
                 .getDownloadURL()
                 .then(downloadURL => downloadURL);
             })
+            .catch(error => {
+              this.notify("error", error.message);
+              this.uploadLoading = false;
+            })
         );
-      });
+      }
 
       this.uploadLoading = true;
 
@@ -430,29 +827,108 @@ export default {
 
         if (product.hasOwnProperty("photos")) {
           const photos = [...product.photos, ...res];
-          await productsCollection.doc(product.id).update({ photos: photos });
+          product.photos = photos;
+
+          //await productsCollection.doc(product.id).update({ photos: photos });
+          await this.$store.dispatch("products/UPDATE_PRODUCT", {
+            productId: product.id,
+            productData: product
+          });
           console.log("photos", photos);
           this.$emit("itemUpdated", {
             id: product.id,
             photos
           });
-          this.selectedProduct.photos = photos;
+          //this.selectedProduct.photos = photos;
         } else {
-          console.log("res", res);
-          await productsCollection.doc(product.id).update({ photos: res });
-          this.selectedProduct.photos = res;
+          //console.log("res", res);
+          //await productsCollection.doc(product.id).update({ photos: res });
+          product.photos = res;
+          await this.$store.dispatch("products/UPDATE_PRODUCT", {
+            productId: product.id,
+            productData: product
+          });
+          //this.selectedProduct.photos = res;
           this.$emit("itemUpdated", {
             id: product.id,
             photos: res
           });
         }
-        this.notify("success", "Variant images has been successfully uploaded");
-        this.uploadImagesDialog = false;
-      } catch (error) {
-        console.log(error);
-      }
+        //this.notify("success", "Variant images has been successfully uploaded");
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: "Variant images has been successfully uploaded!"
+        });
 
-      this.uploadLoading = false;
+        this.uploadImagesDialog = false;
+        this.uploadLoading = false;
+        this.images = [];
+        this.$refs.dropzoneRef.removeAllFiles(true);
+      } catch (error) {
+        //this.notify("error", error.message);
+        this.$swal.fire({
+          type: "error",
+          title: "Error",
+          text: error.message
+        });
+        console.log(error);
+        this.uploadLoading = false;
+      }
+    },
+
+    async deleteImgVariant(index) {
+      const response = await this.$swal.fire({
+        title: "Are you sure?",
+        text: "Do you want to delete this photo?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if (response.value) {
+        //this.notify("warning", "Deleting Image, please do not close this dialog.");
+        this.$swal.fire({
+          type: "warning",
+          title: "WARNING",
+          text: "Deleting Image, please do not close this dialog."
+        });
+
+        let images = this.selectedProduct.photos;
+        const imgPath = await STORAGE.refFromURL(images[index]);
+        console.log(imgPath);
+        console.log("TO BE DELETE: ", imgPath.name);
+
+        try {
+          await storageRef
+            .child(`variants/${this.selectedProduct.id}/${imgPath.name}`)
+            .delete();
+          images.splice(index, 1);
+          this.selectedProduct.photos = images;
+          //await productsCollection.doc(this.selectedProduct.id).update({ photos: images });
+          await this.$store.dispatch("products/UPDATE_PRODUCT", {
+            productId: this.selectedProduct.id,
+            productData: this.selectedProduct
+          });
+
+          //this.notify("success", "Image has been deleted!");
+          this.$swal.fire({
+            type: "success",
+            title: "Success",
+            text: "Image has been deleted!"
+          });
+        } catch (error) {
+          //this.notify("error", error.message);
+          this.$swal.fire({
+            type: "error",
+            title: "Error",
+            text: error.message
+          });
+          return;
+        }
+      }
     },
 
     view(item) {
@@ -463,6 +939,23 @@ export default {
           data: item
         }
       });
+    },
+
+    validateFile(el) {
+      if (!el.target.value) {
+        return;
+      }
+
+      const path = el.target.value;
+      const idxDot = path.lastIndexOf(".") + 1;
+      const extFile = path.substr(idxDot, path.length).toLowerCase();
+
+      const acceptedFiles = ["jpg", "jpeg", "png"];
+
+      if (!acceptedFiles.includes(extFile)) {
+        this.$refs.categoryFile.value = "";
+        this.notify("error", "Uploaded file is not an image.");
+      }
     }
   },
   watch: {
@@ -482,6 +975,14 @@ export default {
       this.$emit("selected", val);
     }
   },
-  mixins: [mixins]
+  mixins: [mixins],
+  computed: {
+    // ...mapState("products", {
+    //   items: state => state.productsList
+    // })
+  },
+  components: {
+    vueDropzone: vue2Dropzone
+  }
 };
 </script>

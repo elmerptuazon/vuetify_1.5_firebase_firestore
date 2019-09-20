@@ -6,6 +6,7 @@ import { DB } from '@/config/firebase';
 import auth from './modules/auth';
 import companies from './modules/companies';
 import categories from './modules/categories';
+import products from './modules/products';
 import conversations from './modules/conversations';
 import distributors from './modules/distributors';
 import stock_orders from './modules/stock-orders';
@@ -76,6 +77,7 @@ export default new Vuex.Store({
 		auth,
 		companies,
 		categories,
+		products,
 		conversations,
 		distributors,
 		stock_orders,

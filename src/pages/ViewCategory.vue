@@ -10,14 +10,14 @@
 				<!--<v-btn icon class="red white--text" @click="deleteProducts" :disabled="disableActionButtons">
 					<v-icon>delete_forever</v-icon>
 				</v-btn>-->
-				<v-btn icon class="grey darken-2 white--text" @click="archiveProducts" :disabled="disableActionButtons">
+				<!-- <v-btn class="grey darken-2 white--text" @click="archiveProducts" :disabled="disableActionButtons">
 					<v-icon>archive</v-icon>
-				</v-btn>
-				<v-btn icon color="primary" @click.native="showEdit = !showEdit">
+				</v-btn> -->
+				<!-- <v-btn icon color="primary" @click.native="showEdit = !showEdit">
 					<v-icon>{{ showEdit ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
-				</v-btn>
+				</v-btn> -->
 			</v-card-title>
-			<v-slide-y-transition>
+			<!-- <v-slide-y-transition>
 				<div v-show="showEdit">
 					<v-card-text>
 						<div class="text-xs-center mb-3">
@@ -40,7 +40,7 @@
 						<v-btn class="primary white--text" :disabled="saveButtonDisabled" :loading="saveButtonDisabled" @click.native="update">Save</v-btn>
 					</v-card-actions>
 				</div>
-			</v-slide-y-transition>
+			</v-slide-y-transition> -->
 		</v-card>
 		<div class="mt-3"></div>
 		<Products :categoryId="$route.params.id" :items="items" :category="category" ref="productsRef" @selected="toggleActionButtons" @itemUpdated="itemUpdated" />
@@ -55,6 +55,7 @@ import mixins from '@/mixins';
 import {DB, STORAGE} from '@/config/firebase';
 import Products from '@/components/Products';
 import { mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 import { downScaleImageFromFile } from '@/helpers/helpers';
 const categoriesCollection = DB.collection('catalogues');
 const productsCollection = DB.collection('products');
@@ -63,7 +64,7 @@ const storageRef = STORAGE.ref('appsell');
 export default {
 	data: () => ({
 		category: {},
-		items: [],
+		//items: [],
 		loading: false,
 		search: null,
 		showEdit: false,
@@ -75,29 +76,31 @@ export default {
 		saveButtonDisabled: false,
 		disableActionButtons: true
 	}),
-	created () {
+	async created () {
 		this.category = Object.assign({}, this.$route.params.data);
-		this.fetchProducts().then((items) => {
-			this.$refs.productsRef.loading = false;
-			this.items = items;
-		});
+		//console.log("CATEGORY: ", this.category)
+		// this.fetchProducts().then((items) => {
+		// 	this.$refs.productsRef.loading = false;
+		// 	this.items = items;
+		// });
+		await this.$store.dispatch('products/FETCH_PRODUCTS', this.category.id);
 	},
 	methods: {
-		fetchProducts () {
-			return new Promise((resolve) => {
-				productsCollection
-				.where('categoryId', '==', this.$route.params.id)
-				.get()
-				.then((productsSnapshot) => {
-					const items = productsSnapshot.docs.map((doc) => {
-						const data = doc.data();
-						data.id = doc.id;
-						return data;
-					});
-					resolve(items);
-				});
-			});
-		},
+		// fetchProducts () {
+		// 	return new Promise((resolve) => {
+		// 		productsCollection
+		// 		.where('categoryId', '==', this.$route.params.id)
+		// 		.get()
+		// 		.then((productsSnapshot) => {
+		// 			const items = productsSnapshot.docs.map((doc) => {
+		// 				const data = doc.data();
+		// 				data.id = doc.id;
+		// 				return data;
+		// 			});
+		// 			resolve(items);
+		// 		});
+		// 	});
+		// },
 		notify (icon, text, blocking=true) {
 			this.modal.icon = icon;
 			this.modal.text = text;
@@ -282,6 +285,10 @@ export default {
 	computed: {
 		...mapGetters({
 			'roles': 'auth/GET_ROLES'
+		}),
+
+		...mapState("products", {
+			items: state => state.productsList
 		})
 	},
 	mixins: [mixins]
