@@ -34,9 +34,15 @@ const storageRef = STORAGE.ref('appsell');
 export default {
 	data: () => ({
 		category: {},
+		//items: [],
 		loading: false,
 		search: null,
 		showEdit: false,
+		modal: {
+			icon: null,
+			text: null,
+			blocking: false
+		},
 		saveButtonDisabled: false,
 		disableActionButtons: true
 	}),
