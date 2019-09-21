@@ -522,7 +522,6 @@ export default {
         );
 
         if (exists) {
-          //this.notify("Sorry", "Product Code is already existing in the database");
           this.$swal.fire({
             type: "error",
             title: "Sorry",
@@ -572,7 +571,7 @@ export default {
               title: "Error",
               text: error.message
             });
-            //this.notify("error", error.message);
+            
             return;
           }
 
@@ -591,7 +590,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            //this.notify("error", "An error occurred");
+            
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -604,13 +603,10 @@ export default {
             productData: newProduct
           });
 
-          //this.items = this.$store.getters["products/GetProductsList"];
-          //this.items.push(productData);
-
           this.addProductButtonDisabled = false;
           this.addProductDialog = false;
           this.$refs.productFile.value = null;
-          //this.notify("success", "Product has been successfully added");
+          
           this.$swal.fire({
             type: "success",
             title: "Success",
@@ -666,7 +662,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            //this.notify("error", "An error occurred");
+            
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -681,16 +677,9 @@ export default {
           productData: updatedProductData
         });
 
-        //this.items = this.$store.getters["products/GetProductsList"];
-        // const index = this.items.findIndex(item => item.id === productData.id);
-        // this.items[index] = productData;
-        // this.items[index].downloadURL = productData.downloadURL;
-        // this.items[index].pictureName = productData.pictureName;
-        //console.log(this.items);
-
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
-        //this.notify("success", "Product has been successfully updated");
+  
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -903,7 +892,6 @@ export default {
             productData: this.selectedProduct
           });
 
-          
           this.$swal.fire({
             type: "success",
             title: "Success",
