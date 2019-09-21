@@ -2,37 +2,41 @@
   <div>
     <v-card>
       <v-card-title>
-        <v-layout row align-baseline justify-start wrap>
-          <v-flex md2 align-content-end>
-            <div class="headline">Categories</div>
-          </v-flex>
+       <v-layout row align-baseline justify-start wrap>
+					<v-flex md2 align-content-end>
+						<div class="headline">Categories</div>
+					</v-flex>
 
-          <v-flex md6 xs10>
-            <v-text-field
-              append-icon="search"
-              label="Search category..."
-              hide-details
-              v-model="search"
-            ></v-text-field>
-          </v-flex>
+					<v-flex md4 xs10 mr-5>
+						<v-text-field
+						append-icon="search"
+						label="Search category..."
+						hide-details
+						v-model="search"
+						></v-text-field>
+					</v-flex>
 
-          <v-flex
-            md2
-            :class="{
-              'mt-4': $vuetify.breakpoint.smAndDown,
-              'offset-md1': $vuetify.breakpoint.mdAndUp
-            }"
-          >
-            <v-btn
-              dark
-              class="primary white--text"
-              @click="addCategoryDialog = true"
-            >
-              <v-icon class="mr-2">add</v-icon>
-              <span>Add Category</span>
-            </v-btn>
-          </v-flex>
-        </v-layout>
+					<v-flex md2 xs4 mr-5 :class="{'mt-3' : $vuetify.breakpoint.smAndDown}">
+						<v-btn 
+							dark 
+							class="primary white--text" 
+							@click="addCategoryDialog = true" 
+						>
+							<v-icon class="mr-2">add</v-icon>
+							<span>Add Category</span>
+						</v-btn>
+					</v-flex>
+					<v-flex md2 xs4 :class="{'mt-3' : $vuetify.breakpoint.smAndDown}">
+						<v-btn 
+							dark 
+							class="primary white--text" 
+							@click="excelDialog = true" 
+						>
+							<v-icon class="mr-2">add</v-icon>
+							<span>UPLOAD EXCEL FILE</span>
+						</v-btn>
+					</v-flex>
+				</v-layout>
       </v-card-title>
       <v-data-table
         v-model="selected"
