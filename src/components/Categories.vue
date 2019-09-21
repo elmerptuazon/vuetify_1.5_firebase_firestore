@@ -311,6 +311,7 @@
                 ref="excelFile"
                 value="upload"
                 accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                @change="validateExcelFile"
               />
             </div>
             <div class="mb-1 caption">
@@ -715,7 +716,29 @@ export default {
       } catch (error) {
         console.log(error);
       }
-    }
+    },
+    validateExcelFile(el) {
+      if (!el.target.value) {
+        return;
+      }
+
+      const path = el.target.value;
+      const idxDot = path.lastIndexOf(".") + 1;
+      const extFile = path.substr(idxDot, path.length).toLowerCase();
+
+      const acceptedFiles = ["xlsx", "xls", "_xls", "_xlsx"];
+
+      if (!acceptedFiles.includes(extFile)) {
+        this.$refs.excelFile.value = "";
+        this.$swal.fire({
+          type: "error",
+          title: "Error",
+          text: "The uploaded file is not an excel file. Please try again."
+        });
+        return;
+        //this.notify('error', 'Uploaded file is not an image.');
+      }
+    },
   },
   watch: {
     addCategoryDialog(val) {
