@@ -781,27 +781,36 @@ export default {
 				for (let i = 0; i != workbook.SheetNames.length; i++) {
 					let worksheet = workbook.Sheets[workbook.SheetNames[i]];
 					let categoryName = workbook.SheetNames[i];
+          
+          //check if current category on excel is existing in the db
+          const index = this.items.findIndex(item => item.name === categoryName);
+          let categoryData = {};
 
-					let newCategory = {
-						name: categoryName,
-						created: Date.now(),
-						active: 1,
-						position: i + 1,
-						totalProducts: 0,
-						position: this.items.length + 1,
-						pictureName: '',
-						downloadURL: '',
-					};
-					
-					const uploadedCategory = await this.$store.dispatch("categories/ADD_CATEGORY", {
-            categoryData: newCategory
-          });
+          if(index == -1) {
+            categoryData = {
+              name: categoryName,
+              created: Date.now(),
+              active: 1,
+              totalProducts: 0,
+              position: this.items.length + 1,
+              pictureName: '',
+              downloadURL: '',
+            };
+            
+            const uploadedCategory = await this.$store.dispatch("categories/ADD_CATEGORY", {
+              categoryData: categoryData
+            });
 
-					newCategory.id = uploadedCategory.id;
-
+            categoryData.id = uploadedCategory.id;
+          }
+          else {
+            categoryData = this.items[index];
+            console.log("EXISTING CATEGORY: ", categoryData); 
+          }
+          
 					let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
 
-					productList = productList.map(p => {
+					productList = await productList.map(p => {
 						return {
 							active: 1,
 							code: p.Code,
@@ -823,25 +832,43 @@ export default {
 							color: p.color ? p.color : null,
 							isOutofStock: false,
 							createdAt: Date.now(),
-							categoryId: uploadedCategory.id,
-							category: newCategory.name,
+							categoryId: categoryData.id,
+							category: categoryData.name,
 						};
 					});
 					//console.log(`Current Category: ${currentCategory.categoryName} & Product List: ${productList}`);
-					const totalProducts = productList.length;
-					newCategory.totalProducts = totalProducts;
-					
-					await this.$store.dispatch("categories/UPDATE_CATEGORY", {
-            categoryId: newCategory.id,
-            categoryData: newCategory
-          });
-
+          
+          let totalProducts = 0;
 					for(let i = 0; i < productList.length; i++) {
-						const product = productList[i];
-						await this.$store.dispatch("products/ADD_PRODUCT", {
-              productData: product
-            });
-					}
+            const product = productList[i];
+            const exist = await this.$store.dispatch("products/CheckIfProductExists", product);
+            
+            if(exist) {
+              const snapshot = await productsCollection
+                .where("code", "==", product.code)
+                .limit(1)
+                .get()
+              const productId = snapshot.docs[0].id;
+              console.log("EXISTING PRODUCT ID: ", productId);
+              await this.$store.dispatch("products/UPDATE_PRODUCT", {
+                productId: productId,
+                productData: product
+              });
+            }
+            else {
+              await this.$store.dispatch("products/ADD_PRODUCT", {
+                productData: product
+              });
+              totalProducts += 1;
+            }
+          }
+          
+          categoryData.totalProducts += totalProducts;
+					
+          await this.$store.dispatch("categories/UPDATE_CATEGORY", {
+            categoryId: categoryData.id,
+            categoryData: categoryData
+          });
 
 					//add new category to the list
 					//this.items.push(categoryData);
