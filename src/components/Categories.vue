@@ -298,6 +298,47 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog max-width="500px" v-model="excelDialog" persistent>
+        <v-card>
+          <v-card-title>
+            <div class="title">Adding Categories and Products through Excel File</div>
+          </v-card-title>
+          <v-card-text>
+            <div class="mb-1">
+              <input
+                type="file"
+                ref="excelFile"
+                value="upload"
+                accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+              />
+            </div>
+            <div class="mb-1 caption">
+              <v-icon small>info</v-icon>
+              <span class="font-italic"
+                >the file upload only accepts a specified
+                <a
+                  class="font-weight-bold"
+                  :href="excelDownloadURL"
+                  download="Category Excel Template"
+                  >excel template.</a
+                ></span
+              >
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn flat @click.native="excelDialog = false">CANCEL</v-btn>
+            <v-btn
+              color="primary"
+              @click.native="uploadExcelFile"
+              :disabled="excelButtonLoading"
+              :loading="excelButtonLoading"
+              >UPLOAD FILE
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
   </div>
 </template>
 
@@ -377,7 +418,10 @@ export default {
     selectedCategory: {},
     disableDeleteButton: true,
     editCategoryDialog: false,
-    categoryButtonDisabled: false
+    categoryButtonDisabled: false,
+    excelDialog: false,
+		excelButtonLoading: false,
+		excelDownloadURL: "https://firebasestorage.googleapis.com/v0/b/barapido-dev.appspot.com/o/appsell%2FCatalogueExcelTemplate.zip?alt=media&token=59634636-03e9-4b21-8448-29e1a3f7563a",
   }),
   methods: {
     toggleAll() {
