@@ -344,6 +344,8 @@
 </template>
 
 <script>
+import axios from "axios";
+import XLSX from "xlsx";
 import { mapState } from "vuex";
 import mixins from "@/mixins";
 import { DB, STORAGE } from "@/config/firebase";
@@ -739,6 +741,124 @@ export default {
         //this.notify('error', 'Uploaded file is not an image.');
       }
     },
+    async uploadExcelFile() {
+			this.excelButtonLoading = true;
+			if(!this.$refs.excelFile.files[0]) {
+				this.$swal.fire({type: "warning", title: "Choose a file first."});
+				this.excelButtonLoading = false;
+				return;
+			}
+
+			const answer = await this.$swal.fire({
+				title: "Are you sure?",
+				type: "warning",
+				showCancelButton: true,
+				confirmButtonText: "Yes",
+				cancelButtonText: "No",
+				showCloseButton: true
+			});
+
+			if (!answer.value) {
+				this.excelButtonLoading = false;
+				return;
+			} else {
+				const file = this.$refs.excelFile.files[0];
+				const objectURL = window.URL.createObjectURL(file);
+				const promise = await axios.get(objectURL, {
+					responseType: "arraybuffer"
+				});
+				
+				//Process Returned Reponse from Axios
+				const data = new Uint8Array(promise.data);
+				const arr = new Array();
+				for (let i = 0; i != data.length; ++i) {
+					arr[i] = String.fromCharCode(data[i]);
+				}
+
+				const workbook = XLSX.read(arr.join(""), { type: "binary" });
+
+				//Cycle through each category on the excel file
+				for (let i = 0; i != workbook.SheetNames.length; i++) {
+					let worksheet = workbook.Sheets[workbook.SheetNames[i]];
+					let categoryName = workbook.SheetNames[i];
+
+					let newCategory = {
+						name: categoryName,
+						created: Date.now(),
+						active: 1,
+						position: i + 1,
+						totalProducts: 0,
+						position: this.items.length + 1,
+						pictureName: '',
+						downloadURL: '',
+					};
+					
+					const uploadedCategory = await this.$store.dispatch("categories/ADD_CATEGORY", {
+            categoryData: newCategory
+          });
+
+					newCategory.id = uploadedCategory.id;
+
+					let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+
+					productList = productList.map(p => {
+						return {
+							active: 1,
+							code: p.Code,
+							name: p.Name,
+							price: p.Price,
+							resellerPrice: p.ResellerPrice,
+							description: p.Description,
+							sale: p.Sale
+								? {
+									status: true,
+									percentage: p.Sale
+								}
+								: {
+									status: false,
+									percentage: null
+								},
+							discount: p.Discount ? p.Discount : null,
+							size: p.Size ? p.Size : null,
+							color: p.color ? p.color : null,
+							isOutofStock: false,
+							createdAt: Date.now(),
+							categoryId: uploadedCategory.id,
+							category: newCategory.name,
+						};
+					});
+					//console.log(`Current Category: ${currentCategory.categoryName} & Product List: ${productList}`);
+					const totalProducts = productList.length;
+					newCategory.totalProducts = totalProducts;
+					
+					await this.$store.dispatch("categories/UPDATE_CATEGORY", {
+            categoryId: newCategory.id,
+            categoryData: newCategory
+          });
+
+					for(let i = 0; i < productList.length; i++) {
+						const product = productList[i];
+						await this.$store.dispatch("products/ADD_PRODUCT", {
+              productData: product
+            });
+					}
+
+					//add new category to the list
+					//this.items.push(categoryData);
+				}
+
+				this.excelButtonLoading = false;
+				this.excelDialog = false;
+
+				this.$swal.fire({
+					type: "info",
+					title: "Success",
+					text: "The Category and its Products has been uploaded successfully."
+				});
+
+				this.$refs.excelFile.value = null;
+			}
+		}
   },
   watch: {
     addCategoryDialog(val) {
