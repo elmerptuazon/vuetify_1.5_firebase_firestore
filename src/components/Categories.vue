@@ -2,41 +2,30 @@
   <div>
     <v-card>
       <v-card-title>
-       <v-layout row align-baseline justify-start wrap>
-					<v-flex md2 align-content-end>
-						<div class="headline">Categories</div>
-					</v-flex>
+        <div class="headline">Categories</div>
 
-					<v-flex md4 xs10 mr-5>
-						<v-text-field
-						append-icon="search"
-						label="Search category..."
-						hide-details
-						v-model="search"
-						></v-text-field>
-					</v-flex>
+        <v-spacer></v-spacer>
 
-					<v-flex md2 xs4 mr-5 :class="{'mt-3' : $vuetify.breakpoint.smAndDown}">
-						<v-btn 
-							dark 
-							class="primary white--text" 
-							@click="addCategoryDialog = true" 
-						>
-							<v-icon class="mr-2">add</v-icon>
-							<span>Add Category</span>
-						</v-btn>
-					</v-flex>
-					<v-flex md2 xs4 :class="{'mt-3' : $vuetify.breakpoint.smAndDown}">
-						<v-btn 
-							dark 
-							class="primary white--text" 
-							@click="excelDialog = true" 
-						>
-							<v-icon class="mr-2">add</v-icon>
-							<span>UPLOAD EXCEL FILE</span>
-						</v-btn>
-					</v-flex>
-				</v-layout>
+        <v-text-field
+          append-icon="search"
+          label="Search category..."
+          hide-details
+          v-model="search"
+        ></v-text-field>
+
+        <v-btn
+          dark
+          class="primary white--text"
+          @click="addCategoryDialog = true"
+        >
+          <v-icon class="mr-2">add</v-icon>
+          <span>Add Category</span>
+        </v-btn>
+
+        <v-btn dark class="primary white--text" @click="excelDialog = true">
+          <v-icon class="mr-2">add</v-icon>
+          <span>UPLOAD EXCEL FILE</span>
+        </v-btn>
       </v-card-title>
       <v-data-table
         v-model="selected"
@@ -300,46 +289,48 @@
     </v-dialog>
 
     <v-dialog max-width="500px" v-model="excelDialog" persistent>
-        <v-card>
-          <v-card-title>
-            <div class="title">Adding Categories and Products through Excel File</div>
-          </v-card-title>
-          <v-card-text>
-            <div class="mb-1">
-              <input
-                type="file"
-                ref="excelFile"
-                value="upload"
-                accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                @change="validateExcelFile"
-              />
-            </div>
-            <div class="mb-1 caption">
-              <v-icon small>info</v-icon>
-              <span class="font-italic"
-                >the file upload only accepts a specified
-                <a
-                  class="font-weight-bold"
-                  :href="excelDownloadURL"
-                  download="Category Excel Template"
-                  >excel template.</a
-                ></span
-              >
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn flat @click.native="excelDialog = false">CANCEL</v-btn>
-            <v-btn
-              color="primary"
-              @click.native="uploadExcelFile"
-              :disabled="excelButtonLoading"
-              :loading="excelButtonLoading"
-              >UPLOAD FILE
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <v-card>
+        <v-card-title>
+          <div class="title">
+            Adding Categories and Products through Excel File
+          </div>
+        </v-card-title>
+        <v-card-text>
+          <div class="mb-1">
+            <input
+              type="file"
+              ref="excelFile"
+              value="upload"
+              accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+              @change="validateExcelFile"
+            />
+          </div>
+          <div class="mb-1 caption">
+            <v-icon small>info</v-icon>
+            <span class="font-italic"
+              >the file upload only accepts a specified
+              <a
+                class="font-weight-bold"
+                :href="excelDownloadURL"
+                download="Category Excel Template"
+                >excel template.</a
+              ></span
+            >
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn flat @click.native="excelDialog = false">CANCEL</v-btn>
+          <v-btn
+            color="primary"
+            @click.native="uploadExcelFile"
+            :disabled="excelButtonLoading"
+            :loading="excelButtonLoading"
+            >UPLOAD FILE
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -423,8 +414,9 @@ export default {
     editCategoryDialog: false,
     categoryButtonDisabled: false,
     excelDialog: false,
-		excelButtonLoading: false,
-		excelDownloadURL: "https://firebasestorage.googleapis.com/v0/b/barapido-dev.appspot.com/o/appsell%2FCatalogueExcelTemplate.zip?alt=media&token=59634636-03e9-4b21-8448-29e1a3f7563a",
+    excelButtonLoading: false,
+    excelDownloadURL:
+      "https://firebasestorage.googleapis.com/v0/b/barapido-dev.appspot.com/o/appsell%2FCatalogueExcelTemplate.zip?alt=media&token=59634636-03e9-4b21-8448-29e1a3f7563a"
   }),
   methods: {
     toggleAll() {
@@ -457,7 +449,6 @@ export default {
           title: "Error",
           text: "The uploaded file is not an image file. Please try again."
         });
-        
       }
     },
     async addCategory() {
@@ -475,7 +466,6 @@ export default {
       );
 
       if (index !== -1) {
-        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -485,7 +475,7 @@ export default {
       }
 
       const file = this.$refs.categoryFile.files[0];
-     
+
       const metadata = { contentType: file.type };
       this.addCategoryButtonDisabled = true;
 
@@ -517,7 +507,6 @@ export default {
           categoryData: newCategoryData
         });
 
-      
         this.addCategoryButtonDisabled = false;
         this.addCategoryDialog = false;
 
@@ -531,7 +520,7 @@ export default {
         console.log(error);
         this.addCategoryButtonDisabled = false;
         this.addCategoryDialog = false;
-        
+
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -552,7 +541,6 @@ export default {
     },
     async editCategory() {
       if (!this.category.name) {
-        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -582,7 +570,6 @@ export default {
           this.category.downloadURL = downloadURL;
         }
 
-        
         await this.$store.dispatch("categories/UPDATE_CATEGORY", {
           categoryId: this.category.id,
           categoryData: this.category
@@ -591,14 +578,12 @@ export default {
         this.categoryButtonDisabled = false;
         this.editCategoryDialog = false;
 
-       
         this.$swal.fire({
           type: "success",
           title: "Success",
           text: "Category has been successfully updated!"
         });
       } catch (error) {
-        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -636,7 +621,7 @@ export default {
               const itemIndex = this.items.findIndex(i => i.id === item.id);
               this.items[itemIndex].active = active;
               this.statusButtonLoading = false;
-              
+
               this.$swal.fire({
                 type: "success",
                 title: "Success",
@@ -697,7 +682,6 @@ export default {
           this.items[index].position = selectedCategoryClone.position;
         }
 
-        
         this.$swal.fire({
           type: "success",
           title: "success",
@@ -727,151 +711,156 @@ export default {
           text: "The uploaded file is not an excel file. Please try again."
         });
         return;
-        
       }
     },
     async uploadExcelFile() {
-			this.excelButtonLoading = true;
-			if(!this.$refs.excelFile.files[0]) {
-				this.$swal.fire({type: "warning", title: "Choose a file first."});
-				this.excelButtonLoading = false;
-				return;
-			}
+      this.excelButtonLoading = true;
+      if (!this.$refs.excelFile.files[0]) {
+        this.$swal.fire({ type: "warning", title: "Choose a file first." });
+        this.excelButtonLoading = false;
+        return;
+      }
 
-			const answer = await this.$swal.fire({
-				title: "Are you sure?",
-				type: "warning",
-				showCancelButton: true,
-				confirmButtonText: "Yes",
-				cancelButtonText: "No",
-				showCloseButton: true
-			});
+      const answer = await this.$swal.fire({
+        title: "Are you sure?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
 
-			if (!answer.value) {
-				this.excelButtonLoading = false;
-				return;
-			} else {
-				const file = this.$refs.excelFile.files[0];
-				const objectURL = window.URL.createObjectURL(file);
-				const promise = await axios.get(objectURL, {
-					responseType: "arraybuffer"
-				});
-				
-				//Process Returned Reponse from Axios
-				const data = new Uint8Array(promise.data);
-				const arr = new Array();
-				for (let i = 0; i != data.length; ++i) {
-					arr[i] = String.fromCharCode(data[i]);
-				}
+      if (!answer.value) {
+        this.excelButtonLoading = false;
+        return;
+      } else {
+        const file = this.$refs.excelFile.files[0];
+        const objectURL = window.URL.createObjectURL(file);
+        const promise = await axios.get(objectURL, {
+          responseType: "arraybuffer"
+        });
 
-				const workbook = XLSX.read(arr.join(""), { type: "binary" });
+        //Process Returned Reponse from Axios
+        const data = new Uint8Array(promise.data);
+        const arr = new Array();
+        for (let i = 0; i != data.length; ++i) {
+          arr[i] = String.fromCharCode(data[i]);
+        }
 
-				//Cycle through each category on the excel file
-				for (let i = 0; i != workbook.SheetNames.length; i++) {
-					let worksheet = workbook.Sheets[workbook.SheetNames[i]];
-					let categoryName = workbook.SheetNames[i];
-          
+        const workbook = XLSX.read(arr.join(""), { type: "binary" });
+
+        //Cycle through each category on the excel file
+        for (let i = 0; i != workbook.SheetNames.length; i++) {
+          let worksheet = workbook.Sheets[workbook.SheetNames[i]];
+          let categoryName = workbook.SheetNames[i];
+
           //check if current category on excel is existing in the db
-          const index = this.items.findIndex(item => item.name === categoryName);
+          const index = this.items.findIndex(
+            item => item.name === categoryName
+          );
           let categoryData = {};
 
-          if(index == -1) {
+          if (index == -1) {
             categoryData = {
               name: categoryName,
               created: Date.now(),
               active: 1,
               totalProducts: 0,
               position: this.items.length + 1,
-              pictureName: '',
-              downloadURL: '',
+              pictureName: "",
+              downloadURL: ""
             };
-            
-            const uploadedCategory = await this.$store.dispatch("categories/ADD_CATEGORY", {
-              categoryData: categoryData
-            });
+
+            const uploadedCategory = await this.$store.dispatch(
+              "categories/ADD_CATEGORY",
+              {
+                categoryData: categoryData
+              }
+            );
 
             categoryData.id = uploadedCategory.id;
-          }
-          else {
+          } else {
             categoryData = this.items[index];
-            console.log("EXISTING CATEGORY: ", categoryData); 
+            console.log("EXISTING CATEGORY: ", categoryData);
           }
-          
-					let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
 
-					productList = await productList.map(p => {
-						return {
-							active: 1,
-							code: p.Code,
-							name: p.Name,
-							price: p.Price,
-							resellerPrice: p.ResellerPrice,
-							description: p.Description,
-							sale: p.Sale
-								? {
-									status: true,
-									percentage: p.Sale
-								}
-								: {
-									status: false,
-									percentage: null
-								},
-							discount: p.Discount ? p.Discount : null,
-							size: p.Size ? p.Size : null,
-							color: p.color ? p.color : null,
-							isOutofStock: false,
-							createdAt: Date.now(),
-							categoryId: categoryData.id,
-							category: categoryData.name,
-						};
-					});
-					//console.log(`Current Category: ${currentCategory.categoryName} & Product List: ${productList}`);
-          
+          let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+
+          productList = await productList.map(p => {
+            return {
+              active: 1,
+              code: p.Code,
+              name: p.Name,
+              price: p.Price,
+              resellerPrice: p.ResellerPrice,
+              description: p.Description,
+              sale: p.Sale
+                ? {
+                    status: true,
+                    percentage: p.Sale
+                  }
+                : {
+                    status: false,
+                    percentage: null
+                  },
+              discount: p.Discount ? p.Discount : null,
+              size: p.Size ? p.Size : null,
+              color: p.color ? p.color : null,
+              isOutofStock: false,
+              createdAt: Date.now(),
+              categoryId: categoryData.id,
+              category: categoryData.name
+            };
+          });
+          //console.log(`Current Category: ${currentCategory.categoryName} & Product List: ${productList}`);
+
           let totalProducts = 0;
-					for(let i = 0; i < productList.length; i++) {
+          for (let i = 0; i < productList.length; i++) {
             const product = productList[i];
-            const exist = await this.$store.dispatch("products/CheckIfProductExists", product);
-            
-            if(exist) {
+            const exist = await this.$store.dispatch(
+              "products/CheckIfProductExists",
+              product
+            );
+
+            if (exist) {
               const snapshot = await productsCollection
                 .where("code", "==", product.code)
                 .limit(1)
-                .get()
+                .get();
               const productId = snapshot.docs[0].id;
               console.log("EXISTING PRODUCT ID: ", productId);
               await this.$store.dispatch("products/UPDATE_PRODUCT", {
                 productId: productId,
                 productData: product
               });
-            }
-            else {
+            } else {
               await this.$store.dispatch("products/ADD_PRODUCT", {
                 productData: product
               });
               totalProducts += 1;
             }
           }
-          
+
           categoryData.totalProducts += totalProducts;
-					
+
           await this.$store.dispatch("categories/UPDATE_CATEGORY", {
             categoryId: categoryData.id,
             categoryData: categoryData
           });
-				}
+        }
 
-				this.excelButtonLoading = false;
-				this.excelDialog = false;
+        this.excelButtonLoading = false;
+        this.excelDialog = false;
 
-				this.$swal.fire({
-					type: "info",
-					title: "Success",
-					text: "The Category and its Products has been uploaded successfully."
-				});
+        this.$swal.fire({
+          type: "info",
+          title: "Success",
+          text: "The Category and its Products has been uploaded successfully."
+        });
 
-				this.$refs.excelFile.value = null;
-			}
-		}
+        this.$refs.excelFile.value = null;
+      }
+    }
   },
   watch: {
     addCategoryDialog(val) {
