@@ -522,7 +522,6 @@ export default {
         );
 
         if (exists) {
-          //this.notify("Sorry", "Product Code is already existing in the database");
           this.$swal.fire({
             type: "error",
             title: "Sorry",
@@ -572,7 +571,7 @@ export default {
               title: "Error",
               text: error.message
             });
-            //this.notify("error", error.message);
+            
             return;
           }
 
@@ -591,7 +590,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            //this.notify("error", "An error occurred");
+            
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -604,13 +603,10 @@ export default {
             productData: newProduct
           });
 
-          //this.items = this.$store.getters["products/GetProductsList"];
-          //this.items.push(productData);
-
           this.addProductButtonDisabled = false;
           this.addProductDialog = false;
           this.$refs.productFile.value = null;
-          //this.notify("success", "Product has been successfully added");
+          
           this.$swal.fire({
             type: "success",
             title: "Success",
@@ -666,7 +662,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            //this.notify("error", "An error occurred");
+            
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -681,16 +677,9 @@ export default {
           productData: updatedProductData
         });
 
-        //this.items = this.$store.getters["products/GetProductsList"];
-        // const index = this.items.findIndex(item => item.id === productData.id);
-        // this.items[index] = productData;
-        // this.items[index].downloadURL = productData.downloadURL;
-        // this.items[index].pictureName = productData.pictureName;
-        //console.log(this.items);
-
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
-        //this.notify("success", "Product has been successfully updated");
+  
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -834,27 +823,17 @@ export default {
             productId: product.id,
             productData: product
           });
-          console.log("photos", photos);
-          this.$emit("itemUpdated", {
-            id: product.id,
-            photos
-          });
-          //this.selectedProduct.photos = photos;
+          
         } else {
-          //console.log("res", res);
-          //await productsCollection.doc(product.id).update({ photos: res });
+    
           product.photos = res;
           await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: product.id,
             productData: product
           });
-          //this.selectedProduct.photos = res;
-          this.$emit("itemUpdated", {
-            id: product.id,
-            photos: res
-          });
+          
         }
-        //this.notify("success", "Variant images has been successfully uploaded");
+        
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -866,7 +845,7 @@ export default {
         this.images = [];
         this.$refs.dropzoneRef.removeAllFiles(true);
       } catch (error) {
-        //this.notify("error", error.message);
+        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -889,7 +868,7 @@ export default {
       });
 
       if (response.value) {
-        //this.notify("warning", "Deleting Image, please do not close this dialog.");
+        
         this.$swal.fire({
           type: "warning",
           title: "WARNING",
@@ -907,20 +886,19 @@ export default {
             .delete();
           images.splice(index, 1);
           this.selectedProduct.photos = images;
-          //await productsCollection.doc(this.selectedProduct.id).update({ photos: images });
+          
           await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: this.selectedProduct.id,
             productData: this.selectedProduct
           });
 
-          //this.notify("success", "Image has been deleted!");
           this.$swal.fire({
             type: "success",
             title: "Success",
             text: "Image has been deleted!"
           });
         } catch (error) {
-          //this.notify("error", error.message);
+          
           this.$swal.fire({
             type: "error",
             title: "Error",

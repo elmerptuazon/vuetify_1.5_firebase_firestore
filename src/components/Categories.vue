@@ -439,11 +439,6 @@ export default {
         this.pagination.descending = false;
       }
     },
-    notify(icon, text) {
-      this.modal.icon = icon;
-      this.modal.text = text;
-      this.$refs.modal.open();
-    },
     validateFile(el) {
       if (!el.target.value) {
         return;
@@ -462,7 +457,7 @@ export default {
           title: "Error",
           text: "The uploaded file is not an image file. Please try again."
         });
-        //this.notify('error', 'Uploaded file is not an image.');
+        
       }
     },
     async addCategory() {
@@ -480,7 +475,7 @@ export default {
       );
 
       if (index !== -1) {
-        //this.notify('error', 'Category name already exists.');
+        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -490,7 +485,7 @@ export default {
       }
 
       const file = this.$refs.categoryFile.files[0];
-      //const name = this.newCategory.name.trim();
+     
       const metadata = { contentType: file.type };
       this.addCategoryButtonDisabled = true;
 
@@ -522,12 +517,10 @@ export default {
           categoryData: newCategoryData
         });
 
-        //this.items.push(newCategoryData);
-        //console.log('new data', newCategoryData)
+      
         this.addCategoryButtonDisabled = false;
         this.addCategoryDialog = false;
 
-        //this.notify('success', 'Category has been successfully added');
         this.$swal.fire({
           type: "success",
           title: "Success!",
@@ -538,7 +531,7 @@ export default {
         console.log(error);
         this.addCategoryButtonDisabled = false;
         this.addCategoryDialog = false;
-        //this.notify('error', 'An error occurred');
+        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -559,7 +552,7 @@ export default {
     },
     async editCategory() {
       if (!this.category.name) {
-        //this.notify("error", "Category name is Required.");
+        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -589,27 +582,23 @@ export default {
           this.category.downloadURL = downloadURL;
         }
 
-        //await categoriesCollection.doc(this.category.id).update(updatedCategory);
+        
         await this.$store.dispatch("categories/UPDATE_CATEGORY", {
           categoryId: this.category.id,
           categoryData: this.category
         });
 
-        // const index = this.items.findIndex(i => i.id === this.category.id);
-        // this.items[index].name = newData.name;
-        // this.items[index].downloadURL = newData.downloadURL;
-
         this.categoryButtonDisabled = false;
         this.editCategoryDialog = false;
 
-        //this.notify("success", "Category has been successfully updated");
+       
         this.$swal.fire({
           type: "success",
           title: "Success",
           text: "Category has been successfully updated!"
         });
       } catch (error) {
-        //this.notify("error", "An error occurred");
+        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -647,7 +636,7 @@ export default {
               const itemIndex = this.items.findIndex(i => i.id === item.id);
               this.items[itemIndex].active = active;
               this.statusButtonLoading = false;
-              //this.notify('success', text);
+              
               this.$swal.fire({
                 type: "success",
                 title: "Success",
@@ -708,7 +697,7 @@ export default {
           this.items[index].position = selectedCategoryClone.position;
         }
 
-        //this.notify('success', 'Display position updated');
+        
         this.$swal.fire({
           type: "success",
           title: "success",
@@ -738,7 +727,7 @@ export default {
           text: "The uploaded file is not an excel file. Please try again."
         });
         return;
-        //this.notify('error', 'Uploaded file is not an image.');
+        
       }
     },
     async uploadExcelFile() {
@@ -869,9 +858,6 @@ export default {
             categoryId: categoryData.id,
             categoryData: categoryData
           });
-
-					//add new category to the list
-					//this.items.push(categoryData);
 				}
 
 				this.excelButtonLoading = false;

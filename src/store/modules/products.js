@@ -96,13 +96,6 @@ const products = {
                 console.log("RESPONSE ID: " + response.id);
                 payload.productData.id = response.id;
                 commit('AddProductsList', payload.productData);
-                // await dispatch('UpdateProduct', 
-                //     {
-                //         categoryId: payload.categoryId,
-                //         productId: payload.productData.id,
-                //         productData: payload.productData
-                //     }
-                // );
                 Promise.resolve();
                 return response.id;
             } catch (error) {
@@ -128,36 +121,13 @@ const products = {
                 .limit(1)
                 .get();
                 
-                //if there is no returned doc, it means theres no product  
-                //that exist as same as code being checked
+                //if there is no returned doc, it means there's no product  
+                //that exist as same as the code being checked
                 if(snapshot.empty) return false;
                 else return true; 
-                
-                // querySnapshot.docs.forEach(product => {
-                //     console.log(product);
-                //     if (exists == false) {
-                //         promises.push(DB.collection('products')
-                //             .where("code", "==", payload.code)
-                //             .limit(1)
-                //             .get()
-                //             .then((productquerySnapshot) => {
-                //                 if (!productquerySnapshot.empty) {
-                //                     exists = true;
-                //                 }
-                //             }
-                //             )
-                //         )
-                //     }
-
-                // })
-
-                // console.log(promises);
-                // await Promise.all(promises);
-
             } catch (error) {
                 throw error;
             }
-           
         },
         async UPDATE_PRODUCT_BY_KEY({ commit, dispatch }, payload) {
             try {
@@ -167,7 +137,6 @@ const products = {
                 throw error;
             }
         }
-        
     }
 }
 
