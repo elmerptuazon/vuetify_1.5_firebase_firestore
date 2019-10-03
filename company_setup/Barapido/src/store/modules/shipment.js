@@ -22,6 +22,16 @@ const shipment = {
         ClearShipmentList(state, payload) {
             state.shipmentList = [];
         },
+        UpdateShipment(state, payload) {
+            console.log(state.shipmentList)
+            let shipmentIndex = state.shipmentList.findIndex(shipment => { return shipment.id == payload.id })
+            console.log(shipmentIndex);
+            Object.keys(payload.updatedDetails).forEach((key) => {
+                state.shipmentList[shipmentIndex][key] = payload.updatedDetails[key];
+            });
+            // key: the name of the object key
+            // index: the ordinal position of the key within the object 
+        }
     },
     actions: {
         async SubmitShipment({ commit }, payload) {
@@ -42,7 +52,9 @@ const shipment = {
                 console.log(shipmentSnapshot)
                 if (!shipmentSnapshot.empty) {
                     const shipmentList = shipmentSnapshot.docs.map((shipment) => {
-                        return shipment.data();
+                        let shipmentDetails = shipment.data();
+                        shipmentDetails.id = shipment.id;
+                        return shipmentDetails;
                     })
                     commit('SetShipments', shipmentList);
                 }
@@ -75,7 +87,17 @@ const shipment = {
                 throw error;
             }
 
-        }
+        },
+        async UpdateShipment({ commit }, payload) {
+            try {
+                console.log(payload);
+                await DB.collection('shipment').doc(payload.id).update(payload.updatedDetails);
+                commit('UpdateShipment', payload)
+
+            } catch (error) {
+                throw error;
+            }
+        },
 
     }
 }
