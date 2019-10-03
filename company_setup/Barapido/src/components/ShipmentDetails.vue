@@ -9,7 +9,15 @@
         <v-card class="mt-2" color="white">
           <v-card-title class="title">
             Shipment Tracking Number: {{ shipment.trackingNumber }}
+            <v-spacer></v-spacer>
+            <v-btn
+              color="success"
+              v-if="shipment.status.toLowerCase() === 'pending'"
+              @click="UpdateShipmentStatus(shipment)"
+              >This shipment has been received by the Customer</v-btn
+            >
           </v-card-title>
+
           <v-card-text>
             <v-layout align-center justify-space-around row wrap>
               <v-flex xs12 md4>
@@ -135,10 +143,29 @@ export default {
     this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
   },
   methods: {
-    async AddShipmentDetails() {
-      this.shipmentDetails.push(this.selectedItem);
-
-      console.log(this.shipmentDetails);
+    async UpdateShipmentStatus(shipment) {
+      //updates hipmentstatus here
+      console.log(shipment);
+      let updateObj = {
+        id: shipment.id,
+        updatedDetails: {
+          status: "Received"
+        }
+      };
+      try {
+        await this.$store.dispatch("shipment/UpdateShipment", updateObj);
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: "Shipment status has been updated!"
+        });
+      } catch (e) {
+        this.$swal.fire({
+          type: "error",
+          title: "Failed",
+          text: `Shipment update has failed due to: ${e}`
+        });
+      }
     }
   },
   computed: {
