@@ -116,6 +116,16 @@ const stock_orders = {
                 throw error;
             }
         },
+        async UPDATE_STOCK_ORDER_PAYMENT_DETAILS({ commit }, payload) {
+            try {
+
+                await DB.collection('stock_orders').doc(payload.id).update({ paymentDetails: payload.paymentDetails });
+                commit('UPDATE_STOCK_ORDER', { paymentDetails: payload.paymentDetails })
+
+            } catch (error) {
+                throw error;
+            }
+        },
         async POPULATE_STOCK_ORDER_ITEMS({ commit }, payload) {
             let stockOrder = payload
             const items = [];

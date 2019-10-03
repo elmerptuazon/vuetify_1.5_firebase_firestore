@@ -9,10 +9,9 @@
         <v-spacer></v-spacer>
       </v-card-title>
       <v-divider></v-divider>
-
       <v-card-text>
         <v-layout align-center justify-space-around row wrap>
-          <v-flex xs12 s12 md8 lg8 xl8>
+          <v-flex xs12 s12 md7 lg7 xl7>
             <v-container
               ><v-card>
                 <v-card-title>
@@ -90,29 +89,105 @@
               </v-card></v-container
             >
           </v-flex>
-          <v-flex xs12 s12 md4 lg4 xl4>
-            <v-container
-              ><v-select
-                :items="status"
-                v-model="selectedStatus"
-                label="Update Status"
-              ></v-select>
-              <div class="text-xs-center">
-                <v-btn
-                  v-if="
-                    stockOrder.status === 'paid' ||
-                      stockOrder.status === 'partially shipped'
-                  "
-                  @click="shipmentDialog = true"
-                  >Ship this Stock Order</v-btn
-                >
-              </div>
+          <v-flex xs12 s12 md5 lg5 xl5>
+            <v-container>
+              <v-card v-if="stockOrder.hasOwnProperty('paymentDetails')">
+                <v-card-title>
+                  <div class="title">Payment Details</div>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    v-if="stockOrder.paymentDetails.paymentType != 'CC'"
+                    @click="UpdatePayment()"
+                    color="primary"
+                    :class="[
+                      stockOrder.paymentDetails.paymentStatus.toLowerCase() ===
+                      'paid'
+                        ? 'v-btn--disabled '
+                        : ''
+                    ]"
+                    >Tag as Paid</v-btn
+                  >
+                </v-card-title>
+                <v-divider></v-divider>
+                <v-card-text>
+                  <v-list subheader>
+                    <v-list-tile>
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Payment Type</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span
+                            v-if="
+                              stockOrder.paymentDetails.paymentType === 'CC'
+                            "
+                            >Credit Card</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'COD'
+                            "
+                            >Cash On Delivery</span
+                          >
+                          <span v-else>N/A</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+
+                    <v-list-tile
+                      ><v-list-tile-content>
+                        <v-list-tile-sub-title>Amount</v-list-tile-sub-title>
+                        <v-list-tile-title
+                          >{{ stockOrder.paymentDetails.amount }}
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                    <v-list-tile
+                      ><v-list-tile-content>
+                        <v-list-tile-sub-title>Status</v-list-tile-sub-title>
+                        <v-list-tile-title>
+                          <span class="primary--text">{{
+                            stockOrder.paymentDetails.paymentStatus | uppercase
+                          }}</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                  </v-list>
+                </v-card-text>
+              </v-card>
+              <div v-else class="body-2">No Payment Details Provided.</div>
             </v-container>
           </v-flex>
         </v-layout>
         <div class="mb-2"></div>
         <v-card>
-          <v-card-title class="title">Order Details</v-card-title>
+          <v-card-title class="title"
+            >Order Details
+            <v-spacer></v-spacer>
+            <v-btn
+              color="success"
+              @click="updateStatus('processing')"
+              :class="[
+                stockOrder.status.toLowerCase() != 'pending'
+                  ? 'v-btn--disabled '
+                  : ''
+              ]"
+              >Tag for Processing</v-btn
+            >
+            <v-divider class="mx-3" inset vertical></v-divider>
+            <v-btn
+              @click="shipmentDialog = true"
+              color="primary"
+              :class="[
+                stockOrder.status.toLowerCase() === 'cancelled'
+                  ? 'v-btn--disabled '
+                  : ''
+              ]"
+              >Ship this Stock Order</v-btn
+            >
+            <v-divider class="mx-3" inset vertical></v-divider>
+            <v-btn color="error" @click="CancelOrder()">Cancel Order</v-btn>
+          </v-card-title>
           <v-divider></v-divider>
           <StockOrderItems :items="stockOrder.items" :loading="loading" />
         </v-card>
@@ -186,13 +261,11 @@ export default {
   data: () => ({
     loading: false,
     item: {},
-    status: ["Processing", "Paid", "Cancelled"],
     itemsToShip: [],
     shipmentDialog: false,
     shipmentType: "Full",
     shipmentDetails: null,
-    partialShipment: false,
-    selectedStatus: null
+    partialShipment: false
   }),
   async created() {
     this.loading = true;
@@ -494,6 +567,60 @@ export default {
           }
         }
       }
+    },
+    async CancelOrder() {
+      const response = await this.$swal.fire({
+        title: "Are you sure?",
+        text: "Are you sure you want to cancel the order?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Cancel it!"
+      });
+      if (response.value) {
+        this.updateStatus("cancelled");
+      }
+    },
+    async UpdatePayment() {
+      const response = await this.$swal.fire({
+        title: "Are you sure?",
+        text: "Are you sure you want to tag the payment of this order as PAID?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes!"
+      });
+      if (response.value) {
+        //call store for updating payment
+        try {
+          let updateObj = {
+            id: this.$route.params.id,
+            paymentDetails: this.stockOrder.paymentDetails
+          };
+
+          updateObj.paymentDetails.paymentStatus = "Paid";
+          updateObj.paymentDetails.paymentDate = Date.now();
+
+          await this.$store.dispatch(
+            "stock_orders/UPDATE_STOCK_ORDER_PAYMENT_DETAILS",
+            updateObj
+          );
+
+          this.$swal.fire({
+            type: "success",
+            title: "Success",
+            text: "Payment status has been updated!"
+          });
+        } catch (e) {
+          this.$swal.fire({
+            type: "error",
+            title: "Sorry",
+            text: `An Error has occured!: ${e}`
+          });
+        }
+      }
     }
   },
   mixins: [mixins],
@@ -511,11 +638,6 @@ export default {
     StockOrderItems,
     ShipmentDetails,
     PartialShipment
-  },
-  watch: {
-    selectedStatus(val) {
-      this.updateStatus(val.toLowerCase());
-    }
   }
 };
 </script>
