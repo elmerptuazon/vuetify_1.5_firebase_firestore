@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <Categories
       :items="items"
       ref="categoriesRef"
