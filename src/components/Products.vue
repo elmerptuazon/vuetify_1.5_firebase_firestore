@@ -224,12 +224,12 @@
             ></v-text-field> -->
             <v-text-field
               label="Price*"
-              :rules="numberRules"
+              :rules="decimalOnlyRules"
               v-model="product.price"
             ></v-text-field>
             <v-text-field
               label="Reseller Price*"
-              :rules="numberRules"
+              :rules="decimalOnlyRules"
               v-model="product.resellerPrice"
             ></v-text-field>
             <v-text-field
