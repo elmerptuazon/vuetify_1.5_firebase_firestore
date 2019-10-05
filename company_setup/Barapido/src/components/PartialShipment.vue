@@ -49,19 +49,37 @@
                       ></v-select>
                     </v-flex>
                     <v-flex xs4>
-                      <v-text-field
+                      <!-- <v-text-field
                         readonly
                         label="Order QTY"
                         v-model="selectedItem.qty"
                       >
-                      </v-text-field>
+                      </v-text-field> -->
+                      <div>
+                        <span class="font-weight-bold">
+                          Order QTY
+                        </span>
+                        <br/>
+                        <span>
+                          {{ selectedItem.qty || "-" }}
+                        </span>
+                      </div>
                     </v-flex>
                     <v-flex xs4>
-                      <v-text-field
+                      <!-- <v-text-field
                         readonly
                         label="Shipped QTY"
                         v-model="selectedItem.shippedQty"
-                      ></v-text-field>
+                      ></v-text-field> -->
+                      <div>
+                        <span class="font-weight-bold">
+                          Shipped QTY
+                        </span>
+                        <br/>
+                        <span>
+                          {{ selectedItem.qty || "-" }}
+                        </span>
+                      </div>
                     </v-flex>
                     <v-flex xs4>
                       <v-text-field
