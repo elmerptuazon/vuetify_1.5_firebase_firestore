@@ -77,7 +77,7 @@
                         </span>
                         <br/>
                         <span>
-                          {{ selectedItem.qty || "-" }}
+                          {{ selectedItem.shippedQty || "-" }}
                         </span>
                       </div>
                     </v-flex>
@@ -86,6 +86,7 @@
                         mask="######"
                         v-model.number="selectedItem.qtyToShip"
                         label="QTY to Ship"
+                        :disabled="selectedItem.shippedQty === selectedItem.qty"
                       ></v-text-field>
                     </v-flex>
                   </v-layout>
