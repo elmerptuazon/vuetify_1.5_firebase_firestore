@@ -351,6 +351,7 @@ export default {
     // this.loading = true;
     //await this.$store.dispatch("categories/FETCH_CATEGORIES");
     // this.loading = false;
+    this.excelDownloadURL = await this.$store.dispatch('categories/GET_EXCEL_TEMPLATE');
   },
   data: () => ({
     pagination: {
@@ -415,8 +416,7 @@ export default {
     categoryButtonDisabled: false,
     excelDialog: false,
     excelButtonLoading: false,
-    excelDownloadURL:
-      "https://firebasestorage.googleapis.com/v0/b/barapido-dev.appspot.com/o/appsell%2FCatalogueExcelTemplate.zip?alt=media&token=59634636-03e9-4b21-8448-29e1a3f7563a"
+    excelDownloadURL: "",
   }),
   methods: {
     toggleAll() {
