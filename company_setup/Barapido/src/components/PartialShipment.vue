@@ -29,7 +29,7 @@
     <template slot="footer">
       <tr>
         <td colspan="7" class="text-xs-right">
-          <v-btn color="primary" dark class="mb-2" @click="dialog = true"
+          <v-btn color="green" dark class="mb-2" @click="dialog = true"
             >New Item</v-btn
           >
           <v-dialog v-model="dialog" max-width="500px">

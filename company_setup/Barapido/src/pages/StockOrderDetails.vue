@@ -231,7 +231,7 @@
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn @click="SubmitShipment">
+            <v-btn color="primary" dark @click="SubmitShipment">
               Submit Shipment
             </v-btn>
             <v-btn @click="shipmentDialog = false">
