@@ -787,6 +787,32 @@ export default {
           let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
 
           productList = await productList.map(p => {
+            let attributes = [];
+
+            if(p.Size) {
+              const sizeArr = p.Size.split("," || ", ");
+              p.Size = {
+                items: sizeArr,
+                name: "Size"
+              }
+            }
+            else {
+              p.Size = null;
+            }
+            attributes.push(p.Size);
+
+            if(p.Color) {
+              const colorArr = p.Color.split("," || ", ");
+              p.Color = {
+                items: colorArr,
+                name: "Color"
+              }
+            }
+            else {
+              p.Color = null;
+            }
+            attributes.push(p.Color);
+
             return {
               active: 1,
               code: p.Code,
@@ -804,8 +830,7 @@ export default {
                     percentage: null
                   },
               discount: p.Discount ? p.Discount : null,
-              size: p.Size ? p.Size : null,
-              color: p.color ? p.color : null,
+              attributes: attributes,
               isOutofStock: false,
               createdAt: Date.now(),
               categoryId: categoryData.id,
