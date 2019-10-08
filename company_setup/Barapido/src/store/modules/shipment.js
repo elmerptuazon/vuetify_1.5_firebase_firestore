@@ -38,6 +38,7 @@ const shipment = {
             try {
                 payload.trackingNumber = GenerateTrackingNumber();
                 const response = await DB.collection('shipment').add(payload);
+                payload.id = response.id;
                 commit('AddShipment', payload)
                 return response;
             } catch (error) {

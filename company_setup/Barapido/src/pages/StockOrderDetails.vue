@@ -181,12 +181,27 @@
               :class="[
                 stockOrder.status.toLowerCase() === 'cancelled'
                   ? 'v-btn--disabled '
-                  : ''
+                  : stockOrder.status.toLowerCase() === 'shipped'
+                  ? 'v-btn--disabled '
+                  : stockOrder.status.toLowerCase() === 'partially shipped'
+                  ? ''
+                  : stockOrder.status.toLowerCase() === 'processing'
+                  ? ''
+                  : 'v-btn--disabled '
               ]"
               >Ship this Stock Order</v-btn
             >
             <v-divider class="mx-3" inset vertical></v-divider>
-            <v-btn color="error" @click="CancelOrder()">Cancel Order</v-btn>
+            <v-btn
+              color="error"
+              @click="CancelOrder()"
+              :class="[
+                stockOrder.status.toLowerCase() === 'cancelled'
+                  ? 'v-btn--disabled '
+                  : ''
+              ]"
+              >Cancel Order</v-btn
+            >
           </v-card-title>
           <v-divider></v-divider>
           <StockOrderItems :items="stockOrder.items" :loading="loading" />
