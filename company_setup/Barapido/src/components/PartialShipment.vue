@@ -220,12 +220,20 @@ export default {
     completed(value) {
       if(value) {
         this.shipmentDetails = [];
-        this.selectedItem = {};
       }
-    }
+    },
     //if the user clicked "submit shipment" on stockOrderDetails page
     //the previously created partial shipment list is removed
     //it is removed by clearing the shipmentDetails array, so that no items will be displayed
+
+    dialog(value) {
+      if(value) {
+        this.selectedItem.qtyToShip = 0;
+        Object.assign(this.selectedItem, {});
+        this.selectedItem = {};
+      }
+    }
+    //resets the selectedItem.qtyToShip value to 0 after the item is added to the list
   }
 };
 </script>
