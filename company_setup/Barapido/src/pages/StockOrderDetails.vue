@@ -237,6 +237,7 @@
                     v-if="shipmentType == 'Partial'"
                     :items="stockOrder.items"
                     :loading="loading"
+                    :completed="completed"
                     @itemsToShip="SetItemsToShip"
                   />
                 </v-radio-group>
@@ -249,7 +250,7 @@
             <v-btn color="primary" dark @click="SubmitShipment">
               Submit Shipment
             </v-btn>
-            <v-btn @click="shipmentDialog = false">
+            <v-btn @click="closeShipmentDialog">
               Cancel
             </v-btn>
           </v-card-actions>
@@ -280,7 +281,11 @@ export default {
     shipmentDialog: false,
     shipmentType: "Full",
     shipmentDetails: null,
-    partialShipment: false
+    partialShipment: false,
+    
+    //tells the partialShipment component if the previously created
+    //partial shipment list has been submitted already
+    completed: false, 
   }),
   async created() {
     this.loading = true;
@@ -297,6 +302,11 @@ export default {
     this.loading = false;
   },
   methods: {
+    closeShipmentDialog() {
+      this.shipmentDialog = false; 
+      this.completed = true;
+      //clears the partial shipment list upon closing the shipment dialog
+    },
     SetItemsToShip(items) {
       this.itemsToShip = items.map(item => {
         const itemToShip = {
@@ -309,6 +319,10 @@ export default {
         };
         return itemToShip;
       });
+      
+      this.completed = false;
+      //completed variable has to be false since the partial shipment list
+      //is not yet submitted
 
       console.log(this.itemsToShip);
     },
@@ -572,6 +586,11 @@ export default {
                 title: "Success",
                 text: "Partial shipment has been recorded!"
               });
+
+              this.completed = true;
+              //"completed" variable has to be true since the created partial shipment
+              //has been recorded already
+              //this will ensure that the partialShipment component wont display the previously created partial shipment list
             }
           } catch (error) {
             this.$swal.fire({
@@ -579,6 +598,10 @@ export default {
               title: "Failed",
               text: `Partial shipment creation has failed due to: ${error}`
             });
+
+            this.completed = true;
+            //"completed" variable has to be true since the created partial shipment
+            //has been recorded already
           }
         }
       }
