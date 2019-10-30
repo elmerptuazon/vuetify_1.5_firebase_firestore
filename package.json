@@ -11,6 +11,8 @@
     "test-Barapido": "cross-env NODE_ENV=test node config/companySetup.js Barapido",
     "prod-Barapido": "node config/companySetup.js Barapido",
     "test-EverBilena": "cross-env NODE_ENV=test node config/companySetup.js EverBilena",
+    "test-Fetch": "cross-env NODE_ENV=test node config/companySetup.js Fetch",
+    "test-Aquitek": "cross-env NODE_ENV=test node config/companySetup.js Aquitek",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
