@@ -1,4 +1,4 @@
-import {DB} from '@/config/firebase';
+import {DB, STORAGE} from '@/config/firebase';
 
 const categories = {
 	namespaced: true,
@@ -92,6 +92,14 @@ const categories = {
 			try {
 				const { categoryId, key, value } = payload;
                 await DB.collection('catalogues').doc(categoryId).update({ [key]: value });
+            } catch (error) {
+                throw error;
+            }
+        },
+        async GET_EXCEL_TEMPLATE() {
+            try {
+                const downloadURL = STORAGE.ref("appsell").child('CategoryExcelTemplate.zip').getDownloadURL();
+                return downloadURL;
             } catch (error) {
                 throw error;
             }
