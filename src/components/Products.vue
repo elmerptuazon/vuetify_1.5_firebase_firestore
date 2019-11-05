@@ -330,6 +330,7 @@
             </v-layout>
             
             <v-flex xs12 my-2><v-divider/></v-flex>
+
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -583,7 +584,57 @@ export default {
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.isOutofStock = item.isOutofStock;
+      this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
+    },
+    addProductAttribute() {  
+      this.product.attributes.push(
+        {
+          name: this.tempAttribName, 
+          items: this.tempAttribItems.split(', ')
+        }
+      );
+
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+
+      console.log(this.product.attributes);
+    },
+
+    editAttribute(index) {
+      this.tempAttribName = this.product.attributes[index].name;
+      this.tempAttribItems = this.product.attributes[index].items.join(', ');
+      this.showEditConfirmButton = true;
+      this.productIndex = index;
+
+      console.log(this.product.attributes);
+    },
+
+    confirmEditProductAttribute() {
+      this.product.attributes[this.productIndex].name = this.tempAttribName;
+      this.product.attributes[this.productIndex].items = this.tempAttribItems.split(', ');
+      this.showEditConfirmButton = false;
+      this.productIndex = null;
+
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+
+      console.log(this.product.attributes);
+    },
+    async deleteAttribute(index) {
+      const r = await this.$swal.fire({
+        title: "Warning!",
+        text: `Are you sure you want to delete "${this.product.attributes[index].name}" attribute?`,
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if (r.value) {
+        this.product.attributes.splice(index, 1);
+      }
     },
     closeProductDialog() {
       this.$refs.productFile.value = null;
@@ -640,8 +691,9 @@ export default {
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
             sale: this.product.sale,
-            isOutofStock: this.product.isOutofStock || null
+            isOutofStock: this.product.isOutofStock || null,
             //uid: null
+            attributes: this.product.attributes
           };
           console.log(newProduct);
 
@@ -733,7 +785,8 @@ export default {
           //uid: null
           downloadURL: this.product.downloadURL,
           pictureName: this.product.pictureName,
-          id: this.product.id
+          id: this.product.id,
+          attributes: this.product.attributes,
         };
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 
