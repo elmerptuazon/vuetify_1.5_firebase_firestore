@@ -218,7 +218,26 @@
               :rules="basicRules"
               v-model="product.description"
             ></v-textarea>
-             
+            <v-text-field
+              label="Price*"
+              :rules="decimalOnlyRules"
+              v-model="product.price"
+            ></v-text-field>
+            <v-text-field
+              label="Reseller Price*"
+              :rules="decimalOnlyRules"
+              v-model="product.resellerPrice"
+            ></v-text-field>
+            <v-text-field
+              label="Percentage"
+              v-model="product.sale.percentage"
+              v-show="product.sale.status"
+            ></v-text-field>
+            <v-checkbox
+              v-model="product.isOutofStock"
+              :label="'Out of stock?'"
+            ></v-checkbox>
+
             <v-divider class="mt-3"/> 
             <div class="font-weight-bold my-3 suheading">Product Attributes</div>
             
@@ -234,7 +253,28 @@
                 <div class="caption" v-for="item in attrib.items" :key="item">{{ item }}</div>
               </v-flex>
               <v-flex xs4>
-                <v-btn color="primary" outline small @click="deleteAttribute(index)">DELETE ATTRIBUTE</v-btn>
+                <v-tooltip left>
+                  <v-btn
+                    slot="activator"
+                    icon
+                    class="primary white--text"
+                    @click.stop="deleteAttribute(index)"
+                  >
+                    <v-icon>delete</v-icon>
+                  </v-btn>
+                  <span>Delete Attribute</span>
+                </v-tooltip>
+                <v-tooltip right>
+                  <v-btn
+                    slot="activator"
+                    icon
+                    class="primary white--text"
+                    @click.stop="editAttribute(index)"
+                  >
+                    <v-icon>edit</v-icon>
+                  </v-btn>
+                  <span>Edit Attribute</span>
+                </v-tooltip>
               </v-flex>
               <v-flex xs12>
                 <v-divider class="my-2 primary"/>
@@ -262,13 +302,26 @@
               </v-flex>
               
               <v-flex xs12>
+                <v-btn
+                  v-if="showEditConfirmButton"
+                  block 
+                  small 
+                  color="secondary" 
+                  depressed 
+                  :disabled="!tempAttribName || !tempAttribItems" 
+                  @click="confirmEditProductAttribute"
+                >
+                  Confirm Edit on Product Attribute
+                </v-btn>
+
                 <v-btn 
+                  v-else
                   block 
                   small 
                   color="primary" 
                   depressed 
                   :disabled="!tempAttribName || !tempAttribItems" 
-                  @click="addProductAttribute"
+                  @click=" addProductAttribute"
                 >
                   Add Product Attribute
                 </v-btn>
@@ -277,26 +330,6 @@
             </v-layout>
             
             <v-flex xs12 my-2><v-divider/></v-flex>
-
-            <v-text-field
-              label="Price*"
-              :rules="decimalOnlyRules"
-              v-model="product.price"
-            ></v-text-field>
-            <v-text-field
-              label="Reseller Price*"
-              :rules="decimalOnlyRules"
-              v-model="product.resellerPrice"
-            ></v-text-field>
-            <v-text-field
-              label="Percentage"
-              v-model="product.sale.percentage"
-              v-show="product.sale.status"
-            ></v-text-field>
-            <v-checkbox
-              v-model="product.isOutofStock"
-              :label="'Out of stock?'"
-            ></v-checkbox>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -493,6 +526,8 @@ export default {
 
     tempAttribName: null,
     tempAttribItems: null,
+    showEditConfirmButton: false,
+    productIndex: null,
     
     addProductDialog: false,
     dialogText: null,
