@@ -238,99 +238,97 @@
               :label="'Out of stock?'"
             ></v-checkbox>
 
-            <v-divider class="mt-3"/> 
-            <div class="font-weight-bold my-3 suheading">Product Attributes</div>
-            
-            <v-layout row v-if="!product.attributes.length" px-3>
-              <p class="font-italic text-center">There is no attributes in this products</p>
-            </v-layout>
+            <v-card raised>
+              <v-card-title class="font-weight-bold">
+                Product Attributes
+              </v-card-title>
+              <v-layout row v-if="!product.attributes.length" px-3>
+                <p class="font-italic text-center">There is no attributes in this products</p>
+              </v-layout>
 
-            <v-layout row wrap v-else v-for="(attrib, index) in product.attributes" :key="attrib.name" align-center justify-center px-3>
-              <v-flex xs4 pl-2>
-                <div class="font-weight-bold caption">{{ attrib.name }}</div>
-              </v-flex>
-              <v-flex xs4>
-                <div class="caption" v-for="item in attrib.items" :key="item">{{ item }}</div>
-              </v-flex>
-              <v-flex xs4>
-                <v-tooltip left>
-                  <v-btn
-                    slot="activator"
-                    icon
-                    class="primary white--text"
-                    @click.stop="deleteAttribute(index)"
-                  >
-                    <v-icon>delete</v-icon>
-                  </v-btn>
-                  <span>Delete Attribute</span>
-                </v-tooltip>
-                <v-tooltip right>
-                  <v-btn
-                    slot="activator"
-                    icon
-                    class="primary white--text"
-                    @click.stop="editAttribute(index)"
-                  >
-                    <v-icon>edit</v-icon>
-                  </v-btn>
-                  <span>Edit Attribute</span>
-                </v-tooltip>
-              </v-flex>
-              <v-flex xs12>
-                <v-divider class="my-2 primary"/>
-              </v-flex>
-            </v-layout>
+              <v-layout row wrap v-else v-for="(attrib, index) in product.attributes" :key="attrib.name" align-center justify-center px-3>
+                <v-flex xs4 pl-2>
+                  <div class="font-weight-bold caption">{{ attrib.name }}</div>
+                </v-flex>
+                <v-flex xs4>
+                  <div class="caption" v-for="item in attrib.items" :key="item">{{ item }}</div>
+                </v-flex>
+                <v-flex xs4>
+                  <v-tooltip left>
+                    <v-btn
+                      slot="activator"
+                      icon
+                      class="primary white--text"
+                      @click.stop="deleteAttribute(index)"
+                    >
+                      <v-icon>delete</v-icon>
+                    </v-btn>
+                    <span>Delete Attribute</span>
+                  </v-tooltip>
+                  <v-tooltip right>
+                    <v-btn
+                      slot="activator"
+                      icon
+                      class="primary white--text"
+                      @click.stop="editAttribute(index)"
+                    >
+                      <v-icon>edit</v-icon>
+                    </v-btn>
+                    <span>Edit Attribute</span>
+                  </v-tooltip>
+                </v-flex>
+                <v-flex xs12>
+                  <v-divider class="my-2 primary"/>
+                </v-flex>
+              </v-layout>
 
-            <v-layout row wrap align-center justify-end mt-1 pa-3>
-              <v-flex xs12 mb-1>
-                <div class="font-weight-bold">Add Product Attribute</div>
-              </v-flex>
-              <v-flex xs12>
-                <v-text-field
-                  label="Attribute Name"
-                  placeholder="Ex: Color, Weight, Size, etc..."
-                  v-model="tempAttribName"
-                ></v-text-field>
-              </v-flex>
+              <v-layout row wrap align-center justify-end mt-1 pa-3>
+                <v-flex xs12 mb-1>
+                  <div class="font-weight-bold">Add Product Attribute</div>
+                </v-flex>
+                <v-flex xs12>
+                  <v-text-field
+                    label="Attribute Name"
+                    placeholder="Ex: Color, Weight, Size, etc..."
+                    v-model="tempAttribName"
+                  ></v-text-field>
+                </v-flex>
 
-              <v-flex xs12>
-                <v-text-field
-                  label="Attribute Item"
-                  placeholder="Seperate each item with a comma. Ex: Blue, Red"
-                  v-model="tempAttribItems"
-                ></v-text-field>
-              </v-flex>
-              
-              <v-flex xs12>
-                <v-btn
-                  v-if="showEditConfirmButton"
-                  block 
-                  small 
-                  color="secondary" 
-                  depressed 
-                  :disabled="!tempAttribName || !tempAttribItems" 
-                  @click="confirmEditProductAttribute"
-                >
-                  Confirm Edit on Product Attribute
-                </v-btn>
-
-                <v-btn 
-                  v-else
-                  block 
-                  small 
-                  color="primary" 
-                  depressed 
-                  :disabled="!tempAttribName || !tempAttribItems" 
-                  @click=" addProductAttribute"
-                >
-                  Add Product Attribute
-                </v-btn>
-              </v-flex>
+                <v-flex xs12>
+                  <v-text-field
+                    label="Attribute Item"
+                    placeholder="Seperate each item with a comma. Ex: Blue, Red"
+                    v-model="tempAttribItems"
+                  ></v-text-field>
+                </v-flex>
                 
-            </v-layout>
-            
-            <v-flex xs12 my-2><v-divider/></v-flex>
+                <v-flex xs12>
+                  <v-btn
+                    v-if="showEditConfirmButton"
+                    block 
+                    small 
+                    color="secondary" 
+                    depressed 
+                    :disabled="!tempAttribName || !tempAttribItems" 
+                    @click="confirmEditProductAttribute"
+                  >
+                    Confirm Edit on Product Attribute
+                  </v-btn>
 
+                  <v-btn 
+                    v-else
+                    block 
+                    small 
+                    color="primary" 
+                    depressed 
+                    :disabled="!tempAttribName || !tempAttribItems" 
+                    @click=" addProductAttribute"
+                  >
+                    Add Product Attribute
+                  </v-btn>
+                </v-flex>
+              </v-layout>
+            </v-card>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -529,6 +527,7 @@ export default {
     tempAttribItems: null,
     showEditConfirmButton: false,
     productIndex: null,
+    panel: false,
     
     addProductDialog: false,
     dialogText: null,
