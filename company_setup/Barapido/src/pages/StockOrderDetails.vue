@@ -263,7 +263,7 @@
 
 <script>
 import mixins from "@/mixins";
-import { DB } from "@/config/firebase";
+import { FB } from "@/config/firebase";
 import userPlaceholder from "@/assets/placeholder.png";
 import AccountData from "@/components/AccountData";
 import Toast from "@/components/Toast";
@@ -282,10 +282,10 @@ export default {
     shipmentType: "Full",
     shipmentDetails: null,
     partialShipment: false,
-    
+
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
-    completed: false, 
+    completed: false
   }),
   async created() {
     this.loading = true;
@@ -303,7 +303,7 @@ export default {
   },
   methods: {
     closeShipmentDialog() {
-      this.shipmentDialog = false; 
+      this.shipmentDialog = false;
       this.completed = true;
       //clears the partial shipment list upon closing the shipment dialog
     },
@@ -319,7 +319,7 @@ export default {
         };
         return itemToShip;
       });
-      
+
       this.completed = false;
       //completed variable has to be false since the partial shipment list
       //is not yet submitted
@@ -428,16 +428,20 @@ export default {
               status: "shipped",
               date: Date.now()
             });
+            const shipmentIncrement = FB.firestore.FieldValue.increment(1);
             const stockOrderUpdatedData = {
               status: "shipped",
               items: remainingStockOrderItems,
               statusTimeline: statusTimeline,
-              id: this.stockOrder.id
+              shipmentsToReceive: shipmentIncrement
             };
 
             const stockOrderUpdateResponse = await this.$store.dispatch(
               "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-              stockOrderUpdatedData
+              {
+                updateObject: stockOrderUpdatedData,
+                referenceID: this.stockOrder.id
+              }
             );
 
             //console.log(stockOrderUpdateResponse);
@@ -541,17 +545,20 @@ export default {
                 status: "shipped",
                 date: Date.now()
               });
-
+              const shipmentIncrement = FB.firestore.FieldValue.increment(1);
               const stockOrderUpdatedData = {
                 status: "shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
-                id: this.stockOrder.id
+                shipmentsToReceive: shipmentIncrement
               };
 
               const stockOrderUpdateResponse = await this.$store.dispatch(
                 "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-                stockOrderUpdatedData
+                {
+                  updateObject: stockOrderUpdatedData,
+                  referenceID: this.stockOrder.id
+                }
               );
 
               this.shipmentDialog = false;
@@ -567,17 +574,20 @@ export default {
                 status: "partially shipped",
                 date: Date.now()
               });
-
+              const shipmentIncrement = FB.firestore.FieldValue.increment(1);
               const stockOrderUpdatedData = {
                 status: "partially shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
-                id: this.stockOrder.id
+                shipmentsToReceive: shipmentIncrement
               };
 
               const stockOrderUpdateResponse = await this.$store.dispatch(
                 "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-                stockOrderUpdatedData
+                {
+                  updateObject: stockOrderUpdatedData,
+                  referenceID: this.stockOrder.id
+                }
               );
 
               this.shipmentDialog = false;
