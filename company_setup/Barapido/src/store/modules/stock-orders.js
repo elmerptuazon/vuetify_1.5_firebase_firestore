@@ -103,14 +103,16 @@ const stock_orders = {
         },
         async UPDATE_STOCK_ORDER_DETAILS({ commit, dispatch, state }, payload) {
             try {
-                const obj = {
-                    status: payload.status,
-                    items: payload.items,
-                    statusTimeline: payload.statusTimeline
-                }
 
-                await DB.collection('stock_orders').doc(payload.id).update(obj);
-                commit('UPDATE_STOCK_ORDER', obj)
+                // const obj = {
+                //     status: payload.status,
+                //     items: payload.items,
+                //     statusTimeline: payload.statusTimeline,
+                //     shipmentsToReceive: shipmentIncrement
+                // }
+
+                await DB.collection('stock_orders').doc(payload.referenceID).update(payload.updateObject);
+                commit('UPDATE_STOCK_ORDER', payload.updateObject)
                 dispatch('POPULATE_STOCK_ORDER_ITEMS', state.stockOrder)
             } catch (error) {
                 throw error;

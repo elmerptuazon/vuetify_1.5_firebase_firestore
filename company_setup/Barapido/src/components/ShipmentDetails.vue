@@ -120,6 +120,7 @@
 
 <script>
 import { mapState } from "vuex";
+import { FB } from "@/config/firebase";
 export default {
   props: ["stockOrderId"],
   data: () => ({
@@ -146,10 +147,15 @@ export default {
     async UpdateShipmentStatus(shipment) {
       //updates hipmentstatus here
       console.log(shipment);
+      const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
       let updateObj = {
         id: shipment.id,
         updatedDetails: {
           status: "Received"
+        },
+        stockOrderID: shipment.stockOrder.stockOrderId,
+        updatedStockOrderDetails: {
+          shipmentsToReceive: shipmentDecrement
         }
       };
       try {
