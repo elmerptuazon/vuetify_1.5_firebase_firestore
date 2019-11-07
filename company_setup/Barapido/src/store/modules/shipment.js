@@ -89,11 +89,19 @@ const shipment = {
             }
 
         },
-        async UpdateShipment({ commit }, payload) {
+        async UpdateShipment({ commit, dispatch }, payload) {
             try {
                 console.log(payload);
                 await DB.collection('shipment').doc(payload.id).update(payload.updatedDetails);
                 commit('UpdateShipment', payload)
+
+                await dispatch(
+                    "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+                    {
+                        updateObject: payload.updatedStockOrderDetails,
+                        referenceID: payload.stockOrderID
+                    }, { root: true }
+                );
 
             } catch (error) {
                 throw error;
