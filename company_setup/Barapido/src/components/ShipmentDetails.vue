@@ -104,6 +104,16 @@
                             </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
+                        <v-list-tile v-if="shipment.shipmentDate"
+                          ><v-list-tile-content>
+                            <v-list-tile-sub-title
+                              >Shipment Delivery Date</v-list-tile-sub-title
+                            >
+                            <v-list-tile-title
+                              >{{ shipment.shipmentDate | momentize("DD-MMM-YYYY") }}
+                            </v-list-tile-title>
+                          </v-list-tile-content>
+                        </v-list-tile>
                       </v-list>
                     </v-card-text>
                   </v-card></v-container
@@ -136,6 +146,7 @@
 </template>
 
 <script>
+import mixins from "@/mixins";
 import { mapState } from "vuex";
 import { FB } from "@/config/firebase";
 export default {
@@ -220,6 +231,7 @@ export default {
       }
     }
   },
+  mixins: [mixins],
   computed: {
     ...mapState("shipment", {
       shipmentList: state => state.shipmentList
