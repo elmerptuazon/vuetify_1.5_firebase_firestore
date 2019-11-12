@@ -243,6 +243,34 @@
                 </v-radio-group>
               </v-flex>
             </v-layout>
+            <v-layout row>
+              <v-flex xs5>
+                <v-menu
+                  ref="menu"
+                  v-model="menu"
+                  :close-on-content-click="false"
+                  :return-value.sync="date"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="290px"
+                >
+                  <template v-slot:activator="{ on }">
+                    <v-text-field
+                      v-model="date"
+                      label="Pick a Shipment Delivery Date"
+                      prepend-icon="event"
+                      readonly
+                      v-on="on"
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker v-model="date" scrollable>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="secondary" outline @click="menu = false">Cancel</v-btn>
+                    <v-btn text color="primary" @click="$refs.menu.save(date)">OK</v-btn>
+                  </v-date-picker>
+                </v-menu>
+              </v-flex>
+            </v-layout>
           </v-card-text>
           <v-divider></v-divider>
           <v-card-actions>
@@ -282,6 +310,9 @@ export default {
     shipmentType: "Full",
     shipmentDetails: null,
     partialShipment: false,
+    shipmentDate: null,
+    date: null,
+    menu: false,
 
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
@@ -355,6 +386,15 @@ export default {
       }
     },
     async SubmitShipment() {
+      if(!this.date) {
+        this.$swal.fire({
+          title: "Missing Shipment Date",
+          text: "Please select a shipment date!",
+          type: "warning",
+        });
+        return;
+      }
+
       const response = await this.$swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -364,6 +404,9 @@ export default {
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, Submit it!"
       });
+
+      const shipmentDate = Date.parse(this.date);
+
       if (response.value) {
         if (this.shipmentType === "Full") {
           //pass shipment details to vuex that inserts to database
@@ -400,7 +443,8 @@ export default {
               dateSubmitted: Date.now(),
               itemsToShip: itemsToShip,
               type: "Full Shipment",
-              status: "Pending"
+              status: "Pending",
+              shipmentDate: shipmentDate,
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -488,7 +532,8 @@ export default {
               dateSubmitted: Date.now(),
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
-              status: "Pending"
+              status: "Pending", 
+              shipmentDate: shipmentDate,
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -615,6 +660,7 @@ export default {
           }
         }
       }
+      this.date = null;
     },
     async CancelOrder() {
       const response = await this.$swal.fire({
