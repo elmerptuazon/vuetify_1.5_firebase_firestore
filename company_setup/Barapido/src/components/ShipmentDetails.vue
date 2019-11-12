@@ -8,14 +8,31 @@
       >
         <v-card class="mt-2" color="white">
           <v-card-title class="title">
-            Shipment Tracking Number: {{ shipment.trackingNumber }}
-            <v-spacer></v-spacer>
-            <v-btn
-              color="success"
-              v-if="shipment.status.toLowerCase() === 'pending'"
-              @click="UpdateShipmentStatus(shipment)"
-              >This shipment has been received by the Customer</v-btn
-            >
+            <v-layout row wrap align-center justify-end>
+              <v-flex xs12> 
+                Shipment Tracking Number: {{ shipment.trackingNumber }}
+              </v-flex>
+            </v-layout>
+
+            <v-layout row wrap align-center justify-end>
+              <v-flex xs6>
+                <v-btn
+                  color="success"
+                  v-show="shipment.status.toLowerCase() === 'pending'"
+                  @click="UpdateShipmentStatus(shipment)"
+                  >This shipment has been received by the Customer</v-btn
+                >
+              </v-flex>
+
+              <v-flex xs6>
+                <v-btn
+                  color="error"
+                  v-show="shipment.status.toLowerCase() === 'pending'"
+                  @click="cancelShipment(shipment)"
+                  >Cancel this shipment</v-btn
+                >
+              </v-flex>  
+            </v-layout>
           </v-card-title>
 
           <v-card-text>
@@ -152,6 +169,35 @@ export default {
         id: shipment.id,
         updatedDetails: {
           status: "Received"
+        },
+        stockOrderID: shipment.stockOrder.stockOrderId,
+        updatedStockOrderDetails: {
+          shipmentsToReceive: shipmentDecrement
+        }
+      };
+      try {
+        await this.$store.dispatch("shipment/UpdateShipment", updateObj);
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: "Shipment status has been updated!"
+        });
+      } catch (e) {
+        this.$swal.fire({
+          type: "error",
+          title: "Failed",
+          text: `Shipment update has failed due to: ${e}`
+        });
+      }
+    },
+    async cancelShipment(shipment) {
+      //updates hipmentstatus here
+      console.log(shipment);
+      const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
+      let updateObj = {
+        id: shipment.id,
+        updatedDetails: {
+          status: "Cancelled"
         },
         stockOrderID: shipment.stockOrder.stockOrderId,
         updatedStockOrderDetails: {
