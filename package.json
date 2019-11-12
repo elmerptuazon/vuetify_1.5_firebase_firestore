@@ -13,6 +13,7 @@
     "test-EverBilena": "cross-env NODE_ENV=test node config/companySetup.js EverBilena",
     "test-Fetch": "cross-env NODE_ENV=test node config/companySetup.js Fetch",
     "test-Aquitek": "cross-env NODE_ENV=test node config/companySetup.js Aquitek",
+    "test-Chicharooms": "cross-env NODE_ENV=test node config/companySetup.js Chicharooms",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
