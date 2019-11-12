@@ -12,9 +12,7 @@
               <v-flex xs12> 
                 Parcel ID: {{ shipment.trackingNumber }}
               </v-flex>
-            </v-layout>
 
-            <v-layout row wrap align-center justify-end>
               <v-flex xs6>
                 <v-btn
                   color="success"
@@ -114,6 +112,16 @@
                             </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
+                        <v-list-tile v-if="shipment.logisticSTN"
+                          ><v-list-tile-content>
+                            <v-list-tile-sub-title
+                              >Logistic's Shipment Tracking Number</v-list-tile-sub-title
+                            >
+                            <v-list-tile-title
+                              >{{ shipment.logisticSTN }}
+                            </v-list-tile-title>
+                          </v-list-tile-content>
+                        </v-list-tile>
                       </v-list>
                     </v-card-text>
                   </v-card></v-container
@@ -134,6 +142,46 @@
               </v-flex>
             </v-layout>
           </v-card-text>
+          <v-layout 
+            row 
+            wrap
+            v-if="!shipment.logisticSTN && shipment.status.toLowerCase() === 'pending'" 
+            px-3
+            >
+            <v-flex xs4>
+              <v-btn 
+                color="primary" 
+                @click="toggleTextbox"
+                v-show="!showTextbox"
+                >ADD LOGISTIC'S SHIPMENT TRACKING NUMBER</v-btn
+              >
+            </v-flex>
+            <v-flex xs12>
+              <v-layout row v-show="showTextbox">
+                <v-flex xs6>
+                  <v-text-field 
+                    v-model="logisticSTN"
+                    label="Logistic's Shipment Tracking Number"
+                    placeholder="please enter the Logistic's Shipment Tracking Number..."
+                    clearable
+                    >
+                  </v-text-field>
+                </v-flex>
+                <v-flex xs1>
+                  <v-btn flat @click="toggleTextbox">CANCEL</v-btn>
+                </v-flex>
+                <v-flex xs1 ml-3>
+                  <v-btn 
+                    color="primary" 
+                    @click="addLogisticSTN(shipment)"
+                    :loading="btnloading"
+                    >SUBMIT
+                  </v-btn>
+                </v-flex>
+              </v-layout>
+            </v-flex>
+          </v-layout>
+          
           <v-layout class="mt-0 pt-0" align-center>
             <v-flex xs4>
               <div class="body-2"></div>
@@ -165,13 +213,20 @@ export default {
         value: "qtyToShip",
         align: "center"
       }
-    ]
+    ],
+    showTextbox: false,
+    logisticSTN: null,
+    btnloading: false,
   }),
   created() {
     //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
     this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
   },
   methods: {
+    toggleTextbox() {
+      this.showTextbox = !this.showTextbox;
+      this.logisticSTN = null;
+    },
     async UpdateShipmentStatus(shipment) {
       //updates hipmentstatus here
       console.log(shipment);
@@ -229,6 +284,48 @@ export default {
           text: `Shipment update has failed due to: ${e}`
         });
       }
+    },
+    async addLogisticSTN(shipment) {
+      this.btnloading = true;
+
+      if(!this.logisticSTN) {
+        this.$swal.fire({
+          type: "error",
+          title: "Missing Logistic's Shipment Tracking Number",
+          text: `Please provide the Logistic's Shipment Tracking Number`
+        });
+        return;
+      }
+
+      console.log(shipment);
+      let updateObj = {
+        id: shipment.id,
+        updatedDetails: {
+          logisticSTN: this.logisticSTN
+        },
+        stockOrderID: shipment.stockOrder.stockOrderId,
+        updatedStockOrderDetails: {
+
+        }
+      };
+      try {
+        await this.$store.dispatch("shipment/UpdateShipment", updateObj);
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: "Logistic's Shipment Tracking Number has been added!"
+        });
+        this.btnloading = false;
+      } catch (e) {
+        this.$swal.fire({
+          type: "error",
+          title: "Failed",
+          text: `Shipment update has failed due to: ${e}`
+        });
+        this.btnloading = false;
+      }
+      this.logisticSTN = null;
+      this.showTextbox = false;
     }
   },
   mixins: [mixins],
