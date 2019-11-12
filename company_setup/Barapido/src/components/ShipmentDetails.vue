@@ -10,7 +10,7 @@
           <v-card-title class="title">
             <v-layout row wrap align-center justify-end>
               <v-flex xs12> 
-                Shipment Tracking Number: {{ shipment.trackingNumber }}
+                Parcel ID: {{ shipment.trackingNumber }}
               </v-flex>
             </v-layout>
 
