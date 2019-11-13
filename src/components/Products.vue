@@ -163,84 +163,195 @@
       {{ modal.text }}
     </sweet-modal>
 
-    <v-dialog max-width="500px" v-model="addProductDialog" persistent>
+    <v-dialog max-width="700px" v-model="addProductDialog" persistent>
       <v-card>
         <v-card-title>
           <div class="title">{{ dialogText }}</div>
         </v-card-title>
         <v-card-text>
           <v-form ref="form" lazy-validation>
-            Product Thumbnail
-            <br />
-            <input
-              type="file"
-              ref="productFile"
-              value="upload"
-              accept=".png, .jpg, .jpeg"
-              @change="validateFile"
-            />
-            <v-avatar v-if="product.downloadURL" size="100px" tile>
-              <v-img
-                contain
-                :src="product.downloadURL"
-                :alt="product.name"
-                :lazy-src="require('@/assets/no-image.png')"
+            <v-card raised>
+              <v-card-title class="font-weight-bold">
+                Details
+              </v-card-title>
+              <v-divider></v-divider>
+              <div class="px-3 pt-2">
+                Product Thumbnail
+                <br />
+                <input
+                  type="file"
+                  ref="productFile"
+                  value="upload"
+                  accept=".png, .jpg, .jpeg"
+                  @change="validateFile"
+                />
+                <v-avatar v-if="product.downloadURL" size="100px" tile>
+                  <v-img
+                    contain
+                    :src="product.downloadURL"
+                    :alt="product.name"
+                    :lazy-src="require('@/assets/no-image.png')"
+                  >
+                    <v-layout
+                      slot="placeholder"
+                      fill-height
+                      align-center
+                      justify-center
+                      ma-0
+                    >
+                      <v-progress-circular
+                        indeterminate
+                        color="grey lighten-5"
+                      ></v-progress-circular>
+                    </v-layout>
+                  </v-img>
+                </v-avatar>
+                <v-text-field
+                  label="Product Code*"
+                  :rules="basicRules"
+                  v-model="product.code"
+                  :disabled="
+                    product.code !== '' && dialogText === 'Edit Product Details'
+                  "
+                ></v-text-field>
+                <v-text-field
+                  label="Name*"
+                  :rules="basicRules"
+                  v-model="product.name"
+                ></v-text-field>
+                <v-textarea
+                  label="Description*"
+                  :rules="basicRules"
+                  v-model="product.description"
+                ></v-textarea>
+                <v-text-field
+                  label="Price*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.price"
+                ></v-text-field>
+                <v-text-field
+                  label="Reseller Price*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.resellerPrice"
+                ></v-text-field>
+                <v-text-field
+                  label="Percentage"
+                  v-model="product.sale.percentage"
+                  v-show="product.sale.status"
+                ></v-text-field>
+                <v-checkbox
+                  v-model="product.isOutofStock"
+                  :label="'Out of stock?'"
+                ></v-checkbox>
+              </div>
+            </v-card>
+
+            <v-card raised class="mt-2">
+              <v-card-title class="font-weight-bold">
+                Attributes
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-layout row v-if="!product.attributes.length" px-3>
+                <p class="font-italic text-center">
+                  There is no attributes in this products
+                </p>
+              </v-layout>
+
+              <v-layout
+                row
+                wrap
+                v-else
+                v-for="(attrib, index) in product.attributes"
+                :key="attrib.name"
+                align-center
+                justify-center
+                px-3
+                py-2
               >
-                <v-layout
-                  slot="placeholder"
-                  fill-height
-                  align-center
-                  justify-center
-                  ma-0
-                >
-                  <v-progress-circular
-                    indeterminate
-                    color="grey lighten-5"
-                  ></v-progress-circular>
-                </v-layout>
-              </v-img>
-            </v-avatar>
-            <v-text-field
-              label="Product Code*"
-              :rules="basicRules"
-              v-model="product.code"
-              :disabled="
-                product.code !== '' && dialogText === 'Edit Product Details'
-              "
-            ></v-text-field>
-            <v-text-field
-              label="Name*"
-              :rules="basicRules"
-              v-model="product.name"
-            ></v-text-field>
-            <v-textarea
-              label="Description*"
-              :rules="basicRules"
-              v-model="product.description"
-            ></v-textarea>
-            <!-- <v-text-field
-              label="Color"
-              v-model="product.attributes.color"
-            ></v-text-field> -->
-            <v-text-field
-              label="Price*"
-              :rules="decimalOnlyRules"
-              v-model="product.price"
-            ></v-text-field>
-            <v-text-field
-              label="Reseller Price*"
-              :rules="decimalOnlyRules"
-              v-model="product.resellerPrice"
-            ></v-text-field>
-            <v-text-field
-              label="Percentage"
-              v-model="product.sale.percentage"
-              v-show="product.sale.status"
-            ></v-text-field>
-            <v-checkbox
-              v-model="product.isOutofStock"
-              :label="'Out of stock?'"
-            ></v-checkbox>
+                <v-flex xs4 pl-2>
+                  <div class="font-weight-bold caption">{{ attrib.name }}</div>
+                </v-flex>
+                <v-flex xs4>
+                  <div class="caption" v-for="item in attrib.items" :key="item">
+                    {{ item }}
+                  </div>
+                </v-flex>
+                <v-flex xs4>
+                  <v-tooltip left>
+                    <v-btn
+                      slot="activator"
+                      icon
+                      class="primary white--text"
+                      @click.stop="deleteAttribute(index)"
+                    >
+                      <v-icon>delete</v-icon>
+                    </v-btn>
+                    <span>Delete Attribute</span>
+                  </v-tooltip>
+                  <v-tooltip right>
+                    <v-btn
+                      slot="activator"
+                      icon
+                      class="primary white--text"
+                      @click.stop="editAttribute(index)"
+                    >
+                      <v-icon>edit</v-icon>
+                    </v-btn>
+                    <span>Edit Attribute</span>
+                  </v-tooltip>
+                </v-flex>
+                <v-flex xs12>
+                  <v-divider class="my-2 primary" />
+                </v-flex>
+              </v-layout>
+
+              <v-layout row wrap align-center justify-end mt-1 pa-3>
+                <v-flex xs12 mb-1>
+                  <div class="font-weight-bold">Add Product Attribute</div>
+                </v-flex>
+                <v-flex xs12>
+                  <v-text-field
+                    label="Attribute Name"
+                    placeholder="Ex: Color, Weight, Size, etc..."
+                    v-model="tempAttribName"
+                  ></v-text-field>
+                </v-flex>
+
+                <v-flex xs12>
+                  <v-text-field
+                    label="Attribute Item"
+                    placeholder="Seperate each item with a comma. Ex: Blue, Red"
+                    v-model="tempAttribItems"
+                  ></v-text-field>
+                </v-flex>
+
+                <v-flex xs12>
+                  <v-btn
+                    v-if="showEditConfirmButton"
+                    block
+                    small
+                    color="secondary"
+                    depressed
+                    :disabled="!tempAttribName || !tempAttribItems"
+                    @click="confirmEditProductAttribute"
+                  >
+                    Confirm Edit on Product Attribute
+                  </v-btn>
+
+                  <v-btn
+                    v-else
+                    block
+                    small
+                    color="primary"
+                    depressed
+                    :disabled="!tempAttribName || !tempAttribItems"
+                    @click="addProductAttribute"
+                  >
+                    Add Product Attribute
+                  </v-btn>
+                </v-flex>
+              </v-layout>
+            </v-card>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -431,8 +542,16 @@ export default {
       promotion: false,
       downloadURL: null,
       isOutofStock: null,
-      id: null
+      id: null,
+      attributes: []
     },
+
+    tempAttribName: null,
+    tempAttribItems: null,
+    showEditConfirmButton: false,
+    productIndex: null,
+    panel: false,
+
     addProductDialog: false,
     dialogText: null,
     addProductButtonDisabled: false,
@@ -474,6 +593,9 @@ export default {
       this.product.name = null;
       this.product.isOutofStock = null;
       this.$refs.productFile.files.value = null;
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+      this.product.attributes = [];
     },
     async viewItemDetails(item) {
       this.dialogText = "Edit Product Details";
@@ -487,7 +609,63 @@ export default {
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.isOutofStock = item.isOutofStock;
+      this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+    },
+    addProductAttribute() {
+      this.product.attributes.push({
+        name: this.tempAttribName,
+        items: this.tempAttribItems.split(",").map(attribute => {
+          return attribute.trim();
+        })
+      });
+
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+
+      console.log(this.product.attributes);
+    },
+
+    editAttribute(index) {
+      this.tempAttribName = this.product.attributes[index].name;
+      this.tempAttribItems = this.product.attributes[index].items.join(", ");
+      this.showEditConfirmButton = true;
+      this.productIndex = index;
+
+      console.log(this.product.attributes);
+    },
+
+    confirmEditProductAttribute() {
+      this.product.attributes[this.productIndex].name = this.tempAttribName;
+      this.product.attributes[
+        this.productIndex
+      ].items = this.tempAttribItems.split(",").map(attribute => {
+        return attribute.trim();
+      });
+      this.showEditConfirmButton = false;
+      this.productIndex = null;
+
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+
+      console.log(this.product.attributes);
+    },
+    async deleteAttribute(index) {
+      const r = await this.$swal.fire({
+        title: "Warning!",
+        text: `Are you sure you want to delete "${this.product.attributes[index].name}" attribute?`,
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if (r.value) {
+        this.product.attributes.splice(index, 1);
+      }
     },
     closeProductDialog() {
       this.$refs.productFile.value = null;
@@ -543,8 +721,9 @@ export default {
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
             sale: this.product.sale,
-            isOutofStock: this.product.isOutofStock || null
+            isOutofStock: this.product.isOutofStock || null,
             //uid: null
+            attributes: this.product.attributes
           };
           console.log(newProduct);
 
@@ -631,9 +810,10 @@ export default {
           sale: this.product.sale,
           isOutofStock: this.product.isOutofStock || null,
           //uid: null
-          downloadURL: this.product.downloadURL,
-          pictureName: this.product.pictureName,
-          id: this.product.id
+          downloadURL: this.product.downloadURL || null,
+          pictureName: this.product.pictureName || null,
+          id: this.product.id,
+          attributes: this.product.attributes
         };
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 

@@ -21,6 +21,10 @@ export default {
 			v => !!v || 'This field is required',
 			v => (v && v.length >= 6) || 'Minimum of 6 characters',
 		],
+		decimalOnlyRules: [
+			v => !!v || 'This field is required',
+			v => /^(0|[1-9]\d*)(\.\d+)?$/.test(v) || 'Requires a valid decimal number',
+		],
 		rules: {
 			required: value => !!value || 'Required.',
 			passwordMin: v => v.length >= 6 || 'Minimum of 6 characters',
