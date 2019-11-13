@@ -70,11 +70,12 @@ const shipment = {
         async GetShipmentsByDate({ commit }, payload) {
             try {
                 commit('ClearShipmentList');
-                const fromDate = new Date(moment(payload.fromDate).startOf("day"));
+                const fromDate = new Date(moment(payload.dateRange.fromDate).startOf("day"));
                 const millisecondFromConvertion = fromDate.getTime();
-                const toDate = new Date(moment(payload.toDate).endOf("day"));
+                const toDate = new Date(moment(payload.dateRange.toDate).endOf("day"));
                 const millisecondToConvertion = toDate.getTime();
-                const shipmentSnapshot = await DB.collection('shipment').where("dateSubmitted", ">=", millisecondFromConvertion).where("dateSubmitted", "<=", millisecondToConvertion).get();
+                const filter = payload.filter === "Delivery Date" ? "shipmentDate" : "dateSubmitted";
+                const shipmentSnapshot = await DB.collection('shipment').where(filter, ">=", millisecondFromConvertion).where(filter, "<=", millisecondToConvertion).get();
                 console.log(shipmentSnapshot)
                 if (!shipmentSnapshot.empty) {
                     const shipmentList = shipmentSnapshot.docs.map((shipment) => {
