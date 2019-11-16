@@ -8,12 +8,12 @@
       >
         <v-card class="mt-2" color="white">
           <v-card-title class="title">
-            <v-layout row wrap align-center justify-end>
+            <v-layout row wrap align-center justify-start>
               <v-flex xs12> 
                 Parcel ID: {{ shipment.trackingNumber }}
               </v-flex>
 
-              <v-flex xs6>
+              <v-flex xs12 md4>
                 <v-btn
                   color="success"
                   v-show="shipment.status.toLowerCase() === 'pending'"
@@ -22,7 +22,7 @@
                 >
               </v-flex>
 
-              <v-flex xs6>
+              <v-flex xs12 md3 offset-md1>
                 <v-btn
                   color="error"
                   v-show="shipment.status.toLowerCase() === 'pending'"
@@ -30,6 +30,14 @@
                   >Cancel this shipment</v-btn
                 >
               </v-flex>  
+
+              <v-flex xs12 md4>
+                <v-btn
+                  color="primary"
+                  @click="printShipmentDetails(shipment)"
+                  >Print this Shipment Details</v-btn
+                >
+              </v-flex>
             </v-layout>
           </v-card-title>
 
@@ -326,6 +334,121 @@ export default {
       }
       this.logisticSTN = null;
       this.showTextbox = false;
+    },
+    printShipmentDetails(shipment) {
+      
+      
+      const date = new Date(shipment.shipmentDate);
+      if(date) {
+        const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+        shipment.shipmentDate = `${month[date.getMonth()]} ${date.getDate()} ${date.getFullYear()}`;
+      }
+      else {
+        shipment.shipmentDate = null;
+      }
+      
+      //create the html code for the "items to be ship" table
+      let itemsToShipHTML = "<table><tr><th>Product Name</th><th>Qty to Ship</th></tr>";
+
+      for(let i = 0; i < shipment.itemsToShip.length; i++) {
+        const item = shipment.itemsToShip[i];
+        itemsToShipHTML += "<tr>";
+        itemsToShipHTML += "<td>" + item.productName + "</td>" + "<td>" + item.qtyToShip + "</td>";
+        itemsToShipHTML += "</tr>";
+      }
+
+      itemsToShipHTML += "</table>";
+
+      // Open the print window
+      const WinPrint = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
+
+      WinPrint.document.write(`<!DOCTYPE html>
+      <html>
+        <head>
+         <style>
+          
+          body {
+            margin-left: 30px;
+          }
+
+          table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+          }
+
+          th, td {
+            padding: 10px;
+            text-align: left;
+          }
+
+          .title {
+            font-weight: bold;
+          }
+
+          .header {
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 5px;
+          }
+
+         </style>
+        </head>
+       
+        <body>
+          <div class="header">
+            Shipment Details
+          </div>
+
+          <table>
+            <tr>
+              <td class="title">Parcel ID</td>
+              <td>${shipment.trackingNumber || ""}</td>
+            </tr>
+            <tr>
+              <td class="title">Customer Name</td>
+              <td>${shipment.userDetails.firstName || ""} ${shipment.userDetails.middleInitial || ""} ${shipment.userDetails.lastName || ""}</td>
+            </tr>
+            <tr>
+              <td class="title">Stock Order Reference Number</td>
+              <td>${shipment.stockOrder.stockOrderReference || ""}</td>
+            </tr>
+            <tr>
+              <td class="title">Address</td>
+              <td>${shipment.userDetails.address.house || ""} ${shipment.userDetails.address.streetName || ""} ${shipment.userDetails.address.baranggay || ""} ${shipment.userDetails.address.citymun || ""} ${shipment.userDetails.address.province}</td>
+            </tr>
+            <tr>
+              <td class="title">Shipment Type</td>
+              <td>${shipment.type || ""}</td>
+            </tr>
+            <tr>
+              <td class="title">Shipment Status</td>
+              <td>${shipment.status || ""}</td>
+            </tr>
+            <tr>
+              <td class="title">Shipment Delivery Date</td>
+              <td>${shipment.shipmentDate || ""}</td>
+            </tr>
+            <tr>
+              <td class="title">Logistic's Shipment Tracking Number</td>
+              <td>${shipment.logisticSTN || ""}</td>
+            </tr>
+          </table>
+          
+          <br/>
+
+          <div>
+            <div class="header">
+              Items to Ship
+            </div>
+
+            ${itemsToShipHTML}
+          </div>
+        </body>
+      </html>`);
+
+      WinPrint.document.close();
+      WinPrint.focus();
+      WinPrint.print();
     }
   },
   mixins: [mixins],
