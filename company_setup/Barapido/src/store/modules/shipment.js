@@ -96,13 +96,13 @@ const shipment = {
                 await DB.collection('shipment').doc(payload.id).update(payload.updatedDetails);
                 commit('UpdateShipment', payload)
 
-                await dispatch(
-                    "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-                    {
-                        updateObject: payload.updatedStockOrderDetails,
-                        referenceID: payload.stockOrderID
-                    }, { root: true }
-                );
+                // await dispatch(
+                //     "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+                //     {
+                //         updateObject: payload.updatedStockOrderDetails,
+                //         referenceID: payload.stockOrderID
+                //     }, { root: true }
+                // );
 
             } catch (error) {
                 throw error;
