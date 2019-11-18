@@ -246,28 +246,28 @@
             <v-layout row>
               <v-flex xs5>
                 <v-menu
-                  ref="menu"
-                  v-model="menu"
+                  lazy
                   :close-on-content-click="false"
-                  :return-value.sync="date"
+                  v-model="menu"
                   transition="scale-transition"
                   offset-y
+                  full-width
+                  :nudge-right="40"
+                  max-width="290px"
                   min-width="290px"
                 >
-                  <template v-slot:activator="{ on }">
-                    <v-text-field
-                      v-model="date"
-                      label="Pick a Shipment Delivery Date"
-                      prepend-icon="event"
-                      readonly
-                      v-on="on"
-                    ></v-text-field>
-                  </template>
-                  <v-date-picker v-model="date" scrollable>
-                    <v-spacer></v-spacer>
-                    <v-btn text color="secondary" outline @click="menu = false">Cancel</v-btn>
-                    <v-btn text color="primary" @click="$refs.menu.save(date)">OK</v-btn>
-                  </v-date-picker>
+                  <v-text-field
+                    slot="activator"
+                    label="Pick a Shipment Delivery Date"
+                    v-model="date"
+                    prepend-icon="event"
+                    readonly
+                  ></v-text-field>
+                  <v-date-picker
+                    v-model="date"
+                    @input="menu = false"
+                    no-title
+                  ></v-date-picker>
                 </v-menu>
               </v-flex>
             </v-layout>
@@ -298,8 +298,8 @@ import Toast from "@/components/Toast";
 import StockOrderItems from "@/components/StockOrderItems";
 import ShipmentDetails from "@/components/ShipmentDetails";
 import PartialShipment from "@/components/PartialShipment";
-import { async } from "q";
 import { mapState } from "vuex";
+import moment from "moment";
 
 export default {
   data: () => ({
@@ -386,11 +386,11 @@ export default {
       }
     },
     async SubmitShipment() {
-      if(!this.date) {
+      if (!this.date) {
         this.$swal.fire({
           title: "Missing Shipment Date",
           text: "Please select a shipment date!",
-          type: "warning",
+          type: "warning"
         });
         return;
       }
@@ -405,7 +405,7 @@ export default {
         confirmButtonText: "Yes, Submit it!"
       });
 
-      const shipmentDate = Date.parse(this.date);
+      const shipmentDate = Date.parse(moment(this.date).startOf("day"));
 
       if (response.value) {
         if (this.shipmentType === "Full") {
@@ -444,7 +444,7 @@ export default {
               itemsToShip: itemsToShip,
               type: "Full Shipment",
               status: "Pending",
-              shipmentDate: shipmentDate,
+              shipmentDate: shipmentDate
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -532,8 +532,8 @@ export default {
               dateSubmitted: Date.now(),
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
-              status: "Pending", 
-              shipmentDate: shipmentDate,
+              status: "Pending",
+              shipmentDate: shipmentDate
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
