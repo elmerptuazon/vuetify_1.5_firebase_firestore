@@ -326,13 +326,20 @@ export default {
             stockOrderDataDocument.data().statusTimeline.length - 2
           ].status;
         }
+        let updatedeStatusTimeline = stockOrderDataDocument.data()
+          .statusTimeline;
 
+        updatedeStatusTimeline.push({
+          status: stockOrderStatus,
+          date: Date.now()
+        });
         let stockOrderUpdateObj = {
           referenceID: shipment.stockOrder.stockOrderId,
           updateObject: {
             shipmentsToReceive: shipmentDecrement,
             items: updatedStockOrderItems,
-            status: stockOrderStatus
+            status: stockOrderStatus,
+            statusTimeline: updatedeStatusTimeline
           }
         };
 
