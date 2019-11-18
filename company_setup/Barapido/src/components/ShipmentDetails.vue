@@ -247,14 +247,21 @@ export default {
         id: shipment.id,
         updatedDetails: {
           status: "Received"
-        },
-        stockOrderID: shipment.stockOrder.stockOrderId,
-        updatedStockOrderDetails: {
+        }
+      };
+      let stockOrderUpdateObj = {
+        referenceID: shipment.stockOrder.stockOrderId,
+        updateObject: {
           shipmentsToReceive: shipmentDecrement
         }
       };
       try {
         await this.$store.dispatch("shipment/UpdateShipment", updateObj);
+
+        await this.$store.dispatch(
+          "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+          stockOrderUpdateObj
+        );
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -270,31 +277,72 @@ export default {
     },
     async cancelShipment(shipment) {
       //updates hipmentstatus here
-      console.log(shipment);
-      const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
-      let updateObj = {
-        id: shipment.id,
-        updatedDetails: {
-          status: "Cancelled"
-        },
-        stockOrderID: shipment.stockOrder.stockOrderId,
-        updatedStockOrderDetails: {
-          shipmentsToReceive: shipmentDecrement
+      //console.log(shipment);
+
+      const response = await this.$swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Cancel it!"
+      });
+      if (response.value) {
+        let updateObj = {
+          id: shipment.id,
+          updatedDetails: {
+            status: "Cancelled"
+          }
+        };
+
+        //move this to Vuex or do this kind of updates in a cloud functions
+        const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
+        let stockOrderDataDocument = await FB.firestore()
+          .collection("stock_orders")
+          .doc(shipment.stockOrder.stockOrderId)
+          .get();
+
+        let updatedStockOrderItems = stockOrderDataDocument
+          .data()
+          .items.map(item => {
+            const cancelledItem = shipment.itemsToShip.find(
+              shippedItem => shippedItem.productId === item.productId
+            );
+            if (cancelledItem) {
+              console.log(cancelledItem);
+              item.shippedQty = item.shippedQty - cancelledItem.qtyToShip;
+              console.log(item);
+            }
+            return item;
+          });
+
+        let stockOrderUpdateObj = {
+          referenceID: shipment.stockOrder.stockOrderId,
+          updateObject: {
+            shipmentsToReceive: shipmentDecrement,
+            items: updatedStockOrderItems
+          }
+        };
+        console.log(updatedStockOrderItems);
+        try {
+          await this.$store.dispatch("shipment/UpdateShipment", updateObj);
+          await this.$store.dispatch(
+            "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+            stockOrderUpdateObj
+          );
+          this.$swal.fire({
+            type: "success",
+            title: "Success",
+            text: "Shipment status has been updated!"
+          });
+        } catch (e) {
+          this.$swal.fire({
+            type: "error",
+            title: "Failed",
+            text: `Shipment update has failed due to: ${e}`
+          });
         }
-      };
-      try {
-        await this.$store.dispatch("shipment/UpdateShipment", updateObj);
-        this.$swal.fire({
-          type: "success",
-          title: "Success",
-          text: "Shipment status has been updated!"
-        });
-      } catch (e) {
-        this.$swal.fire({
-          type: "error",
-          title: "Failed",
-          text: `Shipment update has failed due to: ${e}`
-        });
       }
     },
     async addLogisticSTN(shipment) {
@@ -306,6 +354,7 @@ export default {
           title: "Missing Logistic's Shipment Tracking Number",
           text: `Please provide the Logistic's Shipment Tracking Number`
         });
+        this.btnloading = false;
         return;
       }
 
@@ -314,9 +363,7 @@ export default {
         id: shipment.id,
         updatedDetails: {
           logisticSTN: this.logisticSTN
-        },
-        stockOrderID: shipment.stockOrder.stockOrderId,
-        updatedStockOrderDetails: {}
+        }
       };
       try {
         await this.$store.dispatch("shipment/UpdateShipment", updateObj);
