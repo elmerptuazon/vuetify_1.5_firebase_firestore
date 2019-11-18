@@ -500,17 +500,14 @@ export default {
               <td class="title">Address</td>
               <td>${shipment.userDetails.address.house || ""} ${shipment
         .userDetails.address.streetName || ""} ${shipment.userDetails.address
-        .baranggay || ""} ${shipment.userDetails.address.citymun || ""} ${
+        .barangay || ""} ${shipment.userDetails.address.citymun || ""} ${
         shipment.userDetails.address.province
-      }</td>
+      }  ${shipment.userDetails.address.zipCode || ""} 
+      </td>
             </tr>
             <tr>
               <td class="title">Shipment Type</td>
               <td>${shipment.type || ""}</td>
-            </tr>
-            <tr>
-              <td class="title">Shipment Status</td>
-              <td>${shipment.status || ""}</td>
             </tr>
             <tr>
               <td class="title">Shipment Delivery Date</td>
