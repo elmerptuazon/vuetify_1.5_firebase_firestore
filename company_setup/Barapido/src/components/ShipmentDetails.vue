@@ -310,21 +310,32 @@ export default {
               shippedItem => shippedItem.productId === item.productId
             );
             if (cancelledItem) {
-              console.log(cancelledItem);
               item.shippedQty = item.shippedQty - cancelledItem.qtyToShip;
-              console.log(item);
             }
             return item;
           });
+        let stockOrderStatus;
+        if (
+          typeof stockOrderDataDocument.data().statusTimeline[
+            stockOrderDataDocument.data().statusTimeline.length - 2
+          ] == "undefined"
+        ) {
+          stockOrderStatus = "pending";
+        } else {
+          stockOrderStatus = stockOrderDataDocument.data().statusTimeline[
+            stockOrderDataDocument.data().statusTimeline.length - 2
+          ].status;
+        }
 
         let stockOrderUpdateObj = {
           referenceID: shipment.stockOrder.stockOrderId,
           updateObject: {
             shipmentsToReceive: shipmentDecrement,
-            items: updatedStockOrderItems
+            items: updatedStockOrderItems,
+            status: stockOrderStatus
           }
         };
-        console.log(updatedStockOrderItems);
+
         try {
           await this.$store.dispatch("shipment/UpdateShipment", updateObj);
           await this.$store.dispatch(
