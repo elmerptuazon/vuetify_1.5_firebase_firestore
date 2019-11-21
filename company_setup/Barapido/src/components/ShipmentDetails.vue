@@ -6,7 +6,15 @@
         v-for="shipment in shipmentList"
         :key="shipment.trackingNumber"
       >
-        <v-card class="mt-2" color="white">
+        <v-card
+          class="mt-2"
+          color="white"
+          :class="[
+            shipment.status.toLowerCase() === 'cancelled'
+              ? 'grey lighten-1'
+              : ''
+          ]"
+        >
           <v-card-title class="title">
             Parcel ID: {{ shipment.trackingNumber }}
             <v-spacer></v-spacer>
@@ -104,6 +112,11 @@
                               >Shipment Status</v-list-tile-sub-title
                             >
                             <v-list-tile-title
+                              :class="[
+                                shipment.status.toLowerCase() === 'cancelled'
+                                  ? 'red--text'
+                                  : ''
+                              ]"
                               >{{ shipment.status }}
                             </v-list-tile-title>
                           </v-list-tile-content>
@@ -191,12 +204,6 @@
                   </v-btn>
                 </v-flex>
               </v-layout>
-            </v-flex>
-          </v-layout>
-
-          <v-layout class="mt-0 pt-0" align-center>
-            <v-flex xs4>
-              <div class="body-2"></div>
             </v-flex>
           </v-layout>
         </v-card>
