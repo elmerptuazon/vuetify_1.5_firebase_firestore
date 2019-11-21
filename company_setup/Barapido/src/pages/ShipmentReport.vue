@@ -169,8 +169,8 @@ export default {
     fromMenu: false,
     toDate: new Date().toISOString().substr(0, 10),
     toMenu: false,
-    filters: ["Delivery Date", "Process Date"],
-    selectedFilter: "Delivery Date",
+    filters: ["Pick-Up Date", "Process Date"],
+    selectedFilter: "Pick-Up Date",
     loading: false,
     headers: [
       {

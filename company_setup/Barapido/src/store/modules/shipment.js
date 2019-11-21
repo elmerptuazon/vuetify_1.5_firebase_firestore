@@ -74,7 +74,7 @@ const shipment = {
                 const millisecondFromConvertion = fromDate.getTime();
                 const toDate = new Date(moment(payload.dateRange.toDate).endOf("day"));
                 const millisecondToConvertion = toDate.getTime();
-                const filter = payload.filter === "Delivery Date" ? "shipmentDate" : "dateSubmitted";
+                const filter = payload.filter === "Pick-Up Date" ? "pickupDate" : "dateSubmitted";
                 const shipmentSnapshot = await DB.collection('shipment').where(filter, ">=", millisecondFromConvertion).where(filter, "<=", millisecondToConvertion).get();
                 console.log(shipmentSnapshot)
                 if (!shipmentSnapshot.empty) {
