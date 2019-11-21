@@ -229,7 +229,7 @@
           <v-divider></v-divider>
           <v-card-text>
             <v-layout wrap>
-              <v-flex xs12>
+              <v-flex xs8>
                 <v-radio-group v-model="shipmentType" row>
                   <v-radio label="Full Shipment" value="Full"></v-radio>
                   <v-radio label="Partial Shipment" value="Partial"></v-radio>
@@ -242,9 +242,7 @@
                   />
                 </v-radio-group>
               </v-flex>
-            </v-layout>
-            <v-layout row>
-              <v-flex xs5>
+              <v-flex xs4>
                 <v-menu
                   lazy
                   :close-on-content-click="false"
@@ -258,13 +256,13 @@
                 >
                   <v-text-field
                     slot="activator"
-                    label="Pick a Shipment Delivery Date"
-                    v-model="date"
+                    label="Pick-up Date"
+                    v-model="pickupDate"
                     prepend-icon="event"
                     readonly
                   ></v-text-field>
                   <v-date-picker
-                    v-model="date"
+                    v-model="pickupDate"
                     @input="menu = false"
                     no-title
                   ></v-date-picker>
@@ -310,8 +308,7 @@ export default {
     shipmentType: "Full",
     shipmentDetails: null,
     partialShipment: false,
-    shipmentDate: null,
-    date: null,
+    pickupDate: null,
     menu: false,
 
     //tells the partialShipment component if the previously created
@@ -386,10 +383,10 @@ export default {
       }
     },
     async SubmitShipment() {
-      if (!this.date) {
+      if (!this.pickupDate) {
         this.$swal.fire({
-          title: "Missing Shipment Date",
-          text: "Please select a shipment date!",
+          title: "Missing Pick-up Date",
+          text: "Please select a pick-up date!",
           type: "warning"
         });
         return;
@@ -405,7 +402,7 @@ export default {
         confirmButtonText: "Yes, Submit it!"
       });
 
-      const shipmentDate = Date.parse(moment(this.date).startOf("day"));
+      const pickupDate = Date.parse(moment(this.pickupDate).startOf("day"));
 
       if (response.value) {
         if (this.shipmentType === "Full") {
@@ -444,7 +441,7 @@ export default {
               itemsToShip: itemsToShip,
               type: "Full Shipment",
               status: "Pending",
-              shipmentDate: shipmentDate
+              pickupDate: pickupDate
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -533,7 +530,7 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              shipmentDate: shipmentDate
+              pickupDate: pickupDate
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
