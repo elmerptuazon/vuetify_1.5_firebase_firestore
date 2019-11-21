@@ -459,6 +459,7 @@ export default {
           
           body {
             margin-left: 30px;
+             margin-top: 200px;
           }
 
           table, th, td {
@@ -512,14 +513,15 @@ export default {
       }  ${shipment.userDetails.address.zipCode || ""} 
       </td>
             </tr>
+             <tr>
+              <td class="title">Contact Details</td>
+              <td>${shipment.userDetails.contact || ""}</td>
+            </tr>
             <tr>
               <td class="title">Shipment Type</td>
               <td>${shipment.type || ""}</td>
             </tr>
-            <tr>
-              <td class="title">Shipment Delivery Date</td>
-              <td>${shipment.shipmentDate || ""}</td>
-            </tr>
+           
             <tr>
               <td class="title">Logistic's Shipment Tracking Number</td>
               <td>${shipment.logisticSTN || ""}</td>
