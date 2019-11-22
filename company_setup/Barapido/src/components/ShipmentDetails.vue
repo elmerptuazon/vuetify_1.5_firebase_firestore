@@ -49,53 +49,34 @@
 
           <v-card-text>
             <v-layout align-center justify-space-around row wrap>
-              <v-flex xs12 md4>
-                <v-container
-                  ><v-card flat>
-                    <v-card-text>
+              <v-flex xs12 md5>
+                <v-container fluid
+                  ><v-card>
+                    <v-card-actions class="mb-0 pb-0">
+                      <v-spacer> </v-spacer>
+                      <v-btn
+                        v-if="shipment.status.toLowerCase() === 'pending'"
+                        small
+                        icon
+                      >
+                        <v-icon @click="showShipmentFields(shipment)"
+                          >edit</v-icon
+                        >
+                      </v-btn>
+                    </v-card-actions>
+                    <v-card-text class="mt-0 pt-0">
                       <v-list subheader>
-                        <v-list-tile>
-                          <v-list-tile-content>
-                            <v-list-tile-sub-title
-                              >Customer Name</v-list-tile-sub-title
-                            >
-                            <v-list-tile-title>
-                              {{ shipment.userDetails.firstName }}
-                              {{ shipment.userDetails.middleInitial || "" }}
-                              {{
-                                shipment.userDetails.lastName
-                              }}</v-list-tile-title
-                            >
-                          </v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                          <v-list-tile-content>
-                            <v-list-tile-sub-title
-                              >Stock Order Reference
-                              Number</v-list-tile-sub-title
-                            >
-                            <v-list-tile-title>{{
-                              shipment.stockOrder.stockOrderReference
-                            }}</v-list-tile-title>
-                          </v-list-tile-content>
-                        </v-list-tile>
-
                         <v-list-tile
                           ><v-list-tile-content>
                             <v-list-tile-sub-title
-                              >Address</v-list-tile-sub-title
-                            >
+                              >Logistic's Shipment Tracking Number
+                            </v-list-tile-sub-title>
                             <v-list-tile-title
-                              >{{ shipment.userDetails.address.house }}
-                              {{ shipment.userDetails.address.streetName }},
-                              {{ shipment.userDetails.address.barangay }},
-                              {{ shipment.userDetails.address.citymun }},
-                              {{
-                                shipment.userDetails.address.province
-                              }}</v-list-tile-title
-                            >
+                              >{{ shipment.logisticSTN }}
+                            </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
+
                         <v-list-tile
                           ><v-list-tile-content>
                             <v-list-tile-sub-title
@@ -124,23 +105,24 @@
                         <v-list-tile v-if="shipment.shipmentDate"
                           ><v-list-tile-content>
                             <v-list-tile-sub-title
-                              >Shipment Delivery Date</v-list-tile-sub-title
-                            >
-                            <v-list-tile-title
-                              >{{
+                              >Shipment Delivery Date
+                            </v-list-tile-sub-title>
+                            <v-list-tile-title>
+                              {{
                                 shipment.shipmentDate | momentize("DD-MMM-YYYY")
                               }}
                             </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
-                        <v-list-tile v-if="shipment.logisticSTN"
+                        <v-list-tile
                           ><v-list-tile-content>
                             <v-list-tile-sub-title
-                              >Logistic's Shipment Tracking
-                              Number</v-list-tile-sub-title
-                            >
-                            <v-list-tile-title
-                              >{{ shipment.logisticSTN }}
+                              >Pick-up Date
+                            </v-list-tile-sub-title>
+                            <v-list-tile-title>
+                              {{
+                                shipment.pickupDate | momentize("DD-MMM-YYYY")
+                              }}
                             </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
@@ -149,7 +131,61 @@
                   </v-card></v-container
                 >
               </v-flex>
-              <v-flex xs12 md8>
+              <v-flex xs12 md7>
+                <v-container fluid
+                  ><v-card>
+                    <v-card-text>
+                      <v-list subheader>
+                        <v-list-tile>
+                          <v-list-tile-content>
+                            <v-list-tile-sub-title
+                              >Stock Order Reference
+                              Number</v-list-tile-sub-title
+                            >
+                            <v-list-tile-title>{{
+                              shipment.stockOrder.stockOrderReference
+                            }}</v-list-tile-title>
+                          </v-list-tile-content>
+                        </v-list-tile>
+                        <v-list-tile>
+                          <v-list-tile-content>
+                            <v-list-tile-sub-title
+                              >Customer Name</v-list-tile-sub-title
+                            >
+                            <v-list-tile-title>
+                              {{ shipment.userDetails.firstName }}
+                              {{ shipment.userDetails.middleInitial || "" }}
+                              {{
+                                shipment.userDetails.lastName
+                              }}</v-list-tile-title
+                            >
+                          </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile
+                          ><v-list-tile-content>
+                            <v-list-tile-sub-title
+                              >Address</v-list-tile-sub-title
+                            >
+                            <v-list-tile-title
+                              >{{ shipment.userDetails.address.house }}
+                              {{ shipment.userDetails.address.streetName }},
+                              {{ shipment.userDetails.address.barangay }},
+                              {{ shipment.userDetails.address.citymun }},
+                              {{ shipment.userDetails.address.province }},
+                              {{
+                                shipment.userDetails.address.zipCode
+                              }}</v-list-tile-title
+                            >
+                          </v-list-tile-content>
+                        </v-list-tile>
+                      </v-list>
+                    </v-card-text>
+                  </v-card></v-container
+                >
+              </v-flex>
+
+              <v-flex xs12>
                 <v-data-table
                   hide-actions
                   :headers="headers"
@@ -164,51 +200,59 @@
               </v-flex>
             </v-layout>
           </v-card-text>
-          <v-layout
-            row
-            wrap
-            v-if="
-              !shipment.logisticSTN &&
-                shipment.status.toLowerCase() === 'pending'
-            "
-            px-3
-          >
-            <v-flex xs4>
-              <v-btn
-                color="primary"
-                @click="toggleTextbox"
-                v-show="!showTextbox"
-                >ADD LOGISTIC'S SHIPMENT TRACKING NUMBER</v-btn
-              >
-            </v-flex>
-            <v-flex xs12>
-              <v-layout row v-show="showTextbox">
-                <v-flex xs6>
-                  <v-text-field
-                    v-model="logisticSTN"
-                    label="Logistic's Shipment Tracking Number"
-                    placeholder="please enter the Logistic's Shipment Tracking Number..."
-                    clearable
-                  >
-                  </v-text-field>
-                </v-flex>
-                <v-flex xs1>
-                  <v-btn flat @click="toggleTextbox">CANCEL</v-btn>
-                </v-flex>
-                <v-flex xs1 ml-3>
-                  <v-btn
-                    color="primary"
-                    @click="addLogisticSTN(shipment)"
-                    :loading="btnloading"
-                    >SUBMIT
-                  </v-btn>
-                </v-flex>
-              </v-layout>
-            </v-flex>
-          </v-layout>
         </v-card>
       </v-flex>
     </v-layout>
+    <v-dialog v-model="shipmentDialog" max-width="600px">
+      <v-card>
+        <v-card-title>Shipment Details </v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="selectedShipment.logisticSTN"
+            label="Logistic's Shipment Tracking Number"
+            clearable
+          >
+          </v-text-field>
+          <v-menu
+            lazy
+            :close-on-content-click="false"
+            v-model="dateMenu"
+            transition="scale-transition"
+            offset-y
+            full-width
+            :nudge-right="40"
+            max-width="290px"
+            min-width="290px"
+          >
+            <v-text-field
+              slot="activator"
+              label="Shipment Date"
+              v-model="selectedShipment.shipmentDate"
+              prepend-icon="event"
+              readonly
+            ></v-text-field>
+            <v-date-picker
+              v-model="selectedShipment.shipmentDate"
+              @input="dateMenu = false"
+              no-title
+            ></v-date-picker>
+          </v-menu>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" @click="shipmentDialog = false" flat
+            >Close</v-btn
+          >
+          <v-btn
+            color="blue darken-1"
+            flat
+            :loading="btnloading"
+            @click="UpdateShipmentDetails"
+            >Save</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -216,6 +260,7 @@
 import mixins from "@/mixins";
 import { mapState } from "vuex";
 import { FB } from "@/config/firebase";
+import moment from "moment";
 export default {
   props: ["stockOrderId"],
   data: () => ({
@@ -233,19 +278,20 @@ export default {
         align: "center"
       }
     ],
-    showTextbox: false,
-    logisticSTN: null,
-    btnloading: false
+    btnloading: false,
+    //showShipmentFields: false,
+    shipmentDialog: false,
+    dateMenu: false,
+    selectedShipment: {
+      logisticSTN: null,
+      shipmentDate: null
+    }
   }),
   created() {
     //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
     this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
   },
   methods: {
-    toggleTextbox() {
-      this.showTextbox = !this.showTextbox;
-      this.logisticSTN = null;
-    },
     async UpdateShipmentStatus(shipment) {
       //updates hipmentstatus here
       console.log(shipment);
@@ -370,10 +416,10 @@ export default {
         }
       }
     },
-    async addLogisticSTN(shipment) {
+    async UpdateShipmentDetails() {
       this.btnloading = true;
 
-      if (!this.logisticSTN) {
+      if (!this.selectedShipment.logisticSTN) {
         this.$swal.fire({
           type: "error",
           title: "Missing Logistic's Shipment Tracking Number",
@@ -382,12 +428,14 @@ export default {
         this.btnloading = false;
         return;
       }
-
-      console.log(shipment);
       let updateObj = {
-        id: shipment.id,
+        id: this.selectedShipment.id,
         updatedDetails: {
-          logisticSTN: this.logisticSTN
+          logisticSTN: this.selectedShipment.logisticSTN,
+          shipmentDate:
+            new Date(
+              moment(this.selectedShipment.shipmentDate).startOf("day")
+            ).getTime() || null
         }
       };
       try {
@@ -395,9 +443,10 @@ export default {
         this.$swal.fire({
           type: "success",
           title: "Success",
-          text: "Logistic's Shipment Tracking Number has been added!"
+          text: "Shipment details has been updated!"
         });
         this.btnloading = false;
+        this.shipmentDialog = false;
       } catch (e) {
         this.$swal.fire({
           type: "error",
@@ -405,9 +454,15 @@ export default {
           text: `Shipment update has failed due to: ${e}`
         });
         this.btnloading = false;
+        this.shipmentDialog = false;
       }
-      this.logisticSTN = null;
-      this.showTextbox = false;
+    },
+    showShipmentFields(shipment) {
+      this.shipmentDialog = true;
+      //this.selectedShipment.shipmentDate = shipment.shipmentDate;
+      this.selectedShipment.logisticSTN = shipment.logisticSTN;
+      this.selectedShipment.id = shipment.id;
+      console.log(this.selectedShipment);
     },
     printShipmentDetails(shipment) {
       const date = new Date(shipment.shipmentDate);
