@@ -10,9 +10,9 @@
       </v-card-title>
       <v-divider></v-divider>
       <v-card-text>
-        <v-layout align-center justify-space-around row wrap>
-          <v-flex xs12 s12 md7 lg7 xl7>
-            <v-container
+        <v-layout align-top justify-center row wrap>
+          <v-flex xs12 s12 md5 lg5 xl5>
+            <v-container fluid
               ><v-card>
                 <v-card-title>
                   <v-list class="pa-0">
@@ -89,8 +89,8 @@
               </v-card></v-container
             >
           </v-flex>
-          <v-flex xs12 s12 md5 lg5 xl5>
-            <v-container>
+          <v-flex xs12 s12 md4 lg4 xl4>
+            <v-container fluid>
               <v-card v-if="stockOrder.hasOwnProperty('paymentDetails')">
                 <v-card-title>
                   <div class="title">Payment Details</div>
@@ -127,7 +127,7 @@
                             v-else-if="
                               stockOrder.paymentDetails.paymentType === 'COD'
                             "
-                            >Cash On Delivery</span
+                            >Cash On Delivery / Upon Pick-Up</span
                           >
                           <span v-else>N/A</span>
                         </v-list-tile-title>
@@ -136,7 +136,9 @@
 
                     <v-list-tile
                       ><v-list-tile-content>
-                        <v-list-tile-sub-title>Amount</v-list-tile-sub-title>
+                        <v-list-tile-sub-title
+                          >Total Amount</v-list-tile-sub-title
+                        >
                         <v-list-tile-title
                           >{{ stockOrder.paymentDetails.amount }}
                         </v-list-tile-title>
@@ -149,6 +151,45 @@
                           <span class="primary--text">{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
                           }}</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                  </v-list>
+                </v-card-text>
+              </v-card>
+              <div v-else class="body-2">No Payment Details Provided.</div>
+            </v-container>
+          </v-flex>
+          <v-flex xs12 s12 md3 lg3 xl3>
+            <v-container fluid>
+              <v-card v-if="stockOrder.hasOwnProperty('paymentDetails')">
+                <v-card-title>
+                  <div class="title">Logistics Details</div>
+                </v-card-title>
+                <v-divider></v-divider>
+                <v-card-text>
+                  <v-list subheader>
+                    <v-list-tile>
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Selected Provider</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span v-if="stockOrder.logisticsDetails">{{
+                            stockOrder.logisticsDetails.logisticProvider.toUpperCase()
+                          }}</span>
+                          <span v-else>N/A</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+
+                    <v-list-tile
+                      ><v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Shipping Fee</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title
+                          >{{ stockOrder.logisticsDetails.shippingFee }}
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
