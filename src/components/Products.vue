@@ -235,9 +235,9 @@
                   v-model="product.resellerPrice"
                 ></v-text-field>
                 <v-text-field
-                  label="Percentage"
-                  v-model="product.sale.percentage"
-                  v-show="product.sale.status"
+                  label="Weight (g)*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.weight"
                 ></v-text-field>
                 <v-checkbox
                   v-model="product.isOutofStock"
@@ -312,7 +312,7 @@
                 <v-flex xs12>
                   <v-text-field
                     label="Attribute Name"
-                    placeholder="Ex: Color, Weight, Size, etc..."
+                    placeholder="Ex: Color, Size, etc..."
                     v-model="tempAttribName"
                   ></v-text-field>
                 </v-flex>
@@ -519,10 +519,6 @@ export default {
     newProduct: {
       name: null,
       description: null,
-      sale: {
-        status: false,
-        percentage: null
-      },
       promotion: false
     },
     statusButtonLoading: false,
@@ -533,10 +529,6 @@ export default {
       code: null,
       name: null,
       description: null,
-      sale: {
-        status: false,
-        percentage: null
-      },
       price: null,
       resellerPrice: null,
       promotion: false,
@@ -592,6 +584,7 @@ export default {
       this.product.downloadURL = null;
       this.product.name = null;
       this.product.isOutofStock = null;
+      this.product.weight = null;
       this.$refs.productFile.files.value = null;
       this.tempAttribName = null;
       this.tempAttribItems = null;
@@ -609,6 +602,7 @@ export default {
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.isOutofStock = item.isOutofStock;
+      this.product.weight = item.weight;
       this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
       this.tempAttribName = null;
@@ -720,8 +714,8 @@ export default {
             price: this.product.price,
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
-            sale: this.product.sale,
             isOutofStock: this.product.isOutofStock || null,
+            weight: Number(this.product.weight),
             //uid: null
             attributes: this.product.attributes
           };
@@ -750,7 +744,7 @@ export default {
               title: "Error",
               text: error.message
             });
-            
+
             return;
           }
 
@@ -769,7 +763,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            
+
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -785,7 +779,7 @@ export default {
           this.addProductButtonDisabled = false;
           this.addProductDialog = false;
           this.$refs.productFile.value = null;
-          
+
           this.$swal.fire({
             type: "success",
             title: "Success",
@@ -807,8 +801,8 @@ export default {
           price: this.product.price,
           resellerPrice: this.product.resellerPrice,
           //promotion: this.product.promotion,
-          sale: this.product.sale,
           isOutofStock: this.product.isOutofStock || null,
+          weight: Number(this.product.weight),
           //uid: null
           downloadURL: this.product.downloadURL || null,
           pictureName: this.product.pictureName || null,
@@ -842,7 +836,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            
+
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -859,7 +853,7 @@ export default {
 
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
-  
+
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -1003,17 +997,14 @@ export default {
             productId: product.id,
             productData: product
           });
-          
         } else {
-    
           product.photos = res;
           await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: product.id,
             productData: product
           });
-          
         }
-        
+
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -1025,7 +1016,6 @@ export default {
         this.images = [];
         this.$refs.dropzoneRef.removeAllFiles(true);
       } catch (error) {
-        
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -1048,7 +1038,6 @@ export default {
       });
 
       if (response.value) {
-        
         this.$swal.fire({
           type: "warning",
           title: "WARNING",
@@ -1066,7 +1055,7 @@ export default {
             .delete();
           images.splice(index, 1);
           this.selectedProduct.photos = images;
-          
+
           await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: this.selectedProduct.id,
             productData: this.selectedProduct
@@ -1078,7 +1067,6 @@ export default {
             text: "Image has been deleted!"
           });
         } catch (error) {
-          
           this.$swal.fire({
             type: "error",
             title: "Error",
@@ -1120,12 +1108,7 @@ export default {
     addProductDialog(val) {
       if (!val) {
         this.newProduct = {
-          name: null,
-          sale: {
-            status: false,
-            percentage: null
-          },
-          promotion: false
+          name: null
         };
       }
     },

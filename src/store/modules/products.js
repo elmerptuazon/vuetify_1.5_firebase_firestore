@@ -31,6 +31,7 @@ const products = {
                         product.name = payloadproduct.name;
                         product.price = payloadproduct.price;
                         product.resellerPrice = payloadproduct.resellerPrice;
+                        product.weight = payloadproduct.weight;
                         product.sale = payloadproduct.sale;
                     }
                     if (payloadproduct.hasOwnProperty('downloadURL')) {
@@ -70,14 +71,14 @@ const products = {
                 });
             });
         },
-        
+
     },
     actions: {
         async FETCH_PRODUCTS({ commit }, payload) {
             try {
                 const querySnapshot = await DB.collection('products')
-                .where("categoryId", "==", payload)
-                .get();
+                    .where("categoryId", "==", payload)
+                    .get();
                 const products = querySnapshot.docs.map((doc) => {
                     const data = doc.data();
                     data.id = doc.id;
@@ -117,14 +118,14 @@ const products = {
             try {
                 //const promises = [];
                 const snapshot = await DB.collection('products')
-                .where("code", "==", payload.code)
-                .limit(1)
-                .get();
-                
+                    .where("code", "==", payload.code)
+                    .limit(1)
+                    .get();
+
                 //if there is no returned doc, it means there's no product  
                 //that exist as same as the code being checked
-                if(snapshot.empty) return false;
-                else return true; 
+                if (snapshot.empty) return false;
+                else return true;
             } catch (error) {
                 throw error;
             }
