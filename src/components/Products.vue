@@ -239,11 +239,6 @@
                   :rules="decimalOnlyRules"
                   v-model="product.weight"
                 ></v-text-field>
-                <v-text-field
-                  label="Percentage"
-                  v-model="product.sale.percentage"
-                  v-show="product.sale.status"
-                ></v-text-field>
                 <v-checkbox
                   v-model="product.isOutofStock"
                   :label="'Out of stock?'"
@@ -524,10 +519,6 @@ export default {
     newProduct: {
       name: null,
       description: null,
-      sale: {
-        status: false,
-        percentage: null
-      },
       promotion: false
     },
     statusButtonLoading: false,
@@ -538,10 +529,6 @@ export default {
       code: null,
       name: null,
       description: null,
-      sale: {
-        status: false,
-        percentage: null
-      },
       price: null,
       resellerPrice: null,
       promotion: false,
@@ -727,7 +714,6 @@ export default {
             price: this.product.price,
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
-            sale: this.product.sale,
             isOutofStock: this.product.isOutofStock || null,
             weight: Number(this.product.weight),
             //uid: null
@@ -815,7 +801,6 @@ export default {
           price: this.product.price,
           resellerPrice: this.product.resellerPrice,
           //promotion: this.product.promotion,
-          sale: this.product.sale,
           isOutofStock: this.product.isOutofStock || null,
           weight: Number(this.product.weight),
           //uid: null
@@ -1123,12 +1108,7 @@ export default {
     addProductDialog(val) {
       if (!val) {
         this.newProduct = {
-          name: null,
-          sale: {
-            status: false,
-            percentage: null
-          },
-          promotion: false
+          name: null
         };
       }
     },
