@@ -188,8 +188,11 @@
                         <v-list-tile-sub-title
                           >Shipping Fee</v-list-tile-sub-title
                         >
-                        <v-list-tile-title
-                          >{{ stockOrder.logisticsDetails.shippingFee }}
+                        <v-list-tile-title>
+                          <span v-if="stockOrder.logisticsDetails">{{
+                            stockOrder.logisticsDetails.shippingFee
+                          }}</span>
+                          <span v-else>N/A</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
