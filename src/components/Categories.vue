@@ -351,7 +351,9 @@ export default {
     // this.loading = true;
     //await this.$store.dispatch("categories/FETCH_CATEGORIES");
     // this.loading = false;
-    this.excelDownloadURL = await this.$store.dispatch('categories/GET_EXCEL_TEMPLATE');
+    this.excelDownloadURL = await this.$store.dispatch(
+      "categories/GET_EXCEL_TEMPLATE"
+    );
   },
   data: () => ({
     pagination: {
@@ -416,7 +418,7 @@ export default {
     categoryButtonDisabled: false,
     excelDialog: false,
     excelButtonLoading: false,
-    excelDownloadURL: "",
+    excelDownloadURL: ""
   }),
   methods: {
     toggleAll() {
@@ -787,50 +789,51 @@ export default {
           let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
 
           productList = await productList.map(p => {
-            let attributes = [];
+            // let attributes = [];
 
-            if(p.Size) {
-              const sizeArr = p.Size.split("," || ", ");
-              p.Size = {
-                items: sizeArr,
-                name: "Size"
-              }
-            }
-            else {
-              p.Size = null;
-            }
-            attributes.push(p.Size);
+            // if(p.Size) {
+            //   const sizeArr = p.Size.split("," || ", ");
+            //   p.Size = {
+            //     items: sizeArr,
+            //     name: "Size"
+            //   }
+            // }
+            // else {
+            //   p.Size = null;
+            // }
+            // attributes.push(p.Size);
 
-            if(p.Color) {
-              const colorArr = p.Color.split("," || ", ");
-              p.Color = {
-                items: colorArr,
-                name: "Color"
-              }
-            }
-            else {
-              p.Color = null;
-            }
-            attributes.push(p.Color);
+            // if(p.Color) {
+            //   const colorArr = p.Color.split("," || ", ");
+            //   p.Color = {
+            //     items: colorArr,
+            //     name: "Color"
+            //   }
+            // }
+            // else {
+            //   p.Color = null;
+            // }
+            // attributes.push(p.Color);
 
             return {
               active: 1,
               code: p.Code,
               name: p.Name,
-              price: p.Price,
-              resellerPrice: p.ResellerPrice,
+              price: Number(p.Price),
+              resellerPrice: Number(p.ResellerPrice),
               description: p.Description,
-              sale: p.Sale
-                ? {
-                    status: true,
-                    percentage: p.Sale
-                  }
-                : {
-                    status: false,
-                    percentage: null
-                  },
-              discount: p.Discount ? p.Discount : null,
-              attributes: attributes,
+              weight: Number(p.Weight),
+              // sale: p.Sale
+              //   ? {
+              //       status: true,
+              //       percentage: p.Sale
+              //     }
+              //   : {
+              //       status: false,
+              //       percentage: null
+              //     },
+              // discount: p.Discount ? p.Discount : null,
+              attributes: [],
               isOutofStock: false,
               createdAt: Date.now(),
               categoryId: categoryData.id,
