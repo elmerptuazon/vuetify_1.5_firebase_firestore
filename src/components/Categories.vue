@@ -837,7 +837,10 @@ export default {
               isOutofStock: false,
               createdAt: Date.now(),
               categoryId: categoryData.id,
-              category: categoryData.name
+              category: categoryData.name,
+              searchTerms: p.Name.split(" ").map(term => {
+                return term.toLowerCase();
+              })
             };
           });
           //console.log(`Current Category: ${currentCategory.categoryName} & Product List: ${productList}`);

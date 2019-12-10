@@ -717,7 +717,8 @@ export default {
             isOutofStock: this.product.isOutofStock || null,
             weight: Number(this.product.weight),
             //uid: null
-            attributes: this.product.attributes
+            attributes: this.product.attributes,
+            searchTerms: this.product.name.split(" ")
           };
           console.log(newProduct);
 
@@ -790,7 +791,9 @@ export default {
         //Edit Product Details
       } else {
         this.addProductButtonDisabled = true;
-
+        let searchTerms = this.product.name.split(" ").map(term => {
+          return term.toLowerCase();
+        });
         //try-catch block for saving productData to database
         const updatedProductData = {
           active: 1,
@@ -807,7 +810,8 @@ export default {
           downloadURL: this.product.downloadURL || null,
           pictureName: this.product.pictureName || null,
           id: this.product.id,
-          attributes: this.product.attributes
+          attributes: this.product.attributes,
+          searchTerms: searchTerms
         };
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 
