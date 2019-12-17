@@ -10,9 +10,9 @@
       </v-card-title>
       <v-divider></v-divider>
       <v-card-text>
-        <v-layout align-top justify-center row wrap>
-          <v-flex xs12 s12 md5 lg5 xl5>
-            <v-container fluid
+        <v-layout align-center justify-space-around row wrap>
+          <v-flex xs12 s12 md7 lg7 xl7>
+            <v-container
               ><v-card>
                 <v-card-title>
                   <v-list class="pa-0">
@@ -89,8 +89,8 @@
               </v-card></v-container
             >
           </v-flex>
-          <v-flex xs12 s12 md4 lg4 xl4>
-            <v-container fluid>
+          <v-flex xs12 s12 md5 lg5 xl5>
+            <v-container>
               <v-card v-if="stockOrder.hasOwnProperty('paymentDetails')">
                 <v-card-title>
                   <div class="title">Payment Details</div>
@@ -127,7 +127,7 @@
                             v-else-if="
                               stockOrder.paymentDetails.paymentType === 'COD'
                             "
-                            >Cash On Delivery / Upon Pick-Up</span
+                            >Cash On Delivery</span
                           >
                           <span v-else>N/A</span>
                         </v-list-tile-title>
@@ -136,9 +136,7 @@
 
                     <v-list-tile
                       ><v-list-tile-content>
-                        <v-list-tile-sub-title
-                          >Total Amount</v-list-tile-sub-title
-                        >
+                        <v-list-tile-sub-title>Amount</v-list-tile-sub-title>
                         <v-list-tile-title
                           >{{ stockOrder.paymentDetails.amount }}
                         </v-list-tile-title>
@@ -151,48 +149,6 @@
                           <span class="primary--text">{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
                           }}</span>
-                        </v-list-tile-title>
-                      </v-list-tile-content>
-                    </v-list-tile>
-                  </v-list>
-                </v-card-text>
-              </v-card>
-              <div v-else class="body-2">No Payment Details Provided.</div>
-            </v-container>
-          </v-flex>
-          <v-flex xs12 s12 md3 lg3 xl3>
-            <v-container fluid>
-              <v-card v-if="stockOrder.hasOwnProperty('paymentDetails')">
-                <v-card-title>
-                  <div class="title">Logistics Details</div>
-                </v-card-title>
-                <v-divider></v-divider>
-                <v-card-text>
-                  <v-list subheader>
-                    <v-list-tile>
-                      <v-list-tile-content>
-                        <v-list-tile-sub-title
-                          >Selected Provider</v-list-tile-sub-title
-                        >
-                        <v-list-tile-title>
-                          <span v-if="stockOrder.logisticsDetails">{{
-                            stockOrder.logisticsDetails.logisticProvider.toUpperCase()
-                          }}</span>
-                          <span v-else>N/A</span>
-                        </v-list-tile-title>
-                      </v-list-tile-content>
-                    </v-list-tile>
-
-                    <v-list-tile
-                      ><v-list-tile-content>
-                        <v-list-tile-sub-title
-                          >Shipping Fee</v-list-tile-sub-title
-                        >
-                        <v-list-tile-title>
-                          <span v-if="stockOrder.logisticsDetails">{{
-                            stockOrder.logisticsDetails.shippingFee
-                          }}</span>
-                          <span v-else>N/A</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -273,7 +229,7 @@
           <v-divider></v-divider>
           <v-card-text>
             <v-layout wrap>
-              <v-flex xs8>
+              <v-flex xs12>
                 <v-radio-group v-model="shipmentType" row>
                   <v-radio label="Full Shipment" value="Full"></v-radio>
                   <v-radio label="Partial Shipment" value="Partial"></v-radio>
@@ -285,32 +241,6 @@
                     @itemsToShip="SetItemsToShip"
                   />
                 </v-radio-group>
-              </v-flex>
-              <v-flex xs4>
-                <v-menu
-                  lazy
-                  :close-on-content-click="false"
-                  v-model="menu"
-                  transition="scale-transition"
-                  offset-y
-                  full-width
-                  :nudge-right="40"
-                  max-width="290px"
-                  min-width="290px"
-                >
-                  <v-text-field
-                    slot="activator"
-                    label="Pick-up Date"
-                    v-model="pickupDate"
-                    prepend-icon="event"
-                    readonly
-                  ></v-text-field>
-                  <v-date-picker
-                    v-model="pickupDate"
-                    @input="menu = false"
-                    no-title
-                  ></v-date-picker>
-                </v-menu>
               </v-flex>
             </v-layout>
           </v-card-text>
@@ -340,8 +270,8 @@ import Toast from "@/components/Toast";
 import StockOrderItems from "@/components/StockOrderItems";
 import ShipmentDetails from "@/components/ShipmentDetails";
 import PartialShipment from "@/components/PartialShipment";
+import { async } from "q";
 import { mapState } from "vuex";
-import moment from "moment";
 
 export default {
   data: () => ({
@@ -352,8 +282,6 @@ export default {
     shipmentType: "Full",
     shipmentDetails: null,
     partialShipment: false,
-    pickupDate: null,
-    menu: false,
 
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
@@ -427,15 +355,6 @@ export default {
       }
     },
     async SubmitShipment() {
-      if (!this.pickupDate) {
-        this.$swal.fire({
-          title: "Missing Pick-up Date",
-          text: "Please select a pick-up date!",
-          type: "warning"
-        });
-        return;
-      }
-
       const response = await this.$swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -445,9 +364,6 @@ export default {
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, Submit it!"
       });
-
-      const pickupDate = Date.parse(moment(this.pickupDate).startOf("day"));
-
       if (response.value) {
         if (this.shipmentType === "Full") {
           //pass shipment details to vuex that inserts to database
@@ -484,8 +400,7 @@ export default {
               dateSubmitted: Date.now(),
               itemsToShip: itemsToShip,
               type: "Full Shipment",
-              status: "Pending",
-              pickupDate: pickupDate
+              status: "Pending"
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -573,8 +488,7 @@ export default {
               dateSubmitted: Date.now(),
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
-              status: "Pending",
-              pickupDate: pickupDate
+              status: "Pending"
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -701,7 +615,6 @@ export default {
           }
         }
       }
-      this.date = null;
     },
     async CancelOrder() {
       const response = await this.$swal.fire({

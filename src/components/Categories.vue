@@ -2,37 +2,30 @@
   <div>
     <v-card>
       <v-card-title>
-        <v-layout row align-baseline justify-start wrap>
-          <v-flex md2 align-content-end>
-            <div class="headline">Categories</div>
-          </v-flex>
+        <div class="headline">Categories</div>
 
-          <v-flex md6 xs10>
-            <v-text-field
-              append-icon="search"
-              label="Search category..."
-              hide-details
-              v-model="search"
-            ></v-text-field>
-          </v-flex>
+        <v-spacer></v-spacer>
 
-          <v-flex
-            md2
-            :class="{
-              'mt-4': $vuetify.breakpoint.smAndDown,
-              'offset-md1': $vuetify.breakpoint.mdAndUp
-            }"
-          >
-            <v-btn
-              dark
-              class="primary white--text"
-              @click="addCategoryDialog = true"
-            >
-              <v-icon class="mr-2">add</v-icon>
-              <span>Add Category</span>
-            </v-btn>
-          </v-flex>
-        </v-layout>
+        <v-text-field
+          append-icon="search"
+          label="Search category..."
+          hide-details
+          v-model="search"
+        ></v-text-field>
+
+        <v-btn
+          dark
+          class="primary white--text"
+          @click="addCategoryDialog = true"
+        >
+          <v-icon class="mr-2">add</v-icon>
+          <span>Add Category</span>
+        </v-btn>
+
+        <v-btn dark class="primary white--text" @click="excelDialog = true">
+          <v-icon class="mr-2">add</v-icon>
+          <span>UPLOAD EXCEL FILE</span>
+        </v-btn>
       </v-card-title>
       <v-data-table
         v-model="selected"
@@ -294,10 +287,56 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog max-width="500px" v-model="excelDialog" persistent>
+      <v-card>
+        <v-card-title>
+          <div class="title">
+            Adding Categories and Products through Excel File
+          </div>
+        </v-card-title>
+        <v-card-text>
+          <div class="mb-1">
+            <input
+              type="file"
+              ref="excelFile"
+              value="upload"
+              accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+              @change="validateExcelFile"
+            />
+          </div>
+          <div class="mb-1 caption">
+            <v-icon small>info</v-icon>
+            <span class="font-italic"
+              >the file upload only accepts a specified
+              <a
+                class="font-weight-bold"
+                :href="excelDownloadURL"
+                download="Category Excel Template"
+                >excel template.</a
+              ></span
+            >
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn flat @click.native="excelDialog = false">CANCEL</v-btn>
+          <v-btn
+            color="primary"
+            @click.native="uploadExcelFile"
+            :disabled="excelButtonLoading"
+            :loading="excelButtonLoading"
+            >UPLOAD FILE
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+import XLSX from "xlsx";
 import { mapState } from "vuex";
 import mixins from "@/mixins";
 import { DB, STORAGE } from "@/config/firebase";
@@ -312,6 +351,9 @@ export default {
     // this.loading = true;
     //await this.$store.dispatch("categories/FETCH_CATEGORIES");
     // this.loading = false;
+    this.excelDownloadURL = await this.$store.dispatch(
+      "categories/GET_EXCEL_TEMPLATE"
+    );
   },
   data: () => ({
     pagination: {
@@ -373,7 +415,10 @@ export default {
     selectedCategory: {},
     disableDeleteButton: true,
     editCategoryDialog: false,
-    categoryButtonDisabled: false
+    categoryButtonDisabled: false,
+    excelDialog: false,
+    excelButtonLoading: false,
+    excelDownloadURL: ""
   }),
   methods: {
     toggleAll() {
@@ -387,11 +432,6 @@ export default {
         this.pagination.sortBy = column;
         this.pagination.descending = false;
       }
-    },
-    notify(icon, text) {
-      this.modal.icon = icon;
-      this.modal.text = text;
-      this.$refs.modal.open();
     },
     validateFile(el) {
       if (!el.target.value) {
@@ -411,7 +451,6 @@ export default {
           title: "Error",
           text: "The uploaded file is not an image file. Please try again."
         });
-        //this.notify('error', 'Uploaded file is not an image.');
       }
     },
     async addCategory() {
@@ -429,7 +468,6 @@ export default {
       );
 
       if (index !== -1) {
-        //this.notify('error', 'Category name already exists.');
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -439,7 +477,7 @@ export default {
       }
 
       const file = this.$refs.categoryFile.files[0];
-      //const name = this.newCategory.name.trim();
+
       const metadata = { contentType: file.type };
       this.addCategoryButtonDisabled = true;
 
@@ -471,12 +509,9 @@ export default {
           categoryData: newCategoryData
         });
 
-        //this.items.push(newCategoryData);
-        //console.log('new data', newCategoryData)
         this.addCategoryButtonDisabled = false;
         this.addCategoryDialog = false;
 
-        //this.notify('success', 'Category has been successfully added');
         this.$swal.fire({
           type: "success",
           title: "Success!",
@@ -487,7 +522,7 @@ export default {
         console.log(error);
         this.addCategoryButtonDisabled = false;
         this.addCategoryDialog = false;
-        //this.notify('error', 'An error occurred');
+
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -508,7 +543,6 @@ export default {
     },
     async editCategory() {
       if (!this.category.name) {
-        //this.notify("error", "Category name is Required.");
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -538,27 +572,20 @@ export default {
           this.category.downloadURL = downloadURL;
         }
 
-        //await categoriesCollection.doc(this.category.id).update(updatedCategory);
         await this.$store.dispatch("categories/UPDATE_CATEGORY", {
           categoryId: this.category.id,
           categoryData: this.category
         });
 
-        // const index = this.items.findIndex(i => i.id === this.category.id);
-        // this.items[index].name = newData.name;
-        // this.items[index].downloadURL = newData.downloadURL;
-
         this.categoryButtonDisabled = false;
         this.editCategoryDialog = false;
 
-        //this.notify("success", "Category has been successfully updated");
         this.$swal.fire({
           type: "success",
           title: "Success",
           text: "Category has been successfully updated!"
         });
       } catch (error) {
-        //this.notify("error", "An error occurred");
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -596,7 +623,7 @@ export default {
               const itemIndex = this.items.findIndex(i => i.id === item.id);
               this.items[itemIndex].active = active;
               this.statusButtonLoading = false;
-              //this.notify('success', text);
+
               this.$swal.fire({
                 type: "success",
                 title: "Success",
@@ -657,7 +684,6 @@ export default {
           this.items[index].position = selectedCategoryClone.position;
         }
 
-        //this.notify('success', 'Display position updated');
         this.$swal.fire({
           type: "success",
           title: "success",
@@ -666,6 +692,204 @@ export default {
         this.updatePositionDialog = false;
       } catch (error) {
         console.log(error);
+      }
+    },
+    validateExcelFile(el) {
+      if (!el.target.value) {
+        return;
+      }
+
+      const path = el.target.value;
+      const idxDot = path.lastIndexOf(".") + 1;
+      const extFile = path.substr(idxDot, path.length).toLowerCase();
+
+      const acceptedFiles = ["xlsx", "xls", "_xls", "_xlsx"];
+
+      if (!acceptedFiles.includes(extFile)) {
+        this.$refs.excelFile.value = "";
+        this.$swal.fire({
+          type: "error",
+          title: "Error",
+          text: "The uploaded file is not an excel file. Please try again."
+        });
+        return;
+      }
+    },
+    async uploadExcelFile() {
+      this.excelButtonLoading = true;
+      if (!this.$refs.excelFile.files[0]) {
+        this.$swal.fire({ type: "warning", title: "Choose a file first." });
+        this.excelButtonLoading = false;
+        return;
+      }
+
+      const answer = await this.$swal.fire({
+        title: "Are you sure?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if (!answer.value) {
+        this.excelButtonLoading = false;
+        return;
+      } else {
+        const file = this.$refs.excelFile.files[0];
+        const objectURL = window.URL.createObjectURL(file);
+        const promise = await axios.get(objectURL, {
+          responseType: "arraybuffer"
+        });
+
+        //Process Returned Reponse from Axios
+        const data = new Uint8Array(promise.data);
+        const arr = new Array();
+        for (let i = 0; i != data.length; ++i) {
+          arr[i] = String.fromCharCode(data[i]);
+        }
+
+        const workbook = XLSX.read(arr.join(""), { type: "binary" });
+
+        //Cycle through each category on the excel file
+        for (let i = 0; i != workbook.SheetNames.length; i++) {
+          let worksheet = workbook.Sheets[workbook.SheetNames[i]];
+          let categoryName = workbook.SheetNames[i];
+
+          //check if current category on excel is existing in the db
+          const index = this.items.findIndex(
+            item => item.name === categoryName
+          );
+          let categoryData = {};
+
+          if (index == -1) {
+            categoryData = {
+              name: categoryName,
+              created: Date.now(),
+              active: 1,
+              totalProducts: 0,
+              position: this.items.length + 1,
+              pictureName: "",
+              downloadURL: ""
+            };
+
+            const uploadedCategory = await this.$store.dispatch(
+              "categories/ADD_CATEGORY",
+              {
+                categoryData: categoryData
+              }
+            );
+
+            categoryData.id = uploadedCategory.id;
+          } else {
+            categoryData = this.items[index];
+            console.log("EXISTING CATEGORY: ", categoryData);
+          }
+
+          let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+
+          productList = await productList.map(p => {
+            // let attributes = [];
+
+            // if(p.Size) {
+            //   const sizeArr = p.Size.split("," || ", ");
+            //   p.Size = {
+            //     items: sizeArr,
+            //     name: "Size"
+            //   }
+            // }
+            // else {
+            //   p.Size = null;
+            // }
+            // attributes.push(p.Size);
+
+            // if(p.Color) {
+            //   const colorArr = p.Color.split("," || ", ");
+            //   p.Color = {
+            //     items: colorArr,
+            //     name: "Color"
+            //   }
+            // }
+            // else {
+            //   p.Color = null;
+            // }
+            // attributes.push(p.Color);
+
+            return {
+              active: 1,
+              code: p.Code,
+              name: p.Name,
+              price: Number(p.Price),
+              resellerPrice: Number(p.ResellerPrice),
+              description: p.Description,
+              weight: Number(p.Weight),
+              // sale: p.Sale
+              //   ? {
+              //       status: true,
+              //       percentage: p.Sale
+              //     }
+              //   : {
+              //       status: false,
+              //       percentage: null
+              //     },
+              // discount: p.Discount ? p.Discount : null,
+              attributes: [],
+              isOutofStock: false,
+              createdAt: Date.now(),
+              categoryId: categoryData.id,
+              category: categoryData.name,
+              searchTerms: p.Name.split(" ").map(term => {
+                return term.toLowerCase();
+              })
+            };
+          });
+          //console.log(`Current Category: ${currentCategory.categoryName} & Product List: ${productList}`);
+
+          let totalProducts = 0;
+          for (let i = 0; i < productList.length; i++) {
+            const product = productList[i];
+            const exist = await this.$store.dispatch(
+              "products/CheckIfProductExists",
+              product
+            );
+
+            if (exist) {
+              const snapshot = await productsCollection
+                .where("code", "==", product.code)
+                .limit(1)
+                .get();
+              const productId = snapshot.docs[0].id;
+              console.log("EXISTING PRODUCT ID: ", productId);
+              await this.$store.dispatch("products/UPDATE_PRODUCT", {
+                productId: productId,
+                productData: product
+              });
+            } else {
+              await this.$store.dispatch("products/ADD_PRODUCT", {
+                productData: product
+              });
+              totalProducts += 1;
+            }
+          }
+
+          categoryData.totalProducts += totalProducts;
+
+          await this.$store.dispatch("categories/UPDATE_CATEGORY", {
+            categoryId: categoryData.id,
+            categoryData: categoryData
+          });
+        }
+
+        this.excelButtonLoading = false;
+        this.excelDialog = false;
+
+        this.$swal.fire({
+          type: "info",
+          title: "Success",
+          text: "The Category and its Products has been uploaded successfully."
+        });
+
+        this.$refs.excelFile.value = null;
       }
     }
   },

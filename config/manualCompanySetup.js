@@ -28,6 +28,7 @@ const prompts = require('prompts');
             { title: 'Barapido', value: 'Barapido' },
             { title: 'Fetch', value: 'Fetch' },
             { title: 'Aquitek', value: 'Aquitek' },
+            { title: 'Chicharooms', value: 'Chicharooms' },
             { title: 'Mary Kay', value: 'MaryKay', disabled: true },
             { title: 'My Natural', value: 'MyNatural', disabled: true }
         ],

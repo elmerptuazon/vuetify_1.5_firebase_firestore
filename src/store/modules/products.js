@@ -31,6 +31,7 @@ const products = {
                         product.name = payloadproduct.name;
                         product.price = payloadproduct.price;
                         product.resellerPrice = payloadproduct.resellerPrice;
+                        product.weight = payloadproduct.weight;
                         product.sale = payloadproduct.sale;
                     }
                     if (payloadproduct.hasOwnProperty('downloadURL')) {
@@ -70,14 +71,14 @@ const products = {
                 });
             });
         },
-        
+
     },
     actions: {
         async FETCH_PRODUCTS({ commit }, payload) {
             try {
                 const querySnapshot = await DB.collection('products')
-                .where("categoryId", "==", payload)
-                .get();
+                    .where("categoryId", "==", payload)
+                    .get();
                 const products = querySnapshot.docs.map((doc) => {
                     const data = doc.data();
                     data.id = doc.id;
@@ -96,13 +97,6 @@ const products = {
                 console.log("RESPONSE ID: " + response.id);
                 payload.productData.id = response.id;
                 commit('AddProductsList', payload.productData);
-                // await dispatch('UpdateProduct', 
-                //     {
-                //         categoryId: payload.categoryId,
-                //         productId: payload.productData.id,
-                //         productData: payload.productData
-                //     }
-                // );
                 Promise.resolve();
                 return response.id;
             } catch (error) {
@@ -124,40 +118,17 @@ const products = {
             try {
                 //const promises = [];
                 const snapshot = await DB.collection('products')
-                .where("code", "==", payload.code)
-                .limit(1)
-                .get();
-                
-                //if there is no returned doc, it means theres no product  
-                //that exist as same as code being checked
-                if(snapshot.empty) return false;
-                else return true; 
-                
-                // querySnapshot.docs.forEach(product => {
-                //     console.log(product);
-                //     if (exists == false) {
-                //         promises.push(DB.collection('products')
-                //             .where("code", "==", payload.code)
-                //             .limit(1)
-                //             .get()
-                //             .then((productquerySnapshot) => {
-                //                 if (!productquerySnapshot.empty) {
-                //                     exists = true;
-                //                 }
-                //             }
-                //             )
-                //         )
-                //     }
+                    .where("code", "==", payload.code)
+                    .limit(1)
+                    .get();
 
-                // })
-
-                // console.log(promises);
-                // await Promise.all(promises);
-
+                //if there is no returned doc, it means there's no product  
+                //that exist as same as the code being checked
+                if (snapshot.empty) return false;
+                else return true;
             } catch (error) {
                 throw error;
             }
-           
         },
         async UPDATE_PRODUCT_BY_KEY({ commit, dispatch }, payload) {
             try {
@@ -167,7 +138,6 @@ const products = {
                 throw error;
             }
         }
-        
     }
 }
 

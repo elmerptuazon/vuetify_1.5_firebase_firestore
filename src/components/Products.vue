@@ -163,84 +163,195 @@
       {{ modal.text }}
     </sweet-modal>
 
-    <v-dialog max-width="500px" v-model="addProductDialog" persistent>
+    <v-dialog max-width="700px" v-model="addProductDialog" persistent>
       <v-card>
         <v-card-title>
           <div class="title">{{ dialogText }}</div>
         </v-card-title>
         <v-card-text>
           <v-form ref="form" lazy-validation>
-            Product Thumbnail
-            <br />
-            <input
-              type="file"
-              ref="productFile"
-              value="upload"
-              accept=".png, .jpg, .jpeg"
-              @change="validateFile"
-            />
-            <v-avatar v-if="product.downloadURL" size="100px" tile>
-              <v-img
-                contain
-                :src="product.downloadURL"
-                :alt="product.name"
-                :lazy-src="require('@/assets/no-image.png')"
+            <v-card raised>
+              <v-card-title class="font-weight-bold">
+                Details
+              </v-card-title>
+              <v-divider></v-divider>
+              <div class="px-3 pt-2">
+                Product Thumbnail
+                <br />
+                <input
+                  type="file"
+                  ref="productFile"
+                  value="upload"
+                  accept=".png, .jpg, .jpeg"
+                  @change="validateFile"
+                />
+                <v-avatar v-if="product.downloadURL" size="100px" tile>
+                  <v-img
+                    contain
+                    :src="product.downloadURL"
+                    :alt="product.name"
+                    :lazy-src="require('@/assets/no-image.png')"
+                  >
+                    <v-layout
+                      slot="placeholder"
+                      fill-height
+                      align-center
+                      justify-center
+                      ma-0
+                    >
+                      <v-progress-circular
+                        indeterminate
+                        color="grey lighten-5"
+                      ></v-progress-circular>
+                    </v-layout>
+                  </v-img>
+                </v-avatar>
+                <v-text-field
+                  label="Product Code*"
+                  :rules="basicRules"
+                  v-model="product.code"
+                  :disabled="
+                    product.code !== '' && dialogText === 'Edit Product Details'
+                  "
+                ></v-text-field>
+                <v-text-field
+                  label="Name*"
+                  :rules="basicRules"
+                  v-model="product.name"
+                ></v-text-field>
+                <v-textarea
+                  label="Description*"
+                  :rules="basicRules"
+                  v-model="product.description"
+                ></v-textarea>
+                <v-text-field
+                  label="Price*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.price"
+                ></v-text-field>
+                <v-text-field
+                  label="Reseller Price*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.resellerPrice"
+                ></v-text-field>
+                <v-text-field
+                  label="Weight (g)*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.weight"
+                ></v-text-field>
+                <v-checkbox
+                  v-model="product.isOutofStock"
+                  :label="'Out of stock?'"
+                ></v-checkbox>
+              </div>
+            </v-card>
+
+            <v-card raised class="mt-2">
+              <v-card-title class="font-weight-bold">
+                Attributes
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-layout row v-if="!product.attributes.length" px-3>
+                <p class="font-italic text-center">
+                  There is no attributes in this products
+                </p>
+              </v-layout>
+
+              <v-layout
+                row
+                wrap
+                v-else
+                v-for="(attrib, index) in product.attributes"
+                :key="attrib.name"
+                align-center
+                justify-center
+                px-3
+                py-2
               >
-                <v-layout
-                  slot="placeholder"
-                  fill-height
-                  align-center
-                  justify-center
-                  ma-0
-                >
-                  <v-progress-circular
-                    indeterminate
-                    color="grey lighten-5"
-                  ></v-progress-circular>
-                </v-layout>
-              </v-img>
-            </v-avatar>
-            <v-text-field
-              label="Product Code*"
-              :rules="basicRules"
-              v-model="product.code"
-              :disabled="
-                product.code !== '' && dialogText === 'Edit Product Details'
-              "
-            ></v-text-field>
-            <v-text-field
-              label="Name*"
-              :rules="basicRules"
-              v-model="product.name"
-            ></v-text-field>
-            <v-textarea
-              label="Description*"
-              :rules="basicRules"
-              v-model="product.description"
-            ></v-textarea>
-            <!-- <v-text-field
-              label="Color"
-              v-model="product.attributes.color"
-            ></v-text-field> -->
-            <v-text-field
-              label="Price*"
-              :rules="decimalOnlyRules"
-              v-model="product.price"
-            ></v-text-field>
-            <v-text-field
-              label="Reseller Price*"
-              :rules="decimalOnlyRules"
-              v-model="product.resellerPrice"
-            ></v-text-field>
-            <v-text-field
-              label="Percentage"
-              v-model="product.sale.percentage"
-              v-show="product.sale.status"
-            ></v-text-field>
-            <v-checkbox
-              v-model="product.isOutofStock"
-              :label="'Out of stock?'"
-            ></v-checkbox>
+                <v-flex xs4 pl-2>
+                  <div class="font-weight-bold caption">{{ attrib.name }}</div>
+                </v-flex>
+                <v-flex xs4>
+                  <div class="caption" v-for="item in attrib.items" :key="item">
+                    {{ item }}
+                  </div>
+                </v-flex>
+                <v-flex xs4>
+                  <v-tooltip left>
+                    <v-btn
+                      slot="activator"
+                      icon
+                      class="primary white--text"
+                      @click.stop="deleteAttribute(index)"
+                    >
+                      <v-icon>delete</v-icon>
+                    </v-btn>
+                    <span>Delete Attribute</span>
+                  </v-tooltip>
+                  <v-tooltip right>
+                    <v-btn
+                      slot="activator"
+                      icon
+                      class="primary white--text"
+                      @click.stop="editAttribute(index)"
+                    >
+                      <v-icon>edit</v-icon>
+                    </v-btn>
+                    <span>Edit Attribute</span>
+                  </v-tooltip>
+                </v-flex>
+                <v-flex xs12>
+                  <v-divider class="my-2 primary" />
+                </v-flex>
+              </v-layout>
+
+              <v-layout row wrap align-center justify-end mt-1 pa-3>
+                <v-flex xs12 mb-1>
+                  <div class="font-weight-bold">Add Product Attribute</div>
+                </v-flex>
+                <v-flex xs12>
+                  <v-text-field
+                    label="Attribute Name"
+                    placeholder="Ex: Color, Size, etc..."
+                    v-model="tempAttribName"
+                  ></v-text-field>
+                </v-flex>
+
+                <v-flex xs12>
+                  <v-text-field
+                    label="Attribute Item"
+                    placeholder="Seperate each item with a comma. Ex: Blue, Red"
+                    v-model="tempAttribItems"
+                  ></v-text-field>
+                </v-flex>
+
+                <v-flex xs12>
+                  <v-btn
+                    v-if="showEditConfirmButton"
+                    block
+                    small
+                    color="secondary"
+                    depressed
+                    :disabled="!tempAttribName || !tempAttribItems"
+                    @click="confirmEditProductAttribute"
+                  >
+                    Confirm Edit on Product Attribute
+                  </v-btn>
+
+                  <v-btn
+                    v-else
+                    block
+                    small
+                    color="primary"
+                    depressed
+                    :disabled="!tempAttribName || !tempAttribItems"
+                    @click="addProductAttribute"
+                  >
+                    Add Product Attribute
+                  </v-btn>
+                </v-flex>
+              </v-layout>
+            </v-card>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -408,10 +519,6 @@ export default {
     newProduct: {
       name: null,
       description: null,
-      sale: {
-        status: false,
-        percentage: null
-      },
       promotion: false
     },
     statusButtonLoading: false,
@@ -422,17 +529,21 @@ export default {
       code: null,
       name: null,
       description: null,
-      sale: {
-        status: false,
-        percentage: null
-      },
       price: null,
       resellerPrice: null,
       promotion: false,
       downloadURL: null,
       isOutofStock: null,
-      id: null
+      id: null,
+      attributes: []
     },
+
+    tempAttribName: null,
+    tempAttribItems: null,
+    showEditConfirmButton: false,
+    productIndex: null,
+    panel: false,
+
     addProductDialog: false,
     dialogText: null,
     addProductButtonDisabled: false,
@@ -473,7 +584,11 @@ export default {
       this.product.downloadURL = null;
       this.product.name = null;
       this.product.isOutofStock = null;
+      this.product.weight = null;
       this.$refs.productFile.files.value = null;
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+      this.product.attributes = [];
     },
     async viewItemDetails(item) {
       this.dialogText = "Edit Product Details";
@@ -487,7 +602,64 @@ export default {
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.isOutofStock = item.isOutofStock;
+      this.product.weight = item.weight;
+      this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+    },
+    addProductAttribute() {
+      this.product.attributes.push({
+        name: this.tempAttribName,
+        items: this.tempAttribItems.split(",").map(attribute => {
+          return attribute.trim();
+        })
+      });
+
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+
+      console.log(this.product.attributes);
+    },
+
+    editAttribute(index) {
+      this.tempAttribName = this.product.attributes[index].name;
+      this.tempAttribItems = this.product.attributes[index].items.join(", ");
+      this.showEditConfirmButton = true;
+      this.productIndex = index;
+
+      console.log(this.product.attributes);
+    },
+
+    confirmEditProductAttribute() {
+      this.product.attributes[this.productIndex].name = this.tempAttribName;
+      this.product.attributes[
+        this.productIndex
+      ].items = this.tempAttribItems.split(",").map(attribute => {
+        return attribute.trim();
+      });
+      this.showEditConfirmButton = false;
+      this.productIndex = null;
+
+      this.tempAttribName = null;
+      this.tempAttribItems = null;
+
+      console.log(this.product.attributes);
+    },
+    async deleteAttribute(index) {
+      const r = await this.$swal.fire({
+        title: "Warning!",
+        text: `Are you sure you want to delete "${this.product.attributes[index].name}" attribute?`,
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if (r.value) {
+        this.product.attributes.splice(index, 1);
+      }
     },
     closeProductDialog() {
       this.$refs.productFile.value = null;
@@ -522,7 +694,6 @@ export default {
         );
 
         if (exists) {
-          //this.notify("Sorry", "Product Code is already existing in the database");
           this.$swal.fire({
             type: "error",
             title: "Sorry",
@@ -543,9 +714,11 @@ export default {
             price: this.product.price,
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
-            sale: this.product.sale,
-            isOutofStock: this.product.isOutofStock || null
+            isOutofStock: this.product.isOutofStock || null,
+            weight: Number(this.product.weight),
             //uid: null
+            attributes: this.product.attributes,
+            searchTerms: this.product.name.split(" ")
           };
           console.log(newProduct);
 
@@ -572,7 +745,7 @@ export default {
               title: "Error",
               text: error.message
             });
-            //this.notify("error", error.message);
+
             return;
           }
 
@@ -591,7 +764,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            //this.notify("error", "An error occurred");
+
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -604,13 +777,10 @@ export default {
             productData: newProduct
           });
 
-          //this.items = this.$store.getters["products/GetProductsList"];
-          //this.items.push(productData);
-
           this.addProductButtonDisabled = false;
           this.addProductDialog = false;
           this.$refs.productFile.value = null;
-          //this.notify("success", "Product has been successfully added");
+
           this.$swal.fire({
             type: "success",
             title: "Success",
@@ -621,7 +791,9 @@ export default {
         //Edit Product Details
       } else {
         this.addProductButtonDisabled = true;
-
+        let searchTerms = this.product.name.split(" ").map(term => {
+          return term.toLowerCase();
+        });
         //try-catch block for saving productData to database
         const updatedProductData = {
           active: 1,
@@ -632,12 +804,14 @@ export default {
           price: this.product.price,
           resellerPrice: this.product.resellerPrice,
           //promotion: this.product.promotion,
-          sale: this.product.sale,
           isOutofStock: this.product.isOutofStock || null,
+          weight: Number(this.product.weight),
           //uid: null
-          downloadURL: this.product.downloadURL,
-          pictureName: this.product.pictureName,
-          id: this.product.id
+          downloadURL: this.product.downloadURL || null,
+          pictureName: this.product.pictureName || null,
+          id: this.product.id,
+          attributes: this.product.attributes,
+          searchTerms: searchTerms
         };
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 
@@ -666,7 +840,7 @@ export default {
             console.log(error);
             this.addProductButtonDisabled = false;
             this.addProductDialog = false;
-            //this.notify("error", "An error occurred");
+
             this.$swal.fire({
               type: "error",
               title: "Error",
@@ -681,16 +855,9 @@ export default {
           productData: updatedProductData
         });
 
-        //this.items = this.$store.getters["products/GetProductsList"];
-        // const index = this.items.findIndex(item => item.id === productData.id);
-        // this.items[index] = productData;
-        // this.items[index].downloadURL = productData.downloadURL;
-        // this.items[index].pictureName = productData.pictureName;
-        //console.log(this.items);
-
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
-        //this.notify("success", "Product has been successfully updated");
+
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -834,27 +1001,14 @@ export default {
             productId: product.id,
             productData: product
           });
-          console.log("photos", photos);
-          this.$emit("itemUpdated", {
-            id: product.id,
-            photos
-          });
-          //this.selectedProduct.photos = photos;
         } else {
-          //console.log("res", res);
-          //await productsCollection.doc(product.id).update({ photos: res });
           product.photos = res;
           await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: product.id,
             productData: product
           });
-          //this.selectedProduct.photos = res;
-          this.$emit("itemUpdated", {
-            id: product.id,
-            photos: res
-          });
         }
-        //this.notify("success", "Variant images has been successfully uploaded");
+
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -866,7 +1020,6 @@ export default {
         this.images = [];
         this.$refs.dropzoneRef.removeAllFiles(true);
       } catch (error) {
-        //this.notify("error", error.message);
         this.$swal.fire({
           type: "error",
           title: "Error",
@@ -889,7 +1042,6 @@ export default {
       });
 
       if (response.value) {
-        //this.notify("warning", "Deleting Image, please do not close this dialog.");
         this.$swal.fire({
           type: "warning",
           title: "WARNING",
@@ -907,20 +1059,18 @@ export default {
             .delete();
           images.splice(index, 1);
           this.selectedProduct.photos = images;
-          //await productsCollection.doc(this.selectedProduct.id).update({ photos: images });
+
           await this.$store.dispatch("products/UPDATE_PRODUCT", {
             productId: this.selectedProduct.id,
             productData: this.selectedProduct
           });
 
-          //this.notify("success", "Image has been deleted!");
           this.$swal.fire({
             type: "success",
             title: "Success",
             text: "Image has been deleted!"
           });
         } catch (error) {
-          //this.notify("error", error.message);
           this.$swal.fire({
             type: "error",
             title: "Error",
@@ -962,12 +1112,7 @@ export default {
     addProductDialog(val) {
       if (!val) {
         this.newProduct = {
-          name: null,
-          sale: {
-            status: false,
-            percentage: null
-          },
-          promotion: false
+          name: null
         };
       }
     },
