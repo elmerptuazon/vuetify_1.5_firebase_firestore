@@ -2,71 +2,96 @@
   <v-container fluid>
     <v-card>
       <v-card-title>
-        <div class="headline">Shipment List Report</div>
-        <v-spacer></v-spacer>
-        <v-menu
-          lazy
-          :close-on-content-click="false"
-          v-model="fromMenu"
-          transition="scale-transition"
-          offset-y
-          full-width
-          :nudge-right="40"
-          max-width="290px"
-          min-width="290px"
-        >
-          <v-text-field
-            slot="activator"
-            label="Date from"
-            v-model="fromDate"
-            prepend-icon="event"
-            readonly
-          ></v-text-field>
-          <v-date-picker
-            v-model="fromDate"
-            @input="fromMenu = false"
-            no-title
-          ></v-date-picker>
-        </v-menu>
-        <v-menu
-          lazy
-          :close-on-content-click="false"
-          v-model="toMenu"
-          transition="scale-transition"
-          offset-y
-          full-width
-          :nudge-right="40"
-          max-width="290px"
-          min-width="290px"
-        >
-          <v-text-field
-            slot="activator"
-            label="Date to"
-            v-model="toDate"
-            prepend-icon="event"
-            readonly
-          ></v-text-field>
-          <v-date-picker
-            v-model="toDate"
-            @input="toMenu = false"
-            no-title
-          ></v-date-picker>
-        </v-menu>
-        <v-btn @click="GenerateShipmentReport" color="primary"
-          >Generate Report</v-btn
-        >
-        <v-btn color="success">
-          <download-excel
-            :data="exportData"
-            :fields="json_fields"
-            :before-generate="PrepareDataForDownload"
-            :before-finish="PromptEndOfDownload"
-            worksheet="Shipments"
-            name="Shipments.xls"
-          >
-            Export To excel
-          </download-excel></v-btn
-        >
+        <v-layout>
+          <v-flex xs3> <div class="headline">Shipment List Report</div></v-flex>
+          <v-flex xs9>
+            <v-layout align-start justify-end row fill-height>
+              <v-flex>
+                <v-menu
+                  lazy
+                  :close-on-content-click="false"
+                  v-model="fromMenu"
+                  transition="scale-transition"
+                  offset-y
+                  full-width
+                  :nudge-right="40"
+                  max-width="290px"
+                  min-width="290px"
+                >
+                  <v-text-field
+                    slot="activator"
+                    label="Date from"
+                    v-model="fromDate"
+                    prepend-icon="event"
+                    readonly
+                  ></v-text-field>
+                  <v-date-picker
+                    v-model="fromDate"
+                    @input="fromMenu = false"
+                    no-title
+                  ></v-date-picker> </v-menu
+              ></v-flex>
+              <v-flex>
+                <v-menu
+                  lazy
+                  :close-on-content-click="false"
+                  v-model="toMenu"
+                  transition="scale-transition"
+                  offset-y
+                  full-width
+                  :nudge-right="40"
+                  max-width="290px"
+                  min-width="290px"
+                >
+                  <v-text-field
+                    slot="activator"
+                    label="Date to"
+                    v-model="toDate"
+                    prepend-icon="event"
+                    readonly
+                  ></v-text-field>
+                  <v-date-picker
+                    v-model="toDate"
+                    @input="toMenu = false"
+                    no-title
+                  ></v-date-picker>
+                </v-menu>
+              </v-flex>
+              <v-flex>
+                <div class="text-xs-center">
+                  <v-select
+                    v-model="selectedFilter"
+                    :items="filters"
+                    menu-props="auto"
+                    label="Filter"
+                    prepend-icon="filter_list"
+                  ></v-select>
+                </div>
+              </v-flex>
+              <v-flex>
+                <div class="text-xs-center">
+                  <v-btn @click="GenerateShipmentReport" color="primary"
+                    >Generate Report</v-btn
+                  >
+                </div>
+              </v-flex>
+              <v-flex>
+                <v-btn color="success">
+                  <download-excel
+                    :data="exportData"
+                    :fields="json_fields"
+                    :before-generate="PrepareDataForDownload"
+                    :before-finish="PromptEndOfDownload"
+                    worksheet="Shipments"
+                    name="Shipments.xls"
+                  >
+                    Export To excel
+                  </download-excel></v-btn
+                >
+              </v-flex>
+            </v-layout>
+          </v-flex>
+        </v-layout>
       </v-card-title>
       <v-divider></v-divider>
       <v-data-table
@@ -144,6 +169,8 @@ export default {
     fromMenu: false,
     toDate: new Date().toISOString().substr(0, 10),
     toMenu: false,
+    filters: ["Pick-Up Date", "Process Date"],
+    selectedFilter: "Pick-Up Date",
     loading: false,
     headers: [
       {
@@ -238,7 +265,10 @@ export default {
         fromDate: this.fromDate,
         toDate: this.toDate
       };
-      await this.$store.dispatch("shipment/GetShipmentsByDate", dateRange);
+      await this.$store.dispatch("shipment/GetShipmentsByDate", {
+        dateRange: dateRange,
+        filter: this.selectedFilter
+      });
       this.loading = false;
     },
     PrepareDataForDownload() {
