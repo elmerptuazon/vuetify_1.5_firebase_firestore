@@ -37,6 +37,18 @@ const prompts = require('prompts');
     );
 
     try {
+
+        //remove old files
+        fs.emptyDirSync('src');
+        console.log('Deleted Files');
+
+        //setup commons folder
+        let commonSource = 'commons/src';
+        let commonDestination = 'src'
+        await fs.copy(commonSource, commonDestination)
+        console.log('Common Files has been Set');
+
+
         let imgSource = `company_setup/${answer.value}/src/assets`;
         let imgDestination = 'src/assets'
         await fs.copy(imgSource, imgDestination)
