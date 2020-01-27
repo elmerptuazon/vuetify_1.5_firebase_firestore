@@ -24,6 +24,7 @@ const prompts = require('prompts');
         name: 'value',
         message: 'Pick a company to SetUp',
         choices: [
+            { title: 'AppSellTestApp', value: 'AppSellTestApp' },
             { title: 'Ever Bilena', value: 'EverBilena' },
             { title: 'Barapido', value: 'Barapido' },
             { title: 'Fetch', value: 'Fetch' },
