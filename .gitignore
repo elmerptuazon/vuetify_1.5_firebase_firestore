@@ -8,6 +8,7 @@ config/*.env.js
 src/assets/
 /index.html
 /static/
+/src/
 src/pages/Customers.vue
 
 # Editor directories and files

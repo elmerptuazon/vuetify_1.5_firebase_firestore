@@ -29,7 +29,7 @@
             :class="[props.item.status === 'pending' ? 'blue lighten-4' : '']"
           >
             <td>
-              {{ props.item.user.agentId }}
+              {{ props.item.stockOrderReference }}
             </td>
             <td>
               {{ props.item.user.firstName }}
@@ -74,8 +74,8 @@ export default {
     },
     headers: [
       {
-        text: "Distributor ID",
-        value: "user.agentId"
+        text: "Reference No.",
+        value: "stockOrderReference"
       },
       {
         text: "First Name",
@@ -120,7 +120,8 @@ export default {
     try {
       const data = await this.$store.dispatch("stock_orders/FIND");
       this.items = data.map(order => {
-        order.discountedTotal = this.applyDiscount(order.price);
+        console.log(order);
+        order.discountedTotal = this.applyDiscount(order.resellerPrice);
         return order;
       });
     } catch (error) {
@@ -129,27 +130,31 @@ export default {
     this.loading = false;
   },
   methods: {
-    view(item) {
+    async view(item) {
       console.log(item);
+      await this.$store.dispatch(
+        "stock_orders/POPULATE_STOCK_ORDER_ITEMS",
+        item
+      );
       this.$router.push({
         name: "StockOrderDetails",
-        params: { id: item.id, item }
+        params: { id: item.id }
       });
     },
 
     applyDiscount(total) {
       let discount;
-      if (total >= 1500 && total <= 2999) {
-        discount = 10;
-      } else if (total >= 3000 && total <= 4999) {
-        discount = 15;
-      } else if (total >= 5000 && total <= 9999) {
-        discount = 18;
-      } else if (total >= 10000 && total <= 24999) {
-        discount = 20;
-      } else {
-        discount = null;
-      }
+      // if (total >= 1500 && total <= 2999) {
+      //   discount = 10;
+      // } else if (total >= 3000 && total <= 4999) {
+      //   discount = 15;
+      // } else if (total >= 5000 && total <= 9999) {
+      //   discount = 18;
+      // } else if (total >= 10000 && total <= 24999) {
+      //   discount = 20;
+      // } else {
+      //   discount = null;
+      // }
 
       if (discount) {
         return total - (discount / 100) * total;

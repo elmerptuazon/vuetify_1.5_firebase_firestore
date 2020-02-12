@@ -12,7 +12,9 @@ import VueProgressBar from 'vue-progressbar';
 import Vue2Filters from 'vue2-filters';
 import store from './store'
 import { AUTH } from './config/firebase';
+import JsonExcel from 'vue-json-excel'
 
+Vue.component('downloadExcel', JsonExcel)
 Vue.config.productionTip = false;
 
 Vue.use(Vuetify, {

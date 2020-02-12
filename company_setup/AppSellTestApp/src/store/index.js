@@ -11,6 +11,7 @@ import conversations from './modules/conversations';
 import distributors from './modules/distributors';
 import stock_orders from './modules/stock-orders';
 import users from './modules/users';
+import shipment from './modules/shipment';
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -36,7 +37,8 @@ export default new Vuex.Store({
 					{ icon: 'insert_emoticon', text: 'Reseller List', url: 'Resellers' },
 					{ icon: 'people', text: 'Customer List', url: 'Customers' },
 					{ icon: 'shopping_basket', text: 'Products Ordered', url: 'Products' },
-					{ icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' }
+					{ icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' },
+					{ icon: 'local_shipping', text: 'Shipments', url: 'ShipmentReport' }
 				]
 			},
 			{
@@ -79,6 +81,7 @@ export default new Vuex.Store({
 		conversations,
 		distributors,
 		stock_orders,
-		users
+		users,
+		shipment
 	}
 })

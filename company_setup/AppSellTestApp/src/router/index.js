@@ -15,6 +15,7 @@ import RegistrationDetails from '@/pages/RegistrationDetails';
 import StockOrders from '@/pages/StockOrders';
 import StockOrderDetails from '@/pages/StockOrderDetails';
 import MyAccount from '@/pages/MyAccount';
+import ShipmentReport from '@/pages/ShipmentReport';
 import { AUTH } from '@/config/firebase';
 import store from '@/store';
 
@@ -59,6 +60,14 @@ const router = new Router({
 			path: '/users/customers',
 			name: 'Customers',
 			component: Customers,
+			meta: {
+				requiresAuth: true
+			}
+		},
+		{
+			path: '/reports/shipmentreport',
+			name: 'ShipmentReport',
+			component: ShipmentReport,
 			meta: {
 				requiresAuth: true
 			}

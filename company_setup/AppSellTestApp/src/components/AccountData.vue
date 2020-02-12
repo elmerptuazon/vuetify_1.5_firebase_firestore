@@ -141,6 +141,7 @@
             :rules="numberRules"
             required
             v-model="account.agentId"
+            readonly
           ></v-text-field>
         </v-flex>
       </v-layout>
