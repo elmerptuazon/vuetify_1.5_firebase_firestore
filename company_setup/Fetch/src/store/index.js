@@ -12,6 +12,7 @@ import distributors from './modules/distributors';
 import stock_orders from './modules/stock-orders';
 import users from './modules/users';
 import shipment from './modules/shipment';
+import lalamove from './modules/lalamove';
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -82,6 +83,7 @@ export default new Vuex.Store({
 		distributors,
 		stock_orders,
 		users,
-		shipment
+		shipment,
+		lalamove
 	}
 })
