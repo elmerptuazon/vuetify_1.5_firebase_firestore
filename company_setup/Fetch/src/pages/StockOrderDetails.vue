@@ -273,7 +273,7 @@
           <v-divider></v-divider>
           <v-card-text>
             <v-layout wrap>
-              <v-flex xs8>
+              <v-flex xs6>
                 <v-radio-group v-model="shipmentType" row>
                   <v-radio label="Full Shipment" value="Full"></v-radio>
                   <v-radio label="Partial Shipment" value="Partial"></v-radio>
@@ -286,7 +286,7 @@
                   />
                 </v-radio-group>
               </v-flex>
-              <v-flex xs4>
+              <v-flex xs3>
                 <v-menu
                   lazy
                   :close-on-content-click="false"
@@ -312,12 +312,50 @@
                   ></v-date-picker>
                 </v-menu>
               </v-flex>
+              <v-flex xs3
+                v-if="stockOrder.logisticsDetails.logisticProvider !== 'pick-up'"
+              >
+                <v-menu
+                  ref="menu2"
+                  v-model="menu2"
+                  :close-on-content-click="false"
+                  :nudge-right="40"
+                  :return-value.sync="time"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="290px"
+                  min-width="290px"
+                >
+                  <template v-slot:activator="{ on }">
+                    <v-text-field
+                      v-model="pickupTime"
+                      label="Pick Up Time"
+                      prepend-icon="access_time"
+                      readonly
+                      v-on="on"
+                    ></v-text-field>
+                  </template>
+                  <v-time-picker
+                    v-if="menu2"
+                    v-model="pickupTime"
+                    full-width
+                  >
+                    <v-spacer></v-spacer>
+                    <v-btn color="black" flat @click="menu2 = false">CANCEL</v-btn>
+                    <v-btn color="primary" depressed @click="$refs.menu2.save(time)">OK</v-btn>
+                  </v-time-picker>
+                </v-menu>
+              </v-flex>
             </v-layout>
           </v-card-text>
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" dark @click="SubmitShipment">
+            <v-btn 
+              color="primary" dark
+              :loading="submitLoading" 
+              @click="SubmitShipment"
+            >
               Submit Shipment
             </v-btn>
             <v-btn @click="closeShipmentDialog">
@@ -353,7 +391,11 @@ export default {
     shipmentDetails: null,
     partialShipment: false,
     pickupDate: null,
+    pickupTime: null,
     menu: false,
+    menu2: false,
+    time: '',
+    submitLoading: false,
 
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
@@ -436,6 +478,15 @@ export default {
         return;
       }
 
+      if (!this.pickupTime && this.stockOrder.logisticsDetails.logisticProvider !== 'pick-up') {
+        this.$swal.fire({
+          title: "Missing Pick-Up Time",
+          text: "Please select a pick-up time!",
+          type: "warning"
+        });
+        return;
+      }
+
       const response = await this.$swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -446,7 +497,8 @@ export default {
         confirmButtonText: "Yes, Submit it!"
       });
 
-      const pickupDate = Date.parse(moment(this.pickupDate).startOf("day"));
+      this.submitLoading = true;
+      // const pickupDate = Date.parse(moment(this.pickupDate + this.pickupTime));
 
       if (response.value) {
         if (this.shipmentType === "Full") {
@@ -465,6 +517,12 @@ export default {
               };
               return itemToShip;
             });
+
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              const lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
+            }
+
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
@@ -485,13 +543,15 @@ export default {
               itemsToShip: itemsToShip,
               type: "Full Shipment",
               status: "Pending",
-              pickupDate: pickupDate
+              lalamoveOrderDetails: lalamoveOrderDetails 
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
               this.shipmentDetails
             );
+
+
             //console.log(response);
             //after saving the Shipment Details, Update the Stock Order Values and Status
             const remainingStockOrderItems = this.stockOrder.items.map(item => {
@@ -540,7 +600,7 @@ export default {
             this.$swal.fire({
               type: "error",
               title: "Failed",
-              text: `Shipment creation has failed due to: ${error}`
+              text: `Shipment creation has failed due to: ${error.response.data.message}`
             });
           }
         } else {
@@ -554,6 +614,11 @@ export default {
             return;
           }
           try {
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              const lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
+            }
+
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
@@ -574,7 +639,7 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              pickupDate: pickupDate
+              lalamoveOrderDetails: lalamoveOrderDetails
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -692,7 +757,7 @@ export default {
             this.$swal.fire({
               type: "error",
               title: "Failed",
-              text: `Partial shipment creation has failed due to: ${error}`
+              text: `Partial shipment creation has failed due to: ${error.response.data.message}`
             });
 
             this.completed = true;
@@ -702,6 +767,7 @@ export default {
         }
       }
       this.date = null;
+      this.submitLoading = false;
     },
     async CancelOrder() {
       const response = await this.$swal.fire({
