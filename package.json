@@ -16,7 +16,7 @@
     "test-Chicharooms": "cross-env NODE_ENV=test node config/companySetup.js Chicharooms",
     "test-AppSellTestApp": "cross-env NODE_ENV=test node config/companySetup.js AppSellTestApp",
     "test-Babae": "cross-env NODE_ENV=test node config/companySetup.js Babae",
-    "test-MotherNature": "cross-env NODE_ENV=test node config/companySetup.js MotherNature",
+    "test-MotherNurture": "cross-env NODE_ENV=test node config/companySetup.js MotherNurture",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
