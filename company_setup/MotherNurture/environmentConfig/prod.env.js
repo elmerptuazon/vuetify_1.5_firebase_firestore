@@ -7,5 +7,5 @@ module.exports = {
   storageBucket: '',
   messagingSenderId: '',
   appId: '',
-  primaryColor: '"#aa7c51"',
+  primaryColor: '"#92b253"',
 }
