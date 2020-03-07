@@ -11,5 +11,5 @@ module.exports = merge(devEnv, {
   messagingSenderId: '"923236145582"',
   appId: '"1:923236145582:web:073a7ed83eda71fdcf103f"',
   measurementId: '"G-QWTXNCX24B"',
-  primaryColor: '"#92b253"',
+  primaryColor: '"#9fc45c"',
 })
