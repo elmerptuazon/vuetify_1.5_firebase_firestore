@@ -214,7 +214,45 @@ const lalamove = {
         },
 
         async getOrderStatus({state, commit, dispatch}, payload) {
-            
+            const body = {};
+            let URL = process.env.NODE_ENV === 'development' 
+                ? `/lalamove/orders/${payload.customerOrderId}` : `${host}/orders/${payload.customerOrderId}`;
+
+            try {
+                let response = await axios({
+                    method: 'get',
+                    url: URL,
+                    headers: await generateHeader('GET', `/v2/orders/${payload.customerOrderId}`, body),
+                });
+                console.log('LALAMOVE GET ORDER STATUS:', response.data);
+                
+                let status;
+                switch(response.data.status) {
+                    case 'ASSIGNING_DRIVER': 
+                        status = 'ASSIGNING DRIVER';
+                    case 'ON_GOING':
+                        status = 'ON GOING';
+                    case 'CANCELED':
+                        status = 'CANCELLED';
+                    case 'PICKED_UP':
+                        status = 'PICKED-UP';
+                    case 'REJECTED':
+                        status = 'DELIVERY REJECTED';
+                    case 'COMPLETED':
+                        status = 'DELIVERY COMPLETED';
+                    case 'EXPIRED':
+                        status = 'EXPIRED';      
+                }
+
+                return {
+                    status: status,
+                    price: response.data.price
+                };
+            }
+            catch(error) {
+                console.log('LALAMOVE GET ORDER STATUS ERROR', error.response.data);
+                throw error.response.data;
+            }
         }
     }
 }
