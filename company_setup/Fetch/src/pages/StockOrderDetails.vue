@@ -518,9 +518,11 @@ export default {
               return itemToShip;
             });
 
+            let lalamoveOrderDetails;
             if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              // this.stockOrder.logisticsDetails.quotationBody.scheduleAt = moment(`${this.pickupDate} ${this.pickupTime}`, 'x');
               this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
-              const lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
+              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
             }
 
             this.shipmentDetails = {
@@ -543,7 +545,8 @@ export default {
               itemsToShip: itemsToShip,
               type: "Full Shipment",
               status: "Pending",
-              lalamoveOrderDetails: lalamoveOrderDetails 
+              lalamoveOrderDetails: lalamoveOrderDetails,
+              pickupDate: new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString()
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -600,7 +603,7 @@ export default {
             this.$swal.fire({
               type: "error",
               title: "Failed",
-              text: `Shipment creation has failed due to: ${error.response.data.message}`
+              text: `Shipment creation has failed due to: ${error.data.message}`
             });
           }
         } else {
@@ -614,9 +617,13 @@ export default {
             return;
           }
           try {
+            let lalamoveOrderDetails;
             if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
-              this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
-              const lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
+              console.log("MOMENT FORMATING: ", moment(`${this.pickupDate} ${this.pickupTime}`, moment.ISO_8601));
+              console.log("NEW DATE FORMATTING: ", new Date(`${this.pickupDate}T${this.pickupTime}+08:00`).toISOString());
+              // this.stockOrder.logisticsDetails.quotationBody.scheduleAt = moment(`${this.pickupDate} ${this.pickupTime}`, moment.ISO_8601);
+              this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate}T${this.pickupTime}+08:00`).toISOString();
+              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
             }
 
             this.shipmentDetails = {
@@ -639,7 +646,8 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              lalamoveOrderDetails: lalamoveOrderDetails
+              lalamoveOrderDetails: lalamoveOrderDetails,
+              pickupDate: new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString(),
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -754,10 +762,11 @@ export default {
               //this will ensure that the partialShipment component wont display the previously created partial shipment list
             }
           } catch (error) {
+            console.log(error);
             this.$swal.fire({
               type: "error",
               title: "Failed",
-              text: `Partial shipment creation has failed due to: ${error.response.data.message}`
+              text: `Partial shipment creation has failed due to: ${error.data.message}`
             });
 
             this.completed = true;
@@ -766,7 +775,8 @@ export default {
           }
         }
       }
-      this.date = null;
+      this.pickupDate = null;
+      this.pickupTime = null;
       this.submitLoading = false;
     },
     async CancelOrder() {
