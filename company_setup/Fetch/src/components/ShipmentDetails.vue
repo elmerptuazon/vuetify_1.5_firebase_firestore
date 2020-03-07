@@ -94,7 +94,7 @@
                             >
                             <v-list-tile-title
                               :class="[
-                                shipment.status.toLowerCase() === 'cancelled'
+                                shipment.status.toLowerCase() === 'CANCELLED'
                                   ? 'red--text'
                                   : ''
                               ]"
@@ -121,12 +121,44 @@
                             </v-list-tile-sub-title>
                             <v-list-tile-title>
                               {{
-                                shipment.pickupDate | momentize("DD-MMM-YYYY")
+                                shipment.pickupDate | momentize("DD-MMM-YYYY | hh:mm a")
+                              }}
+                            </v-list-tile-title>
+                          </v-list-tile-content>
+                        </v-list-tile>
+                        <v-list-tile
+                          v-if="shipment.price"
+                          ><v-list-tile-content>
+                            <v-list-tile-sub-title
+                              >Shipment Price
+                            </v-list-tile-sub-title>
+                            <v-list-tile-title>
+                              {{
+                                shipment.price
                               }}
                             </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
                       </v-list>
+                      <v-layout align-center align-start mt-2 wrap
+                        v-if="shipment.lalamoveOrderDetails"
+                      >
+                        <v-flex xs12>
+                          <v-btn
+                            color="primary"
+                            depressed block
+                            :loading="statusBtn"
+                            :disabled="statusBtn"
+                            @click="refreshShipmentStatus(shipment)"
+                          >REFRESH SHIPMENT STATUS</v-btn>
+                        </v-flex>
+                        <v-flex xs12>
+                          <div class="primary--text caption font-italic">
+                            *Real-time updates for a Lalamove Delivery order is not yet supported yet.
+                            Please click the button above to frequently see updates on your Lalamove Delivery order.
+                          </div>
+                        </v-flex>
+                      </v-layout>
                     </v-card-text>
                   </v-card></v-container
                 >
@@ -285,13 +317,37 @@ export default {
     selectedShipment: {
       logisticSTN: null,
       shipmentDate: null
-    }
+    },
+    statusBtn: false
   }),
   created() {
     //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
     this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
   },
   methods: {
+    async refreshShipmentStatus(shipment) {
+      this.statusBtn = true;
+      console.log('Refresh Shipment Status', shipment);
+      
+      let response = await this.$store.dispatch("lalamove/getOrderStatus", {
+        customerOrderId: shipment.lalamoveOrderDetails.customerOrderId,
+        orderRef: shipment.lalamoveOrderDetails.orderRef
+      });
+
+      console.log('SHIPMENT DETAILS STATUS:', response);
+      shipment.status = response.status;
+      shipment.price = response.price.amount;
+
+      await this.$store.dispatch("shipment/UpdateShipment", {
+        id: shipment.id,
+        updatedDetails: {
+          status: shipment.status,
+          price: shipment.price
+        }
+      });
+
+      this.statusBtn = false;
+    },
     async UpdateShipmentStatus(shipment) {
       //updates hipmentstatus here
       console.log(shipment);
