@@ -498,7 +498,6 @@ export default {
       });
 
       this.submitLoading = true;
-      // const pickupDate = Date.parse(moment(this.pickupDate + this.pickupTime));
 
       if (response.value) {
         if (this.shipmentType === "Full") {
@@ -520,7 +519,6 @@ export default {
 
             let lalamoveOrderDetails;
             if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
-              // this.stockOrder.logisticsDetails.quotationBody.scheduleAt = moment(`${this.pickupDate} ${this.pickupTime}`, 'x');
               this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
               lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
             }
@@ -619,9 +617,6 @@ export default {
           try {
             let lalamoveOrderDetails;
             if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
-              console.log("MOMENT FORMATING: ", moment(`${this.pickupDate} ${this.pickupTime}`, moment.ISO_8601));
-              console.log("NEW DATE FORMATTING: ", new Date(`${this.pickupDate}T${this.pickupTime}+08:00`).toISOString());
-              // this.stockOrder.logisticsDetails.quotationBody.scheduleAt = moment(`${this.pickupDate} ${this.pickupTime}`, moment.ISO_8601);
               this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate}T${this.pickupTime}+08:00`).toISOString();
               lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
             }
@@ -646,8 +641,7 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              lalamoveOrderDetails: lalamoveOrderDetails,
-              pickupDate: new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString(),
+              pickupDate: new Date(`${this.pickupDate}`).toISOString(),
             };
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
@@ -766,7 +760,7 @@ export default {
             this.$swal.fire({
               type: "error",
               title: "Failed",
-              text: `Partial shipment creation has failed due to: ${error.data.message}`
+              text: `Partial shipment creation has failed due to: ${error}`
             });
 
             this.completed = true;
