@@ -55,9 +55,8 @@ const lalamove = {
         },
 
         async placeOrder({state, commit, dispatch}, payload) {
-            let body = Object.assign({}, payload.logisticsDetails.quotationBody);
-            payload.logisticsDetails.quotationBody.deliveries[0].remarks = `STOCK ORDER: ${payload.stockOrderReference}`;
-            console.log('lalamove quotation body: ', body);
+            const body = Object.assign({}, payload);
+            console.log('lalamove quotation body: ', payload);
             
             try {
                 let URL = process.env.NODE_ENV === 'development' ? '/lalamove/orders' : `${this.host}/orders`;
@@ -99,7 +98,9 @@ const lalamove = {
 
             console.log("COMPANY ADDRESS ", originCoordinates);
 
-            const address = payload.toAddress;
+            const user = rootGetters["accounts/user"];
+
+            const address = user.address;
             let resellerAdd = `${address.streetName}, ${address.barangay}, ${address.citymun}, ${address.province}, ${address.zipCode}`;
             resellerAdd = resellerAdd.replace(/ /g, "+");
 
@@ -133,8 +134,6 @@ const lalamove = {
             console.log(payload);
             // if(payload.stockOrder.paymentDetails.paymentType === 'COD')
             //     specialRequest.push("COD");
-
-            const user = rootGetters["accounts/user"];
 
             const currentTime = new Date();
             const tomorrow = `${currentTime.getMonth() + 1}/${currentTime.getDate() + 1}/${currentTime.getFullYear()} 13:00:00`; 
@@ -234,6 +233,30 @@ const lalamove = {
             }
             catch(error) {
                 console.log('LALAMOVE GET ORDER STATUS ERROR', error);
+                throw error;
+            }
+        },
+
+        async cancelOrder({commit}, payload) {
+            let URL = process.env.NODE_ENV === 'development' 
+                ? `/lalamove/orders/${payload.orderRef}/cancel` : `${this.host}/orders/${payload.orderRef}/cancel`;
+            const header = await generateHeader('PUT', `/v2/orders/${payload.orderRef}/cancel`, );
+            console.log('cancelOrder: ', header);
+            
+            try {
+                let response = await axios({
+                    method: 'put',
+                    url: URL,
+                    headers: header,
+                });
+                console.log('LALAMOVE CANCEL ORDER STATUS:', response);
+
+                return {
+                    isSuccessful: true
+                };
+            }
+            catch(error) {
+                console.log('LALAMOVE CANCEL ORDER STATUS ERROR', error.response);
                 throw error;
             }
         }
