@@ -12,6 +12,15 @@
           :class="[
             shipment.status.toLowerCase() === 'cancelled'
               ? 'grey lighten-1'
+              : '',
+            shipment.status.toLowerCase() === 'completed'
+              ? 'success lighten-4' 
+              : '',
+            shipment.status.toLowerCase() === 'received'
+              ? 'success lighten-4' 
+              : '',
+            shipment.status.toLowerCase() === 'rejected'
+              ? 'warning lighten-4'
               : ''
           ]"
         >
@@ -20,7 +29,9 @@
             <v-spacer></v-spacer>
             <v-btn
               color="success"
-              v-show="shipment.status.toLowerCase() === 'pending'"
+              v-show="shipment.status.toLowerCase() === 'pending' ||
+                shipment.status.toLowerCase() === 'completed'
+              "
               @click="UpdateShipmentStatus(shipment)"
               >Tag as Received</v-btn
             >
@@ -28,11 +39,17 @@
               class="mx-3"
               inset
               vertical
-              v-show="shipment.status.toLowerCase() === 'pending'"
+              v-show="shipment.status.toLowerCase() === 'pending' ||
+                shipment.status.toLowerCase() === 'completed'
+              "
             ></v-divider>
             <v-btn
               color="error"
-              v-show="shipment.status.toLowerCase() === 'pending'"
+              v-show="shipment.status.toLowerCase() === 'pending' ||
+                shipment.status.toLowerCase() !== 'completed' ||
+                shipment.status.toLowerCase() !== 'received'  ||
+                shipment.status.toLowerCase() !== 'cancelled'
+              "
               @click="cancelShipment(shipment)"
               >Cancel Shipment</v-btn
             >
@@ -40,7 +57,9 @@
               class="mx-3"
               inset
               vertical
-              v-show="shipment.status.toLowerCase() === 'pending'"
+              v-show="shipment.status.toLowerCase() === 'pending' ||
+                shipment.status.toLowerCase() !== 'completed'
+              "
             ></v-divider>
             <v-btn color="primary" @click="printShipmentDetails(shipment)"
               >Print Shipment Details</v-btn
@@ -55,7 +74,7 @@
                     <v-card-actions class="mb-0 pb-0">
                       <v-spacer> </v-spacer>
                       <v-btn
-                        v-if="shipment.status.toLowerCase() === 'pending'"
+                        v-if="shipment.status !== 'completed'"
                         small
                         icon
                       >
@@ -94,11 +113,11 @@
                             >
                             <v-list-tile-title
                               :class="[
-                                shipment.status.toLowerCase() === 'CANCELLED'
+                                shipment.status.toLowerCase() === 'cancelled' || shipment.status.toLowerCase() === 'rejected'
                                   ? 'red--text'
                                   : ''
                               ]"
-                              >{{ shipment.status }}
+                              >{{ shipment.status }} 
                             </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
@@ -329,23 +348,36 @@ export default {
       this.statusBtn = true;
       console.log('Refresh Shipment Status', shipment);
       
-      let response = await this.$store.dispatch("lalamove/getOrderStatus", {
-        customerOrderId: shipment.lalamoveOrderDetails.customerOrderId,
-        orderRef: shipment.lalamoveOrderDetails.orderRef
-      });
-
+      let response;
+      try {
+        response = await this.$store.dispatch("lalamove/getOrderStatus", {
+          customerOrderId: shipment.lalamoveOrderDetails.customerOrderId,
+          orderRef: shipment.lalamoveOrderDetails.orderRef
+        });
+      }
+      catch(error) {
+        console.log(error);
+        this.statusBtn = false;
+      }
+      
       console.log('SHIPMENT DETAILS STATUS:', response);
       shipment.status = response.status;
       shipment.price = response.price.amount;
 
-      await this.$store.dispatch("shipment/UpdateShipment", {
-        id: shipment.id,
-        updatedDetails: {
-          status: shipment.status,
-          price: shipment.price
-        }
-      });
-
+      try {
+        await this.$store.dispatch("shipment/UpdateShipment", {
+          id: shipment.id,
+          updatedDetails: {
+            status: shipment.status,
+            price: shipment.price
+          }
+        });
+      }
+      catch(error) {
+        console.log(error);
+        this.statusBtn = false;
+      }
+      
       this.statusBtn = false;
     },
     async UpdateShipmentStatus(shipment) {
