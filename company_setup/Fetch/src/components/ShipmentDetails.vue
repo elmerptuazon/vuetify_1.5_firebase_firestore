@@ -46,10 +46,11 @@
             <v-btn
               color="error"
               v-show="shipment.status.toLowerCase() === 'pending' ||
-                shipment.status.toLowerCase() !== 'completed' ||
-                shipment.status.toLowerCase() !== 'received'  ||
-                shipment.status.toLowerCase() !== 'cancelled'
+                shipment.status.toLowerCase() === 'assigning_driver' ||
+                shipment.status.toLowerCase() === 'on_going'
               "
+              :disabled="cancelBtn"
+              :loading="cancelBtn"
               @click="cancelShipment(shipment)"
               >Cancel Shipment</v-btn
             >
@@ -58,7 +59,8 @@
               inset
               vertical
               v-show="shipment.status.toLowerCase() === 'pending' ||
-                shipment.status.toLowerCase() !== 'completed'
+                shipment.status.toLowerCase() === 'assigning_driver' ||
+                shipment.status.toLowerCase() === 'on_going'
               "
             ></v-divider>
             <v-btn color="primary" @click="printShipmentDetails(shipment)"
@@ -74,7 +76,9 @@
                     <v-card-actions class="mb-0 pb-0">
                       <v-spacer> </v-spacer>
                       <v-btn
-                        v-if="shipment.status !== 'completed'"
+                        v-if="shipment.status.toLowerCase() === 'assigning_driver' ||
+                          shipment.status.toLowerCase() === 'pending'
+                        "
                         small
                         icon
                       >
@@ -114,7 +118,7 @@
                             <v-list-tile-title
                               :class="[
                                 shipment.status.toLowerCase() === 'cancelled' || shipment.status.toLowerCase() === 'rejected'
-                                  ? 'red--text'
+                                  ? 'red--text font-weight-bold'
                                   : ''
                               ]"
                               >{{ shipment.status }} 
@@ -167,7 +171,7 @@
                             color="primary"
                             depressed block
                             :loading="statusBtn"
-                            :disabled="statusBtn"
+                            :disabled="statusBtn || shipment.status.toLowerCase === 'received'"
                             @click="refreshShipmentStatus(shipment)"
                           >REFRESH SHIPMENT STATUS</v-btn>
                         </v-flex>
@@ -176,6 +180,21 @@
                             *Real-time updates for a Lalamove Delivery order is not yet supported yet.
                             Please click the button above to frequently see updates on your Lalamove Delivery order.
                           </div>
+                        </v-flex>
+                      </v-layout>
+                      <v-layout align-center align-start mt-2 wrap
+                        v-if="shipment.lalamoveOrderDetails"
+                      >
+                        <v-flex xs12>
+                          <v-btn
+                            color="black"
+                            outline block
+                            @click="openRebookDialog(shipment)"
+                            v-show="shipment.status.toLowerCase() === 'expired' ||
+                              shipment.status.toLowerCase() === 'cancelled' ||
+                              shipment.status.toLowerCase() === 'rejected'
+                            "
+                          > Re-Book this Shipment</v-btn>
                         </v-flex>
                       </v-layout>
                     </v-card-text>
@@ -265,6 +284,7 @@
           >
           </v-text-field>
           <v-menu
+            v-if="!selectedShipment.logisticsProvider"
             lazy
             :close-on-content-click="false"
             v-model="dateMenu"
@@ -304,6 +324,86 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="rebookDialog" max-width="600px">
+      <v-card>
+        <v-card-title>
+          Re-Book Shipment: <span class="font-weight-bold">{{ rebookShipment.trackingNumber }}</span>
+        </v-card-title>
+        <v-card-text>
+          <v-menu
+            lazy
+            :close-on-content-click="false"
+            v-model="dateMenu2"
+            transition="scale-transition"
+            offset-y
+            full-width
+            :nudge-right="40"
+            max-width="290px"
+            min-width="290px"
+          >
+            <v-text-field
+              slot="activator"
+              label="Pick-up Date"
+              placeholder="Select a new pick-up date"
+              v-model="rebookShipment.pickupDate"
+              prepend-icon="event"
+              readonly
+            ></v-text-field>
+            <v-date-picker
+              v-model="rebookShipment.pickupDate"
+              @input="dateMenu2 = false"
+              no-title
+            ></v-date-picker>
+          </v-menu>
+          <v-spacer/>
+          <v-menu
+            ref="menu2"
+            v-model="menu2"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            :return-value.sync="time"
+            transition="scale-transition"
+            offset-y
+            max-width="290px"
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="rebookShipment.pickupTime"
+                label="Pick-up Time"
+                placeholder="Select a new pick-up time"
+                prepend-icon="access_time"
+                readonly
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-time-picker
+              v-if="menu2"
+              v-model="rebookShipment.pickupTime"
+              full-width
+            >
+              <v-spacer></v-spacer>
+              <v-btn color="black" flat @click="menu2 = false">CANCEL</v-btn>
+              <v-btn color="primary" depressed @click="$refs.menu2.save(time)">OK</v-btn>
+            </v-time-picker>
+          </v-menu>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" @click="rebookDialog = false" flat
+            >Close</v-btn
+          >
+          <v-btn
+            color="blue darken-1"
+            flat
+            :loading="rebookBtn"
+            @click="rebookDelivery"
+            >Re-Book Shipment</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -332,12 +432,19 @@ export default {
     btnloading: false,
     //showShipmentFields: false,
     shipmentDialog: false,
+    rebookDialog: false,
+    rebookShipment: {},
+    menu2: false,
+    time: null,
     dateMenu: false,
+    dateMenu2: false,
     selectedShipment: {
       logisticSTN: null,
       shipmentDate: null
     },
-    statusBtn: false
+    statusBtn: false,
+    rebookBtn: false,
+    cancelBtn: false,
   }),
   created() {
     //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
@@ -379,6 +486,75 @@ export default {
       }
       
       this.statusBtn = false;
+    },
+    async openRebookDialog(shipment) {
+      this.rebookShipment = Object.assign({}, shipment);
+      this.rebookShipment.pickupDate = null;
+      this.rebookDialog = true;
+    },
+    async rebookDelivery() {
+      this.rebookBtn = true;
+
+      let newPickupDate = new Date(`${this.rebookShipment.pickupDate} ${this.rebookShipment.pickupTime}`).toISOString();
+
+      let stockOrder;
+      try {
+        stockOrder = await this.$store.dispatch('stock_orders/GET_STOCK_ORDER', {
+          id: this.rebookShipment.stockOrder.stockOrderId
+        });
+      }
+      catch(error) {
+        console.log(error);
+        this.rebookBtn = false;
+        this.rebookDialog = false;
+
+        this.$swal.fire({
+          type: "error",
+          title: "Error",
+          text: "Re-Booking was not successful! Please try again. " + error
+        });
+      }
+      
+      let quotationBody = stockOrder.logisticsDetails.quotationBody;
+      quotationBody.scheduleAt = newPickupDate;
+
+      try {
+        let newLalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', quotationBody); 
+
+        await this.$store.dispatch('shipment/UpdateShipment', {
+          id: this.rebookShipment.id,
+          updatedDetails: {
+            lalamoveOrderDetails: newLalamoveOrderDetails,
+            status: 'Pending',
+            pickupDate: newPickupDate
+          }
+        });
+
+        this.rebookShipment.lalamoveOrderDetails = newLalamoveOrderDetails;
+
+        this.rebookBtn = false;
+        this.rebookDialog = false;
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: "Re-Booking was successful!"
+        });
+
+        await this.refreshShipmentStatus(this.rebookShipment);
+         delete this.rebookShipment.pickupTime;
+        this.rebookShipment = {};
+      }
+      catch(error) {
+        this.rebookBtn = false;
+        this.rebookDialog = false;
+        this.rebookShipment = {};
+        this.$swal.fire({
+          type: "error",
+          title: "Error",
+          text: "Re-Booking was not successful! Please try again. " + error
+        });
+      }
+
     },
     async UpdateShipmentStatus(shipment) {
       //updates hipmentstatus here
@@ -430,6 +606,42 @@ export default {
         confirmButtonText: "Yes, Cancel it!"
       });
       if (response.value) {
+        this.cancelBtn = true;
+
+        if(shipment.lalamoveOrderDetails) {
+          try {
+            let response = await this.$store.dispatch('lalamove/cancelOrder', {
+              customerOrderId: shipment.lalamoveOrderDetails.customerOrderId,
+              orderRef: shipment.lalamoveOrderDetails.orderRef
+            });
+
+            if(response.isSuccessful) {
+              this.$swal.fire({
+                type: "success",
+                title: "Success",
+                text: "Lalamove Delivery cancellation was successful."
+              });
+            }
+          }
+          catch(error) {
+            let msg;
+            if(error.response.message === 'ERR_CANCELLATION_FORBIDDEN') {
+              msg = 'You have excceeded the 5-minute cancellation window period.';
+            }
+            else {
+              msg = error;
+            }
+
+            this.$swal.fire({
+              type: "error",
+              title: "Error",
+              text: "Lalamove Delivery cancellation was not successful. " + msg
+            });
+            this.cancelBtn = false;
+            return;
+          }
+        }
+
         let updateObj = {
           id: shipment.id,
           updatedDetails: {
@@ -495,18 +707,20 @@ export default {
             title: "Success",
             text: "Shipment status has been updated!"
           });
+          this.cancelBtn = false;
         } catch (e) {
           this.$swal.fire({
             type: "error",
             title: "Failed",
             text: `Shipment update has failed due to: ${e}`
           });
+          this.cancelBtn = false;
         }
       }
     },
     async UpdateShipmentDetails() {
       this.btnloading = true;
-
+      
       if (!this.selectedShipment.logisticSTN) {
         this.$swal.fire({
           type: "error",
@@ -550,6 +764,10 @@ export default {
       //this.selectedShipment.shipmentDate = shipment.shipmentDate;
       this.selectedShipment.logisticSTN = shipment.logisticSTN;
       this.selectedShipment.id = shipment.id;
+      if(shipment.lalamoveOrderDetails) {
+        this.selectedShipment.logisticsProvider = 'lalamove';
+      }
+      
       console.log(this.selectedShipment);
     },
     printShipmentDetails(shipment) {
