@@ -517,11 +517,7 @@ export default {
               return itemToShip;
             });
 
-            let lalamoveOrderDetails;
-            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
-              this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
-              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
-            }
+            
 
             this.shipmentDetails = {
               stockOrder: {
@@ -543,9 +539,22 @@ export default {
               itemsToShip: itemsToShip,
               type: "Full Shipment",
               status: "Pending",
-              lalamoveOrderDetails: lalamoveOrderDetails,
-              pickupDate: new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString()
+              pickupDate: this.pickupDate,
             };
+
+            //if full shipment will be done through lalamove
+            let lalamoveOrderDetails;
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              let quotationBody = this.stockOrder.logisticsDetails.quotationBody;
+              quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              quotationBody.deliveries[0].remarks = `STOCK ORDER: ${this.stockOrder.stockOrderReference}`
+              
+              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', quotationBody);
+
+              this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
+              this.ShipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+            }
+            
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
@@ -615,11 +624,6 @@ export default {
             return;
           }
           try {
-            let lalamoveOrderDetails;
-            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
-              this.stockOrder.logisticsDetails.quotationBody.scheduleAt = new Date(`${this.pickupDate}T${this.pickupTime}+08:00`).toISOString();
-              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', this.stockOrder);
-            }
 
             this.shipmentDetails = {
               stockOrder: {
@@ -641,8 +645,19 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              pickupDate: new Date(`${this.pickupDate}`).toISOString(),
-            };
+              pickupDate: this.pickupDate            };
+
+            let lalamoveOrderDetails;
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              let quotationBody = this.stockOrder.logisticsDetails.quotationBody;
+              quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              quotationBody.deliveries[0].remarks = `STOCK ORDER: ${this.stockOrder.stockOrderReference}`
+              
+              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', quotationBody);
+
+              this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
+              this.ShipmentDetails.pickupDate = new Date(`${this.pickupDate}`).toISOString();
+            }
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
