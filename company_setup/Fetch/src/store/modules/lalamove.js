@@ -60,7 +60,7 @@ const lalamove = {
             console.log('lalamove quotation body: ', body);
             
             try {
-                let URL = process.env.NODE_ENV === 'development' ? '/lalamove/orders' : `${host}/orders`;
+                let URL = process.env.NODE_ENV === 'development' ? '/lalamove/orders' : `${this.host}/orders`;
 
                 let response = await axios({
                     method: 'post',
@@ -214,44 +214,27 @@ const lalamove = {
         },
 
         async getOrderStatus({state, commit, dispatch}, payload) {
-            const body = {};
+           
             let URL = process.env.NODE_ENV === 'development' 
-                ? `/lalamove/orders/${payload.customerOrderId}` : `${host}/orders/${payload.customerOrderId}`;
+                ? `/lalamove/orders/${payload.orderRef}` : `${this.host}/orders/${payload.orderRef}`;
 
             try {
                 let response = await axios({
                     method: 'get',
                     url: URL,
-                    headers: await generateHeader('GET', `/v2/orders/${payload.customerOrderId}`, body),
+                    headers: await generateHeader('GET', `/v2/orders/${payload.orderRef}`, null),
                 });
                 console.log('LALAMOVE GET ORDER STATUS:', response.data);
                 
-                let status;
-                switch(response.data.status) {
-                    case 'ASSIGNING_DRIVER': 
-                        status = 'ASSIGNING DRIVER';
-                    case 'ON_GOING':
-                        status = 'ON GOING';
-                    case 'CANCELED':
-                        status = 'CANCELLED';
-                    case 'PICKED_UP':
-                        status = 'PICKED-UP';
-                    case 'REJECTED':
-                        status = 'DELIVERY REJECTED';
-                    case 'COMPLETED':
-                        status = 'DELIVERY COMPLETED';
-                    case 'EXPIRED':
-                        status = 'EXPIRED';      
+                if(response.data.status === 'CANCELED') {
+                    response.data.status = 'CANCELLED';
                 }
 
-                return {
-                    status: status,
-                    price: response.data.price
-                };
+                return response.data;
             }
             catch(error) {
-                console.log('LALAMOVE GET ORDER STATUS ERROR', error.response.data);
-                throw error.response.data;
+                console.log('LALAMOVE GET ORDER STATUS ERROR', error);
+                throw error;
             }
         }
     }
