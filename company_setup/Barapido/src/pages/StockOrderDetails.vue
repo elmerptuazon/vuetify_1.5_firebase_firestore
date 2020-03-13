@@ -196,6 +196,18 @@
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
+
+                    <v-list-tile v-if="stockOrder.logisticsDetails.isFreeShipping">
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Is this a Free Delivery?</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span v-if="stockOrder.logisticsDetails.isFreeShipping">YES</span>
+                          <span v-else>NO</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
                   </v-list>
                 </v-card-text>
               </v-card>
