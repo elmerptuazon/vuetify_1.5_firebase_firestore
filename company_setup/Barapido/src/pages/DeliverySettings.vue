@@ -1,15 +1,15 @@
 <template>
     <v-container fluid>
-        <v-layout align-center justify-center row>
-            <v-flex xs5>
+        <v-layout align-center justify-start row>
+            <v-flex xs10>
                 <v-card>
-                    <v-card-title class="font-weight-bold title primary--text">
+                    <v-card-title class="font-weight-bold title primary white--text">
                         Free Delivery Threshold Price
                     </v-card-title>
                     <v-divider/>
                     <v-card-text>
-                        <v-layout align-center justify-start>
-                            <v-flex xs5>
+                        <v-layout align-center justify-start wrap>
+                            <v-flex xs8 px-2>
                                 <v-text-field
                                     v-model="settings.cutOffPrice"
                                     label="Free Delivery Cut-Off Price"
@@ -19,20 +19,19 @@
                                     prefix="PHP"
                                 ></v-text-field>
                             </v-flex>
-                            <v-flex xs2 offset-xs1>
+                            <v-flex xs4>
                                 <v-btn
-                                    outline dense
-                                    :class="[cutOffPriceField ? 'success--text' : 'red--text lighten-1']"
+                                    outline
+                                    :class="[cutOffPriceField ? 'success--text ml-3' : 'red--text lighten-1 ml-3']"
                                     @click="cutOffPriceField = !cutOffPriceField"
                                 >
                                     <span v-if="cutOffPriceField">EDIT</span>
                                     <span v-else>CANCEL</span>
                                 </v-btn>
-                            </v-flex>
-                            <v-flex xs2 offset-xs1>
                                 <v-btn
-                                    depressed dense
+                                    depressed
                                     color="primary"
+                                    class="ml-6"
                                     v-if="!cutOffPriceField"
                                     @click="submitCutOffPrice"
                                     :disabled="
