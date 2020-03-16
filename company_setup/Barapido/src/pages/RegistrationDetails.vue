@@ -135,7 +135,7 @@ export default {
 					status: 'approved',
 					agentId: this.account.agentId,
 					uid: this.account.id,
-					hasNoOrders: true
+					// hasNoOrders: true //marks that a reseller is not yet making any others
 				});
 				this.account.status = 'approved';
 				this.$refs.toast.show('success', 'Registration has been successfully approved');
