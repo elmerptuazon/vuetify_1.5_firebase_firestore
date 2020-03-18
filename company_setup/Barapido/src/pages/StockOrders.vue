@@ -19,6 +19,7 @@
         item-key="id"
         class="elevation-1"
         :loading="loading"
+        :loading-text="loadingText"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
         :pagination.sync="pagination"
@@ -49,7 +50,8 @@
             <td>{{ props.item.submittedAt | momentize("D-MMM-YYYY") }}</td>
             <td>{{ props.item.sku }}</td>
             <td>{{ props.item.status | uppercase }}</td>
-            <td>{{ props.item.discountedTotal | currency("P") }}</td>
+            <!-- <td>{{ props.item.discountedTotal | currency("P") }}</td> -->
+            <td>{{ props.item.resellerPrice | currency("P") }}</td>
           </tr>
         </template>
       </v-data-table>
@@ -60,12 +62,14 @@
 <script>
 import mixins from "@/mixins";
 import { DB } from "@/config/firebase";
+import { mapGetters } from 'vuex';
 const ordersCollection = DB.collection("orders");
 
 export default {
   data: () => ({
-    items: [],
+    // items: [],
     loading: false,
+    loadingText: 'Please Wait...',
     search: null,
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
@@ -111,19 +115,20 @@ export default {
       },
       {
         text: "Price",
-        value: "discountedTotal"
+        value: "resellerPrice"
       }
     ]
   }),
   async created() {
     this.loading = true;
     try {
-      const data = await this.$store.dispatch("stock_orders/FIND");
-      this.items = data.map(order => {
-        console.log(order);
-        order.discountedTotal = this.applyDiscount(order.resellerPrice);
-        return order;
-      });
+      await this.$store.dispatch("stock_orders/FIND");
+      // const data = await this.$store.dispatch("stock_orders/FIND");
+      // this.items = data.map(order => {
+      //   console.log(order);
+      //   order.discountedTotal = this.applyDiscount(order.resellerPrice);
+      //   return order;
+      // });
     } catch (error) {
       console.log(error);
     }
@@ -163,6 +168,11 @@ export default {
       }
     }
   },
-  mixins: [mixins]
+  mixins: [mixins],
+  computed: {
+    ...mapGetters({
+      items: 'stock_orders/GET_STOCK_ORDER_LIST',
+    })
+  },
 };
 </script>
