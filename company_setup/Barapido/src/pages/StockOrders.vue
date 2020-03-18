@@ -70,7 +70,7 @@ export default {
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
     pagination: {
-      sortBy: "position"
+      sortBy: "Order Date"
     },
     headers: [
       {
