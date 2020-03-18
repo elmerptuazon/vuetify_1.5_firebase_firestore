@@ -223,6 +223,8 @@
             <v-btn
               color="success"
               @click="updateStatus('processing')"
+              :loading="updateBtnLoading"
+              :disabled="updateBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() != 'pending'
                   ? 'v-btn--disabled '
@@ -251,6 +253,8 @@
             <v-btn
               color="error"
               @click="CancelOrder()"
+              :loading="cancelBtnLoading"
+              :disabled="cancelBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() === 'cancelled'
                   ? 'v-btn--disabled '
@@ -367,6 +371,9 @@ export default {
     pickupDate: null,
     menu: false,
 
+    updateBtnLoading: false,
+    cancelBtnLoading: false,
+
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
     completed: false
@@ -411,6 +418,13 @@ export default {
       console.log(this.itemsToShip);
     },
     async updateStatus(status) {
+      if(status === 'processing') {
+        this.updateBtnLoading = true;
+      }
+      else if(status === 'cancelled') {
+        this.cancelBtnLoading = true;
+      }
+
       try {
         let statusTimeline = this.stockOrder.statusTimeline;
         if (this.stockOrder.statusTimeline) {
@@ -433,6 +447,9 @@ export default {
           "success",
           "Order has been successfully marked as " + status
         );
+
+        this.updateBtnLoading = false;
+        this.cancelBtnLoading = false;
       } catch (error) {
         this.$refs.toast.show("error", "An error occurred");
         console.log(error);
