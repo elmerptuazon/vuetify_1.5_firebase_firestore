@@ -51,7 +51,7 @@
                     <v-flex xs10>
                       {{ item.text }}
                     </v-flex>
-                    <v-flex xs2>
+                    <v-flex xs2 >
                       <v-avatar color="red" size="20" dark v-show="newStockOrdersCount">
                         <div class="overline white--text">{{ newStockOrdersCount}}</div>
                       </v-avatar>
