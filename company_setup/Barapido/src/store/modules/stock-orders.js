@@ -12,7 +12,15 @@ const stock_orders = {
     getters: {
         GET_COMPANIES: state => state.companies,
         GET_STOCK_ORDER_LIST: state => state.stockOrderList,
-        GET_NEW_ORDER_COUNT: state => state.newOrderCount,
+        GET_NEW_ORDER_COUNT(state) {
+
+            if(!state.stockOrderList.length) {
+                return state.newOrderCount;
+            }
+            else {
+                return state.stockOrderList.filter((order) => order.status.toLowerCase() === 'pending').length;
+            }
+        }  
     },
     mutations: {
         SET_COMPANIES(state, payload) {
@@ -156,7 +164,7 @@ const stock_orders = {
             commit('SET_STOCK_ORDER', stockOrder)
         },
 
-        LISTEN_TO_STOCK_ORDERS({ state, rootGetters, dispatch }) {
+        LISTEN_TO_STOCK_ORDERS({ state, commit, rootGetters, dispatch }) {
             const fetchedUsers = [];
 
 			state.subscriber = DB.collection('stock_orders').where('status', '==', 'pending')
@@ -164,11 +172,16 @@ const stock_orders = {
 
 					console.log('Listening to stock orders...');
 
-					let changes = snapshot.docChanges();
+                    let changes = snapshot.docChanges();
 
 					changes = changes.map((change) => {
-						let data = change.doc.data();
+
+                        console.log(change);
+                        
+                        let data = change.doc.data();
                         data.id = change.doc.id;
+
+                        data.type = change.type; 
                         
                         data.user = {};
                         const userIndex = fetchedUsers.findIndex(user => user.id === data.userId);
@@ -194,17 +207,21 @@ const stock_orders = {
 
                         });
 
-						return data;
+                        return data;
                     });
                     
                     console.log('CHANGES IN STOCKORDER: ', changes);
-
+                    
                     if(state.stockOrderList.length) {
                         changes.forEach(change => {
-                            state.stockOrderList.unshift(change);
+                            //dont add changes that is due to an update on the 'status' field of an existing order
+                            if(change.type === 'added') 
+                                state.stockOrderList.unshift(change);
+
+                            delete change.type;
                         });
                     }
-
+                    
                     state.newOrderCount = changes.length;
                     console.log('new orders count: ', state.newOrderCount);
 				});
