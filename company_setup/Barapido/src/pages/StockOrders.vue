@@ -1,17 +1,62 @@
 <template>
   <v-container fluid>
     <v-card>
-      <v-card-title>
-        <div class="headline">Stock Orders</div>
-        <v-spacer></v-spacer>
-        <v-text-field
-          append-icon="search"
-          label="Search stock order..."
-          single-line
-          hide-details
-          v-model="search"
-        ></v-text-field>
-      </v-card-title>
+      <v-container>
+        <v-layout align-center justify-start row>
+          <v-flex xs3>
+            <div class="headline">
+              Stock Orders
+              <span>
+                <v-tooltip bottom color="primary" dark>
+                  <template v-slot:activator="{ on }">
+                    <v-btn icon v-on="on">
+                      <v-icon color="grey lighten-1">help</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>
+                    <b>NOTE:</b> New Stock Orders are automatically shown on top of the list in real-time,<br/> 
+                    please refrain from refreshing this page.
+                  </span>
+                </v-tooltip>
+              </span>
+            </div>
+          </v-flex>
+          
+          <v-flex xs8 offset-xs2>
+            <v-text-field
+              append-icon="search"
+              label="Search stock order..."
+              dense
+              v-model="search"
+            ></v-text-field>
+          </v-flex>
+        </v-layout>
+        
+        <v-layout align-center justify-start mt-4 row>
+          <div 
+            v-for="status in statuses"
+            :key="status.name"
+            class="mr-2"
+          >
+            <v-chip
+              :active="status.count"
+              :class="[status.count === 0 ? 'grey' : 'primary']"
+              :outline="status.count === 0"
+              dark small
+            >
+              <div class="font-weight-thin overline">
+                {{ status.name }} Orders 
+                <span class="font-weight-bold">
+                  : {{ status.count }}
+                </span>
+              </div>
+            </v-chip>
+          </div>
+        </v-layout>
+      </v-container>
+      
+      <v-divider class="my-1"/>
+
       <v-data-table
         v-model="selected"
         :headers="headers"
@@ -27,7 +72,10 @@
         <template slot="items" slot-scope="props">
           <tr
             @click="view(props.item)"
-            :class="[props.item.status === 'pending' ? 'blue lighten-4' : '']"
+            :class="[
+              props.item.isRead && props.item.status.toLowerCase() === 'pending' ? 'grey lighten-2' : '',
+              !props.item.isRead && props.item.status.toLowerCase() === 'pending' ? 'blue lighten-4' : '',
+            ]"
           >
             <td>
               {{ props.item.stockOrderReference }}
@@ -117,33 +165,55 @@ export default {
         text: "Price",
         value: "resellerPrice"
       }
-    ]
+    ],
+    statuses: [],
+    statusType: ['Unread', 'Pending', 'Processing', 'Partially Shipped', 'Fully Shipped', 'Cancelled'],
   }),
   async created() {
     this.loading = true;
-    try {
-      await this.$store.dispatch("stock_orders/FIND");
-      // const data = await this.$store.dispatch("stock_orders/FIND");
-      // this.items = data.map(order => {
-      //   console.log(order);
-      //   order.discountedTotal = this.applyDiscount(order.resellerPrice);
-      //   return order;
-      // });
-    } catch (error) {
-      console.log(error);
-    }
+    // try {
+    //   const data = await this.$store.dispatch("stock_orders/FIND");
+    //   this.items = data.map(order => {
+    //     console.log(order);
+    //     order.discountedTotal = this.applyDiscount(order.resellerPrice);
+    //     return order;
+    //   });
+    // } catch (error) {
+    //   console.log(error);
+    // }
     this.loading = false;
   },
   methods: {
     async view(item) {
       console.log(item);
+      this.loading = true;
       await this.$store.dispatch(
         "stock_orders/POPULATE_STOCK_ORDER_ITEMS",
         item
       );
+
       this.$router.push({
         name: "StockOrderDetails",
         params: { id: item.id }
+      });
+      this.loading = false;
+    },
+
+    computeStatusNumbers(orders) {
+      this.statuses = [];
+      this.statusType.forEach(status => {
+        let entry = {
+          name: status,
+        }
+  
+        if(status === 'Unread') {
+          entry.count = orders.filter(order => order.status.toLowerCase() === 'pending' && !order.isRead).length;
+        }
+        else {
+          entry.count = orders.filter(order => order.status.toLowerCase() === status.toLowerCase()).length;
+        }
+
+        this.statuses.push(entry);
       });
     },
 
@@ -170,9 +240,12 @@ export default {
   },
   mixins: [mixins],
   computed: {
-    ...mapGetters({
-      items: 'stock_orders/GET_STOCK_ORDER_LIST',
-    })
+    items() {
+      const orders = this.$store.getters['stock_orders/GET_STOCK_ORDER_LIST'];
+      this.computeStatusNumbers(orders);
+      return orders;
+    }
   },
+
 };
 </script>
