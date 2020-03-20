@@ -381,7 +381,14 @@ export default {
   async created() {
     this.loading = true;
     try {
-      const id = this.$route.params;
+      const id = this.$route.params.id;
+      
+      if(!this.stockOrder.isRead) {
+        await this.$store.dispatch('stock_orders/UPDATE_STOCK_ORDER_DETAILS', {
+          referenceID: id,
+          updateObject: { isRead: true }
+        });
+      }
 
       if (!id) {
         this.$router.push({ name: "StockOrders" });
