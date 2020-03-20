@@ -47,6 +47,7 @@ const auth = {
 				const userData = await dispatch('GET_USER', uid);
 
 				commit('SET_USER', userData);
+				dispatch('stock_orders/LISTEN_TO_STOCK_ORDERS', null, { root: true });
 				return;
 			} catch (error) {
 				await AUTH.signOut();
