@@ -13,13 +13,8 @@ const stock_orders = {
         GET_COMPANIES: state => state.companies,
         GET_STOCK_ORDER_LIST: state => state.stockOrderList,
         GET_NEW_ORDER_COUNT(state) {
-
-            if(!state.stockOrderList.length) {
-                return state.newOrderCount;
-            }
-            else {
-                return state.stockOrderList.filter((order) => order.status.toLowerCase() === 'pending').length;
-            }
+            //return length of array of orders that are not yet read by the user
+            return state.stockOrderList.filter((order) => !order.isRead).length;
         }  
     },
     mutations: {
@@ -41,6 +36,97 @@ const stock_orders = {
         }
     },
     actions: {
+
+        async LISTEN_TO_STOCK_ORDERS({ state, commit, rootGetters, dispatch }) {
+            const fetchedUsers = [];
+            commit('SET_STOCK_ORDER_LIST', []);
+
+            state.subscriber = DB.collection('stock_orders')
+                .where('active', '==', false) //get all stock orders that are already submitted by a reseller
+                .orderBy('submittedAt', 'desc')
+				.onSnapshot((snapshot) => {
+
+					console.log('Listening to stock orders...');
+
+                    let changes = snapshot.docChanges();
+
+					changes = changes.map((change) => {
+
+                        console.log(change);
+                        
+                        let data = change.doc.data();
+                        data.id = change.doc.id;
+
+                        data.type = change.type; 
+                        
+                        data.user = {};
+                        const userIndex = fetchedUsers.findIndex(user => user.id === data.userId);
+                        if (userIndex !== -1) {
+                            data.user = fetchedUsers[userIndex];
+                        } else {
+                            dispatch('auth/GET_USER', data.userId, { root: true })
+                                .then((res) => {
+                                    data.user = res;
+                                    fetchedUsers.push(data.user);
+                                })
+                                .catch(error => {
+                                    console.log('stock orders listening: ', error);
+                                });
+                        }
+
+                        data.sku = data.items.length;
+                        data.price = 0;
+                        data.resellerPrice = 0;
+                        data.items.forEach((item) => {
+                            data.price += (item.qty * item.price);
+                            data.resellerPrice += (item.qty * item.resellerPrice);
+
+                        });
+
+                        if(!data.hasOwnProperty('isRead') && data.status.toLowerCase() === 'pending') {
+                            data.isRead = true;
+                        
+                        } else if(data.status.toLowerCase() !== 'pending') {
+                            data.isRead = true;
+                        }
+
+                        return data;
+                    });
+                    
+                    console.log('CHANGES IN STOCKORDER: ', changes);
+                    let newOrderCounter = 0;
+
+                    if(!state.stockOrderList || !state.stockOrderList.length) {
+                        commit('SET_STOCK_ORDER_LIST', changes);
+
+                    } else {
+                        changes.forEach(change => {
+                            //dont add the document that is due to an update on the 'status' field of an existing order
+                            if(
+                                change.type === 'added' && (!change.isRead || !change.hasOwnProperty('isRead'))
+                            ) {
+                                change.isRead = false;
+                                state.stockOrderList.unshift(change);
+                                // newOrderCounter++;
+                            }
+                                
+                            delete change.type;
+                            // state.newOrderCount = newOrderCounter;
+                        });
+                        
+                    }
+                    
+                    // state.newOrderCount = newOrderCounter;
+                    console.log('new orders count: ', state.newOrderCount);
+				});
+		},
+
+		UNSUBSCRIBE_FROM_STOCK_ORDERS({ state }) {
+			if (state.subscriber) {
+				state.subscriber();
+			}
+        },
+        
         async FIND({ state, commit, dispatch }) {
             const uid = AUTH.currentUser.uid;
             // commit('SET_STOCK_ORDER_LIST', []);
@@ -93,7 +179,6 @@ const stock_orders = {
                 }
                 
                 commit('SET_STOCK_ORDER_LIST', data);
-                // state.stockOrders = data;
                 return data;
             } catch (error) {
                 throw error;
@@ -131,7 +216,7 @@ const stock_orders = {
 
                 await DB.collection('stock_orders').doc(payload.referenceID).update(payload.updateObject);
                 commit('UPDATE_STOCK_ORDER', payload.updateObject)
-                dispatch('POPULATE_STOCK_ORDER_ITEMS', state.stockOrder)
+                await dispatch('POPULATE_STOCK_ORDER_ITEMS', state.stockOrder)
             } catch (error) {
                 throw error;
             }
@@ -164,74 +249,7 @@ const stock_orders = {
             commit('SET_STOCK_ORDER', stockOrder)
         },
 
-        LISTEN_TO_STOCK_ORDERS({ state, commit, rootGetters, dispatch }) {
-            const fetchedUsers = [];
-
-			state.subscriber = DB.collection('stock_orders').where('status', '==', 'pending')
-				.onSnapshot((snapshot) => {
-
-					console.log('Listening to stock orders...');
-
-                    let changes = snapshot.docChanges();
-
-					changes = changes.map((change) => {
-
-                        console.log(change);
-                        
-                        let data = change.doc.data();
-                        data.id = change.doc.id;
-
-                        data.type = change.type; 
-                        
-                        data.user = {};
-                        const userIndex = fetchedUsers.findIndex(user => user.id === data.userId);
-                        if (userIndex !== -1) {
-                            data.user = fetchedUsers[userIndex];
-                        } else {
-                            dispatch('auth/GET_USER', data.userId, { root: true })
-                                .then((res) => {
-                                    data.user = res;
-                                    fetchedUsers.push(data.user);
-                                })
-                                .catch(error => {
-                                    console.log('stock orders listening: ', error);
-                                });
-                        }
-
-                        data.sku = data.items.length;
-                        data.price = 0;
-                        data.resellerPrice = 0;
-                        data.items.forEach((item) => {
-                            data.price += (item.qty * item.price);
-                            data.resellerPrice += (item.qty * item.resellerPrice);
-
-                        });
-
-                        return data;
-                    });
-                    
-                    console.log('CHANGES IN STOCKORDER: ', changes);
-                    
-                    if(state.stockOrderList.length) {
-                        changes.forEach(change => {
-                            //dont add changes that is due to an update on the 'status' field of an existing order
-                            if(change.type === 'added') 
-                                state.stockOrderList.unshift(change);
-
-                            delete change.type;
-                        });
-                    }
-                    
-                    state.newOrderCount = changes.length;
-                    console.log('new orders count: ', state.newOrderCount);
-				});
-		},
-
-		UNSUBSCRIBE_FROM_STOCK_ORDERS({ state }) {
-			if (state.subscriber) {
-				state.subscriber();
-			}
-		},
+        
     }
 }
 
