@@ -52,8 +52,12 @@
                       {{ item.text }}
                     </v-flex>
                     <v-flex xs2>
-                      <v-avatar color="red" size="20" dark v-show="newStockOrdersCount">
-                        <div class="overline white--text">{{ newStockOrdersCount}}</div>
+                      <v-avatar 
+                        color="red" dark
+                        size="24"
+                        v-show="newStockOrdersCount"
+                      >
+                        <div class="overline white--text pa-2">{{ newStockOrdersCount }}</div>
                       </v-avatar>
                     </v-flex>
                   </v-layout>
