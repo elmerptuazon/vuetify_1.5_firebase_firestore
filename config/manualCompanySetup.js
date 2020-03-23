@@ -71,6 +71,14 @@ const prompts = require('prompts');
             console.log(`Error: ${e}`);
         }
         try {
+            let layoutsSource = `company_setup/${answer.value}/src/layouts`;
+            let layoutsDestination = 'src/layouts'
+            await fs.copy(layoutsSource, layoutsDestination)
+            console.log('Layouts update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
+        try {
             let componentSource = `company_setup/${answer.value}/src/components`;
             let componentDestination = 'src/components'
             await fs.copy(componentSource, componentDestination)
