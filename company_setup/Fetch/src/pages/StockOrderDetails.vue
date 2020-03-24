@@ -196,6 +196,18 @@
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
+
+                    <v-list-tile
+                      v-if="stockOrder.logisticsDetails.isFreeShipping"
+                      ><v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Is this Free Shipping?</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span>YES</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
                   </v-list>
                 </v-card-text>
               </v-card>
@@ -261,10 +273,14 @@
     <div class="mb-2"></div>
     <v-card>
       <v-card-title class="title">Shipment Details</v-card-title>
-      <ShipmentDetails :stockOrderId="stockOrder.id" />
+      <ShipmentDetails 
+        ref="shipmentDetails" 
+        :stockOrderId="stockOrder.id" 
+        :logisticProvider="stockOrder.logisticsDetails.logisticProvider"
+      />
     </v-card>
 
-    <v-dialog v-model="shipmentDialog" max-width="900">
+    <v-dialog v-model="shipmentDialog" max-width="900" persistent>
       <v-card>
         <v-container grid-list-md>
           <v-card-title class="title">
@@ -420,6 +436,10 @@ export default {
       this.shipmentDialog = false;
       this.completed = true;
       //clears the partial shipment list upon closing the shipment dialog
+
+      this.pickupDate = null;
+      this.pickupTime = null;
+      this.shipmentType = 'Full';
     },
     SetItemsToShip(items) {
       this.itemsToShip = items.map(item => {
@@ -552,7 +572,9 @@ export default {
               lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', quotationBody);
 
               this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
-              this.ShipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              this.shipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+
+              this.$refs.shipmentDetails.refreshShipmentStatus(this.shipmentDetails);
             }
             
             //call vuex and pass this.shipmentDetails
@@ -561,9 +583,15 @@ export default {
               this.shipmentDetails
             );
 
+            //update the lalamove order status of the created shipment
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              this.shipmentDetails.id = response.id;
+              this.$refs.shipmentDetails.refreshShipmentStatus(this.shipmentDetails);
+            }
 
-            //console.log(response);
             //after saving the Shipment Details, Update the Stock Order Values and Status
+            //console.log(response);
+              
             const remainingStockOrderItems = this.stockOrder.items.map(item => {
               const updatedStockOrder = {
                 attributes: item.attributes,
@@ -583,7 +611,13 @@ export default {
               status: "shipped",
               date: Date.now()
             });
-            const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+
+            //create shipmentsToReceive if this stock order is for pickup
+            let shipmentIncrement = 0;
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
+              shipmentIncrement = FB.firestore.FieldValue.increment(1);  
+            }
+            
             const stockOrderUpdatedData = {
               status: "shipped",
               items: remainingStockOrderItems,
@@ -614,6 +648,7 @@ export default {
             });
           }
         } else {
+          //this is the logic for creating partial shipment
           //get shipment details from component, then pass the details to vuex that inserts to database
           if (this.itemsToShip.length < 1) {
             this.$swal.fire({
@@ -645,7 +680,8 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              pickupDate: this.pickupDate            };
+              pickupDate: this.pickupDate            
+            };
 
             let lalamoveOrderDetails;
             if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
@@ -656,13 +692,21 @@ export default {
               lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', quotationBody);
 
               this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
-              this.ShipmentDetails.pickupDate = new Date(`${this.pickupDate}`).toISOString();
+              this.shipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              
             }
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
               this.shipmentDetails
             );
+
+            //update the lalamove status of the created shipment
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              this.shipmentDetails.id = response.id;
+              this.$refs.shipmentDetails.refreshShipmentStatus(this.shipmentDetails);
+            }
+
             //after saving the Shipment Details, Update the Stock Order Values and Status
             const remainingStockOrderItems = this.stockOrder.items.map(item => {
               const updatedIndex = this.itemsToShip.findIndex(
@@ -713,14 +757,18 @@ export default {
                 status: "shipped",
                 date: Date.now()
               });
-              const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+
               const stockOrderUpdatedData = {
                 status: "shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
-                shipmentsToReceive: shipmentIncrement
               };
-
+              
+              //create shipmentsToReceive if this stock order is for pickup
+              if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
+                stockOrderUpdatedData.shipmentsToReceive = FB.firestore.FieldValue.increment(1);  
+              }
+              
               const stockOrderUpdateResponse = await this.$store.dispatch(
                 "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
                 {
@@ -742,13 +790,17 @@ export default {
                 status: "partially shipped",
                 date: Date.now()
               });
-              const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+
               const stockOrderUpdatedData = {
                 status: "partially shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
-                shipmentsToReceive: shipmentIncrement
               };
+
+              //create shipmentsToReceive if this stock order is for pickup
+              if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
+                stockOrderUpdatedData.shipmentsToReceive = FB.firestore.FieldValue.increment(1);  
+              }
 
               const stockOrderUpdateResponse = await this.$store.dispatch(
                 "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
@@ -764,6 +816,9 @@ export default {
                 title: "Success",
                 text: "Partial shipment has been recorded!"
               });
+              
+              this.pickupDate = null;
+              this.pickupTime = null;
 
               this.completed = true;
               //"completed" variable has to be true since the created partial shipment
@@ -778,15 +833,18 @@ export default {
               text: `Partial shipment creation has failed due to: ${error}`
             });
 
+            this.pickupDate = null;
+            this.pickupTime = null;
+
             this.completed = true;
             //"completed" variable has to be true since the created partial shipment
             //has been recorded already
           }
         }
       }
-      this.pickupDate = null;
-      this.pickupTime = null;
+      
       this.submitLoading = false;
+      this.shipmentDialog = false;
     },
     async CancelOrder() {
       const response = await this.$swal.fire({
