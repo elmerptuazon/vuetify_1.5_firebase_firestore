@@ -54,6 +54,17 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
 
+    proxyTable: {
+      '/lalamove': {
+        logLevel: 'info',
+        target: 'https://sandbox-rest.lalamove.com/v2',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/lalamove': ''
+        }
+      }
+    },
+
     /**
      * Source Maps
      */
