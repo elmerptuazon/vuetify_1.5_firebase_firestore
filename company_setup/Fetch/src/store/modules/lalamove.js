@@ -10,10 +10,16 @@ const host = process.env.lalamoveURL;
 async function generateSigniture(time, path, body, method) {
     const secret = await DB.collection('providers').doc('lalamove').collection('keys').doc('secret').get();
     let _encryptedStr = `${time}\r\n${method}\r\n${path}\r\n\r\n`
+    
+    if(method === 'PUT') {
+        return cryptoJS.HmacSHA256(_encryptedStr, secret.data().key);
+    }
+
     if (method !== 'GET') {
       let _body = JSON.stringify(body)
       _encryptedStr = _encryptedStr + _body
     }
+    
     return cryptoJS.HmacSHA256(_encryptedStr, secret.data().key)
 }
 
@@ -215,7 +221,7 @@ const lalamove = {
         async getOrderStatus({state, commit, dispatch}, payload) {
            
             let URL = process.env.NODE_ENV === 'development' 
-                ? `/lalamove/orders/${payload.orderRef}` : `${this.host}/orders/${payload.orderRef}`;
+                ? `/lalamove/orders/${payload.orderRef}` : `${host}/orders/${payload.orderRef}`;
 
             try {
                 let response = await axios({
@@ -240,8 +246,8 @@ const lalamove = {
         async cancelOrder({commit}, payload) {
             let URL = process.env.NODE_ENV === 'development' 
                 ? `/lalamove/orders/${payload.orderRef}/cancel` : `${this.host}/orders/${payload.orderRef}/cancel`;
-            const header = await generateHeader('PUT', `/v2/orders/${payload.orderRef}/cancel`, );
-            console.log('cancelOrder: ', header);
+
+            const header = await generateHeader('PUT', `/v2/orders/${payload.orderRef}/cancel`, {});
             
             try {
                 let response = await axios({
@@ -257,7 +263,7 @@ const lalamove = {
             }
             catch(error) {
                 console.log('LALAMOVE CANCEL ORDER STATUS ERROR', error.response);
-                throw error;
+                throw error.response;
             }
         }
     }

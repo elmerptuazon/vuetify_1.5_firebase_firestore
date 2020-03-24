@@ -166,16 +166,17 @@
                       <v-layout align-center align-start mt-2 wrap
                         v-if="shipment.lalamoveOrderDetails"
                       >
-                        <v-flex xs12>
+                        <v-flex xs12 v-if="shipment.status.toLowerCase() !== 'received'">
                           <v-btn
+                          
                             color="primary"
                             depressed block
                             :loading="statusBtn"
-                            :disabled="statusBtn || shipment.status.toLowerCase === 'received'"
+                            :disabled="statusBtn"
                             @click="refreshShipmentStatus(shipment)"
                           >REFRESH SHIPMENT STATUS</v-btn>
                         </v-flex>
-                        <v-flex xs12>
+                        <v-flex xs12 v-if="shipment.status.toLowerCase() !== 'received'">
                           <div class="primary--text caption font-italic">
                             *Real-time updates for a Lalamove Delivery order is not yet supported yet.
                             Please click the button above to frequently see updates on your Lalamove Delivery order.
@@ -413,7 +414,7 @@ import { mapState } from "vuex";
 import { FB } from "@/config/firebase";
 import moment from "moment";
 export default {
-  props: ["stockOrderId"],
+  props: ["stockOrderId", "logisticProvider"],
   data: () => ({
     selectedItem: {},
     headers: [
@@ -446,15 +447,34 @@ export default {
     rebookBtn: false,
     cancelBtn: false,
   }),
-  created() {
+  async mounted() {
     //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
-    this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
+    await this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
+
+    //if this stock order is being delivered through lalamove
+    //re check the lalamove status of each shipments in this stock order
+    // if(this.logisticProvider === 'lalamove') {
+    //   for(const shipment of this.shipmentList) {
+      
+    //     const status = shipment.status.toLowerCase();
+
+    //     if(status === 'assigning_driver' || status === 'on_going') {
+    //       await this.refreshShipmentStatus(shipment);
+        
+    //     }
+    //   }
+    // }
+    
   },
   methods: {
     async refreshShipmentStatus(shipment) {
       this.statusBtn = true;
       console.log('Refresh Shipment Status', shipment);
-      
+
+      //retrieve any new update on the shipment details
+      let prevStatus = await this.$store.dispatch('shipment/GetSingleShipment', shipment.id);
+      prevStatus = prevStatus.status.toLowerCase();
+
       let response;
       try {
         response = await this.$store.dispatch("lalamove/getOrderStatus", {
@@ -472,19 +492,33 @@ export default {
       shipment.price = response.price.amount;
 
       try {
-        await this.$store.dispatch("shipment/UpdateShipment", {
-          id: shipment.id,
-          updatedDetails: {
-            status: shipment.status,
-            price: shipment.price
+        //update shipment status in DB when there is a new lalamove status
+        if(prevStatus !== response.status.toLowerCase()) {
+          await this.$store.dispatch("shipment/UpdateShipment", {
+            id: shipment.id,
+            updatedDetails: {
+              status: shipment.status,
+              price: shipment.price
+            }
+          });
+
+          //if the new lalamove status is picked_up, then increment the shipmentsToReceive counter in DB
+          if(response.status.toLowerCase() === 'picked_up') {
+            const shipmentIncrement =  FB.firestore.FieldValue.increment(1);
+            await this.$store.dispatch("stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+              {
+                updateObject: { shipmentsToReceive: shipmentIncrement },
+                referenceID: this.stockOrderId
+              }
+            ); 
           }
-        });
+        }
       }
       catch(error) {
         console.log(error);
         this.statusBtn = false;
       }
-      
+        
       this.statusBtn = false;
     },
     async openRebookDialog(shipment) {
@@ -596,19 +630,27 @@ export default {
       //updates hipmentstatus here
       //console.log(shipment);
 
+      let lalamoveCancel = ''; 
+      if(shipment.hasOwnProperty('lalamoveOrderDetails')) {
+        lalamoveCancel = 'Cancellation is only allowed 5-mins after the order has been accepted by the driver.';
+      }
+
       const response = await this.$swal.fire({
         title: "Are you sure?",
-        text: "You won't be able to revert this!",
+        text: 
+        `You won't be able to revert this! \n ${lalamoveCancel}`,
         type: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, Cancel it!"
       });
+
+
       if (response.value) {
         this.cancelBtn = true;
 
-        if(shipment.lalamoveOrderDetails) {
+        if(shipment.hasOwnProperty('lalamoveOrderDetails')) {
           try {
             let response = await this.$store.dispatch('lalamove/cancelOrder', {
               customerOrderId: shipment.lalamoveOrderDetails.customerOrderId,
@@ -624,12 +666,13 @@ export default {
             }
           }
           catch(error) {
+            this.cancelBtn = false;
             let msg;
-            if(error.response.message === 'ERR_CANCELLATION_FORBIDDEN') {
-              msg = 'You have excceeded the 5-minute cancellation window period.';
+            if(error.data.message === 'ERR_CANCELLATION_FORBIDDEN') {
+              msg = 'You have exceeded the 5-minute cancellation window period.';
             }
             else {
-              msg = error;
+              msg = '';
             }
 
             this.$swal.fire({
@@ -637,7 +680,6 @@ export default {
               title: "Error",
               text: "Lalamove Delivery cancellation was not successful. " + msg
             });
-            this.cancelBtn = false;
             return;
           }
         }
