@@ -4,6 +4,7 @@
       fixed
       :clipped="$vuetify.breakpoint.lgAndUp"
       app
+      width="250px"
       v-model="drawer"
     >
       <v-list dense>
