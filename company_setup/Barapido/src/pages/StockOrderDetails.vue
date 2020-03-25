@@ -183,7 +183,9 @@
                       </v-list-tile-content>
                     </v-list-tile>
 
+                    <!-- Display shipping fee when it is not a free delivery and is not for pick-up -->
                     <v-list-tile
+                      v-if="stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'"
                       ><v-list-tile-content>
                         <v-list-tile-sub-title
                           >Shipping Fee</v-list-tile-sub-title
@@ -197,7 +199,11 @@
                       </v-list-tile-content>
                     </v-list-tile>
 
-                    <v-list-tile v-if="stockOrder.logisticsDetails.isFreeShipping">
+                    <v-list-tile 
+                      v-if="
+                        stockOrder.logisticsDetails.isFreeShipping
+                        && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
+                      ">
                       <v-list-tile-content>
                         <v-list-tile-sub-title
                           >Is this a Free Delivery?</v-list-tile-sub-title

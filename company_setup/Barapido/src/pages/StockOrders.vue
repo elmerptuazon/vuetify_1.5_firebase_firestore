@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-card>
-      <v-container>
+      <v-container fluid>
         <v-layout align-center justify-start row>
           <v-flex xs3>
             <div class="headline">
@@ -32,11 +32,11 @@
           </v-flex>
         </v-layout>
         
-        <v-layout align-center justify-start mt-4 row>
+        <v-layout align-center justify-start mt-4>
           <div 
             v-for="status in statuses"
             :key="status.name"
-            class="mr-2"
+            class="mr-1"
           >
             <v-chip
               :active="status.count"
