@@ -1,17 +1,60 @@
 <template>
   <v-container fluid>
     <v-card>
-      <v-card-title>
-        <div class="headline">New Registrations</div>
-        <v-spacer></v-spacer>
-        <v-text-field
-          append-icon="search"
-          label="Search user..."
-          single-line
-          hide-details
-          v-model="search"
-        ></v-text-field>
-      </v-card-title>
+      <v-container>
+        <v-layout align-center justify-start row>
+          <v-flex xs4>
+            <div class="headline">
+              New Registrations
+              <span>
+                <v-tooltip bottom color="primary" dark>
+                  <template v-slot:activator="{ on }">
+                    <v-btn icon v-on="on">
+                      <v-icon color="grey lighten-1">help</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>
+                    <b>NOTE:</b> New Reseller Registrations are automatically shown on top of the list in real-time,<br/> 
+                    please refrain from refreshing this page.
+                  </span>
+                </v-tooltip>
+              </span>
+            </div>
+          </v-flex>
+
+          <v-flex xs7 offset-xs1>
+            <v-text-field
+              append-icon="search"
+              label="Search user..."
+              dense
+              v-model="search"
+            ></v-text-field>
+          </v-flex>
+        </v-layout>
+
+        <v-layout align-center justify-start mt-4>
+          <div 
+            v-for="status in statuses"
+            :key="status.name"
+            class="mr-2"
+          >
+            <v-chip
+              :active="status.count"
+              :class="[status.count === 0 ? 'grey' : 'primary']"
+              :outline="status.count === 0"
+              dark small
+            >
+              <div class="font-weight-thin overline">
+                {{ status.name }} Resellers 
+                <span class="font-weight-bold">
+                  : {{ status.count }}
+                </span>
+              </div>
+            </v-chip>
+          </div>
+        </v-layout>
+      </v-container>
+      
       <v-data-table
         v-model="selected"
         :headers="headers"
@@ -156,7 +199,10 @@ export default {
         value: "id"
       }
     ],
-    loading: false
+    loading: false,
+
+    statuses: [],
+    statusType: ['Unread', 'Pending', 'Approved', 'Denied'],
   }),
   async created() {
     this.loading = true;
@@ -175,6 +221,23 @@ export default {
       this.$router.push({
         name: "RegistrationDetails",
         params: { uid: account.id, account }
+      });
+    },
+    computeStatusNumbers(resellers) {
+      this.statuses = [];
+      this.statusType.forEach(status => {
+        let entry = {
+          name: status,
+        }
+  
+        if(status === 'Unread') {
+          entry.count = resellers.filter(reseller => reseller.status.toLowerCase() === 'pending' && !reseller.isRead).length;
+        
+        } else {
+          entry.count = resellers.filter(reseller => reseller.status.toLowerCase() === status.toLowerCase()).length;
+        }
+
+        this.statuses.push(entry);
       });
     },
     copy(e, item) {
@@ -197,7 +260,9 @@ export default {
   mixins: [mixins],
   computed: {
     items() {
-      return this.$store.getters['distributors/GET_RESELLERS_LIST'];
+      const resellers = this.$store.getters['distributors/GET_RESELLERS_LIST']; 
+      this.computeStatusNumbers(resellers);
+      return resellers;
     },
     user() {
       return this.$store.getters["auth/GET_USER"];
