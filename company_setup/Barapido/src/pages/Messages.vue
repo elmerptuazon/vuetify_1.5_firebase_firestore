@@ -187,14 +187,14 @@ export default {
     conversationsLoading: false,
     loadingDialog: false
   }),
-  async mounted() {
-    this.conversationsLoading = true;
+  async created() {
+    // this.conversationsLoading = true;
     // this.listenToConversations();
 
-    console.log(this.items);
+    // console.log(this.items);
 
     if (this.items.length > 0) {
-      await this.viewConversation(this.items[this.items.length - 1]);
+      await this.viewConversation(this.items[0]);
       this.conversationsLoaded = true;
     }
 
@@ -209,7 +209,7 @@ export default {
     // } catch (error) {
     //   console.log(error);
     // }
-    this.conversationsLoading = false;
+    // this.conversationsLoading = false;
   },
   methods: {
     async viewConversation(item) {
@@ -226,8 +226,9 @@ export default {
       await this.$store.dispatch("conversations/listenToNewMessages", item);
       await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
 
-      this.loading = false;
       this.scrollDown();
+      this.loading = false;
+      
     },
 
     viewConversationFromDialog(conversationId) {
@@ -358,7 +359,7 @@ export default {
         const messagesWindow = document.getElementById("messages-container");
         const totalHeight = messagesWindow.scrollHeight;
         messagesWindow.scrollTo(0, totalHeight);
-      }, 500);
+      }, 250);
     }
   },
   // beforeDestroy() {
