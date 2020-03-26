@@ -3,12 +3,109 @@ import { DB, AUTH } from '@/config/firebase';
 const messages = {
 	namespaced: true,
 	state: {
+		convoSubscriber: null,
+		messageSubscriber: null,
+		conversationsList: [],
+		messagesList: [],
 	},
 	getters: {
+		GET_CONVERSATIONS_LIST: state => state.conversationsList,
+		GET_MESSAGES_LIST: state => state.messagesList,
+		GET_NEW_MESSAGES_COUNT(state) {
+			//filter the conversationsList array with conversation that is not yet opened by the admin
+			const unreadConversations = state.conversationsList.filter(
+				(conversation) => conversation.opened.admin === false
+			);
+			return unreadConversations.length;
+		}
 	},
 	mutations: {
 	},
 	actions: {
+		async listenToConversations({ state, rootState, dispatch }) {
+			console.log('listening to conversations');
+			const user = rootState.auth.user;
+			state.conversationsList = [];
+	  
+			state.convoSubscriber = DB.collection("conversations")
+			  .where("users", "array-contains", "admin")
+			  .orderBy('updated', 'desc')
+			  .onSnapshot(snapshot => {
+	  
+				snapshot.docChanges().forEach(async change => {
+				  const data = change.doc.data();
+				  data.id = change.doc.id;
+	  
+				  if (change.type === "added") {
+					const userIndex = data.users.findIndex(u => u !== user.id);
+					data.user = await dispatch(
+					  "auth/GET_USER",
+					  data.users[userIndex],
+					  { root: true }
+					);
+					
+					//only push conversations with approved resellers
+					if(data.user.status.toLowerCase() !== 'pending' 
+						&& data.user.status.toLowerCase() !== 'denied') 
+					{
+						state.conversationsList.push(data);
+					}
+
+				  } else if (change.type === "modified") {
+					const conversationIndex = state.conversationsList.findIndex(
+					  c => c.id === data.id
+					);
+
+					if (conversationIndex !== -1) {
+						state.conversationsList[conversationIndex].updated = data.updated;
+						state.conversationsList[conversationIndex].opened = data.opened;
+					}
+				  }
+				});
+			});
+		},
+
+		async listenToNewMessages({ state, commit, rootState, dispatch }, conversation) {
+			const user = rootState.auth.user;
+			const asker = conversation.user.id;
+
+			state.messagesList = [];
+
+			state.messageSubscriber = DB.collection("messages")
+			  .where("conversationId", "==", conversation.id)
+			  .onSnapshot(snapshot => {
+	  
+				snapshot.docChanges().forEach(change => {
+					
+					const data = change.doc.data();
+					data.id = change.doc.id;
+					console.log('message: ', change, data);
+
+					if (change.type === "added") {
+						if (asker == data.sender) {
+							data.you = false;
+						} else if (data.sender == "admin") {
+							data.you = true;
+						}
+						console.log(data);
+						
+						if(state.messagesList.length) {
+							//dont push messages that is similar to the last entry message in the messageList
+							const lastIndex = state.messagesList.length - 1;
+							const lastMessage = state.messagesList[lastIndex];
+							if(lastMessage.id !== data.id) {
+								state.messagesList.push(data);
+							}
+						
+						} else {
+							state.messagesList.push(data);
+						}
+						
+					}
+				});
+			});
+		},
+
 		async GET_CONVERSATIONS({ rootState, dispatch }, payload) {
 			try {
 				const convoRef = DB.collection('conversations');
