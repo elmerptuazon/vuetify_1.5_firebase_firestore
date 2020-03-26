@@ -140,7 +140,8 @@
                 placeholder="Type a message..."
                 outline
                 rows="1"
-                single-line
+                single-line 
+                class="px-2 mb-2"
                 append-icon="send"
                 @click:append="sendMessage"
               ></v-textarea>
@@ -170,14 +171,15 @@ import userPlaceholder from "@/assets/placeholder.png";
 import NewMessageDialog from "@/components/NewMessageDialog";
 import { DB, STORAGE } from "@/config/firebase";
 import { downScaleImageFromFile } from "@/helpers/helpers";
+import { mapState } from "vuex";
 import uuidv4 from "uuid/v4";
 
 export default {
   data: () => ({
-    items: [],
+    // items: [],
     selectedConversation: {},
     loading: false,
-    messages: [],
+    // messages: [],
     text: null,
     conversationsLoaded: false,
     conversationsListener: null,
@@ -185,49 +187,54 @@ export default {
     conversationsLoading: false,
     loadingDialog: false
   }),
-  async created() {
+  async mounted() {
     this.conversationsLoading = true;
-    this.listenToConversations();
+    // this.listenToConversations();
 
-    try {
-      const conversations = await this.$store.dispatch(
-        "conversations/GET_CONVERSATIONS"
-      );
+    console.log(this.items);
 
-      this.items = conversations;
+    if (this.items.length > 0) {
+      await this.viewConversation(this.items[this.items.length - 1]);
       this.conversationsLoaded = true;
-
-      console.log(this.items);
-
-      if (this.items.length > 0) {
-        this.viewConversation(this.items[0]);
-      }
-    } catch (error) {
-      console.log(error);
     }
+
+    // try {
+    //   const conversations = await this.$store.dispatch(
+    //     "conversations/GET_CONVERSATIONS"
+    //   );
+
+    //   this.items = conversations;
+
+      
+    // } catch (error) {
+    //   console.log(error);
+    // }
     this.conversationsLoading = false;
   },
   methods: {
     async viewConversation(item) {
       console.log(item);
 
-      if (this.messagesListener) {
-        this.messagesListener();
-        this.messagesListener = null;
-      }
+      // if (this.messagesListener) {
+      //   this.messagesListener();
+      //   this.messagesListener = null;
+      // }
 
       this.selectedConversation = item;
       this.loading = true;
-      this.messages = [];
 
+      await this.$store.dispatch("conversations/listenToNewMessages", item);
       await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
 
-      this.listenToNewMessages(item);
+      this.loading = false;
+      this.scrollDown();
     },
+
     viewConversationFromDialog(conversationId) {
       const index = this.items.findIndex(item => item.id === conversationId);
       this.viewConversation(this.items[index]);
     },
+
     async sendMessage(e) {
       if (!this.text) {
         return;
@@ -247,69 +254,69 @@ export default {
         console.log(error);
       }
     },
-    listenToConversations() {
-      const user = this.$store.getters["auth/GET_USER"];
+    // listenToConversations() {
+      // const user = this.$store.getters["auth/GET_USER"];
 
-      this.conversationsListener = DB.collection("conversations")
-        .where("users", "array-contains", "admin")
-        .onSnapshot(snapshot => {
-          if (!this.conversationsLoaded) {
-            return;
-          }
+      // this.conversationsListener = DB.collection("conversations")
+        // .where("users", "array-contains", "admin")
+        // .onSnapshot(snapshot => {
+          // if (!this.conversationsLoaded) {
+            // return;
+          // }
 
-          snapshot.docChanges().forEach(async change => {
-            const data = change.doc.data();
-            data.id = change.doc.id;
+          // snapshot.docChanges().forEach(async change => {
+            // const data = change.doc.data();
+            // data.id = change.doc.id;
 
-            if (change.type === "added") {
-              const userIndex = data.users.findIndex(u => u !== user.id);
-              data.user = await this.$store.dispatch(
-                "auth/GET_USER",
-                data.users[userIndex]
-              );
-              this.items.push(data);
-            } else if (change.type === "modified") {
-              const conversationIndex = this.items.findIndex(
-                c => c.id === data.id
-              );
-              if (conversationIndex !== -1) {
-                this.items[conversationIndex].updated = data.updated;
-                this.items[conversationIndex].opened = data.opened;
+            // if (change.type === "added") {
+              // const userIndex = data.users.findIndex(u => u !== user.id);
+              // data.user = await this.$store.dispatch(
+                // "auth/GET_USER",
+                // data.users[userIndex]
+              // );
+              // this.items.push(data);
+            // } else if (change.type === "modified") {
+              // const conversationIndex = this.items.findIndex(
+                // c => c.id === data.id
+              // );
+              // if (conversationIndex !== -1) {
+                // this.items[conversationIndex].updated = data.updated;
+                // this.items[conversationIndex].opened = data.opened;
 
-                if (this.selectedConversation.id === data.id) {
-                  this.items[conversationIndex].opened[user.id] = true;
-                }
-              }
-            }
-          });
-        });
-    },
+                // if (this.selectedConversation.id === data.id) {
+                  // this.items[conversationIndex].opened[user.id] = true;
+                // }
+              // }
+            // }
+          // });
+        // });
+    // },
 
-    listenToNewMessages(conversation) {
-      const user = this.$store.getters["auth/GET_USER"];
-      const asker = conversation.user.id;
-      this.messagesListener = DB.collection("messages")
-        .where("conversationId", "==", conversation.id)
-        .onSnapshot(snapshot => {
-          this.loading = false;
+    // listenToNewMessages(conversation) {
+      // const user = this.$store.getters["auth/GET_USER"];
+      // const asker = conversation.user.id;
+      // this.messagesListener = DB.collection("messages")
+        // .where("conversationId", "==", conversation.id)
+        // .onSnapshot(snapshot => {
+          // this.loading = false;
 
-          snapshot.docChanges().forEach(change => {
-            const data = change.doc.data();
-            data.id = change.doc.id;
+          // snapshot.docChanges().forEach(change => {
+            // const data = change.doc.data();
+            // data.id = change.doc.id;
 
-            if (change.type === "added") {
-              if (asker == data.sender) {
-                data.you = false;
-              } else if (data.sender == "admin") {
-                data.you = true;
-              }
-              console.log(data);
-              this.messages.push(data);
-              this.scrollDown();
-            }
-          });
-        });
-    },
+            // if (change.type === "added") {
+              // if (asker == data.sender) {
+                // data.you = false;
+              // } else if (data.sender == "admin") {
+                // data.you = true;
+              // }
+              // console.log(data);
+              // this.messages.push(data);
+              // this.scrollDown();
+            // }
+          // });
+        // });
+    // },
 
     async sendAttachment() {
       if (this.$refs.file.files[0]) {
@@ -354,13 +361,28 @@ export default {
       }, 500);
     }
   },
-  beforeDestroy() {
-    this.conversationsListener();
-    if (this.messagesListener) {
-      this.messagesListener();
-    }
-  },
+  // beforeDestroy() {
+  //   this.conversationsListener();
+  //   if (this.messagesListener) {
+  //     this.messagesListener();
+  //   }
+  // },
   computed: {
+    items() {
+      return this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];
+    },
+    messages() {
+      const list = this.$store.getters['conversations/GET_MESSAGES_LIST'];
+      this.scrollDown();
+      return list.filter((message) => {
+        if(this.selectedConversation) {
+          return message.conversationId === this.selectedConversation.id;
+        
+        } else {
+          return message;
+        }
+      })
+    },
     userPlaceholder() {
       return userPlaceholder;
     },
