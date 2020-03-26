@@ -140,7 +140,7 @@
                           >Total Amount</v-list-tile-sub-title
                         >
                         <v-list-tile-title
-                          >{{ stockOrder.paymentDetails.amount }}
+                          >{{ stockOrder.paymentDetails.amount | currency("P ") }}
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -192,7 +192,7 @@
                         >
                         <v-list-tile-title>
                           <span v-if="stockOrder.logisticsDetails">{{
-                            stockOrder.logisticsDetails.shippingFee
+                            stockOrder.logisticsDetails.shippingFee | currency("P ")
                           }}</span>
                           <span v-else>N/A</span>
                         </v-list-tile-title>
