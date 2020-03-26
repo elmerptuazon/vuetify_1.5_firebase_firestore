@@ -84,6 +84,29 @@
               </v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
+           <v-list-tile 
+            v-else-if="item.url === 'Messages'" 
+            :key="item.text" 
+            :to="{ name: item.url } "
+          >
+            <v-list-tile-action>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>
+                <v-layout align-center justify-end>
+                  <v-flex xs10>
+                    {{ item.text }}
+                  </v-flex>
+                  <v-flex xs2 >
+                    <v-avatar color="red" size="20" dark v-show="newMessagesCount">
+                      <div class="overline white--text">{{ newMessagesCount }}</div>
+                    </v-avatar>
+                  </v-flex>
+                </v-layout>
+              </v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
           <v-list-tile v-else :to="{ name: item.url }" :key="item.text">
             <v-list-tile-action>
               <v-icon>{{ item.icon }}</v-icon>
@@ -170,6 +193,11 @@ export default {
 
     newRegistrations() {
       const count = this.$store.getters['distributors/GET_NEW_RESELLER_COUNT'];
+      return count;
+    },
+
+    newMessagesCount() {
+      const count = this.$store.getters['conversations/GET_NEW_MESSAGES_COUNT'];
       return count;
     }
   },
