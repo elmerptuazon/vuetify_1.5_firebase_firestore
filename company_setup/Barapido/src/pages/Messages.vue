@@ -14,7 +14,7 @@
         </v-btn> -->
       </v-card-title>
       <v-divider></v-divider>
-      <v-card height="80vh" flat>
+      <v-card height="85vh" flat>
         <div class="text-xs-center mt-3" v-if="conversationsLoading">
           <v-progress-circular
             :size="150"
@@ -138,12 +138,14 @@
                 @click:prepend-inner="$refs.file.click()"
                 v-model="text"
                 placeholder="Type a message..."
-                outline
-                rows="1"
+                hint='Press "enter" to send this message..."shift" + "enter" to insert new line'
+                outline round
+                rows="1" rows-height="1"
                 single-line 
-                class="px-2 mb-2"
-                append-icon="send"
-                @click:append="sendMessage"
+                class="px-2 py-2 mb-2"
+                append-outer-icon="send"
+                @click:append-outer="sendMessage"
+                @keyup.enter.exact="sendMessage"
               ></v-textarea>
             </div>
           </v-flex>
@@ -241,12 +243,15 @@ export default {
         return;
       }
 
+      const messageText = this.text;
+      this.text = null;
+
       try {
         const response = await this.$store.dispatch(
           "conversations/SEND_MESSAGE",
           {
             conversationDetails: this.selectedConversation,
-            text: this.text
+            text: messageText
           }
         );
 
