@@ -110,6 +110,15 @@ export default {
 				this.account = account;
 			}
 
+			if (!this.account.isRead || !account.isRead) {
+				this.account.isRead = true;
+				await this.$store.dispatch('distributors/UPDATE_STATUS_BY_FIELD', {
+					uid: uid,
+					key: 'isRead',
+					value: true,
+				});
+			}
+
 			console.log(this.account);
 		} catch (error) {
 			this.$refs.toast.show('error', 'An error occurred');

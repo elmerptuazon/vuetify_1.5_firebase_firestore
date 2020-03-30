@@ -3,12 +3,94 @@ import { DB } from '@/config/firebase';
 const distributors = {
     namespaced: true,
     state: {
+        subscriber: null,
+        resellersList: [],
     },
     getters: {
+        GET_RESELLERS_LIST: state => state.resellersList,
+
+        //get the length of the filtered resellerList array of resellers who are pending and not yet been read.
+        GET_NEW_RESELLER_COUNT: state => state.resellersList.filter((reseller) => !reseller.isRead).length
     },
     mutations: {
+        SET_RESELLERS_LIST(state, payload) {
+            state.resellersList = payload;
+        }
     },
     actions: {
+        async LISTEN_TO_NEW_REGISTRATIONS({ state, commit, dispatch }) {
+            commit('SET_RESELLERS_LIST', []);
+            let accountsToModify = [];
+
+            state.subscriber = DB.collection('accounts')
+                .where('type', '==', 'Reseller')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    console.log('listening to new registrations');
+
+                    let changes = snapshot.docChanges();
+
+                    changes = changes.map((change) => {
+
+                        let data = change.doc.data();
+                        data.id = change.doc.id;
+
+                        data.type = change.type;
+
+                        console.log(data);
+
+                        if(!data.hasOwnProperty('isRead') 
+                            && data.status.toLowerCase() === 'pending'
+                        ) {
+                            
+                            data.isRead = false;
+                            accountsToModify.push(data);
+
+                        } else if(!data.hasOwnProperty('isRead')) {
+                            data.isRead = true;
+                            accountsToModify.push(data);
+                        }
+
+                        return data;
+                    })
+
+                    if(!state.resellersList || !state.resellersList.length) {
+                        commit('SET_RESELLERS_LIST', changes);
+                    
+                    } else {
+                        changes.forEach((change) => {
+                            if(change.type === 'added' 
+                                && (!change.isRead || !change.hasOwnProperty('isRead'))
+                            ) {
+                                change.isRead = false;
+                                state.resellersList.unshift(change);
+                            }
+
+                            delete change.type;
+                        })
+                    } 
+
+                })
+
+            if(accountsToModify.length) {
+                for(const account of accountsToModify) {
+                    console.log('updating isRead of: ', account.id);
+                    await dispatch('UPDATE_STATUS_BY_FIELD', {
+                        uid: account.id,
+                        key: 'isRead',
+                        value: account.isRead,
+                    });
+                }
+            }
+
+        },
+
+        UNSUBSCRIBE_FROM_NEW_RESELLERS({ state }) {
+			if (state.subscriber) {
+				state.subscriber();
+			}
+        },
+
         async FIND({ rootState, commit, dispatch }, payload) {
             try {
 
