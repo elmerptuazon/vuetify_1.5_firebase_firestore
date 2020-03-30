@@ -7,6 +7,7 @@ import uuid from 'uuid';
 
 const host = process.env.lalamoveURL;
 
+
 async function generateSigniture(time, path, body, method) {
     const secret = await DB.collection('providers').doc('lalamove').collection('keys').doc('secret').get();
     let _encryptedStr = `${time}\r\n${method}\r\n${path}\r\n\r\n`
@@ -220,13 +221,13 @@ const lalamove = {
 
         async getOrderStatus({state, commit, dispatch}, payload) {
            
-            let URL = process.env.NODE_ENV === 'development' 
-                ? `/lalamove/orders/${payload.orderRef}` : `${host}/orders/${payload.orderRef}`;
+            // let URL = process.env.NODE_ENV === 'development' 
+            //     ? `/lalamove/orders/${payload.orderRef}` : `${host}/orders/${payload.orderRef}`;
 
             try {
                 let response = await axios({
                     method: 'get',
-                    url: URL,
+                    url: `/lalamove/orders/${payload.orderRef}`,
                     headers: await generateHeader('GET', `/v2/orders/${payload.orderRef}`, null),
                 });
                 console.log('LALAMOVE GET ORDER STATUS:', response.data);
