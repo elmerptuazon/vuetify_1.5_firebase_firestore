@@ -1,5 +1,0 @@
-[[redirects]]
-  from = "/lalamove"
-  to = "https://sandbox-rest.lalamove.com/v2"
-  status = 200
-  force = true 
