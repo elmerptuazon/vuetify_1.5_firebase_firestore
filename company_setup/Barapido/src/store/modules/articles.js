@@ -1,5 +1,6 @@
-import { DB, AUTH } from '@/config/firebase';
+import { DB, AUTH, STORAGE } from '@/config/firebase';
 import firebase from 'firebase/app';
+
 const articles = {
     namespaced: true,
     state: {
@@ -27,6 +28,14 @@ const articles = {
                 Object.keys(payload.updatedDetails).forEach((key) => {
                     state.articles[index][key] = payload.updatedDetails[key];
                 });    
+            }
+        },
+
+        UPDATE_ARTICLE_BY_FIELD(state, payload) {
+            const index = state.articles.findIndex((article) => article.id === payload.id);
+           
+            if(index !== -1) {
+                state.articles[index][payload.key] = payload.value;
             }
         },
 
@@ -74,7 +83,7 @@ const articles = {
         async GET_ARTICLES({state, commit}) {
             commit('SET_ARTICLES', []);
 
-            const querySnapshot = await DB.collection('articles').orderBy('dateCreated', 'desc').get();
+            const querySnapshot = await DB.collection('articles').orderBy('created_at', 'desc').get();
 
             const articles = querySnapshot.docs.map((doc) => {
                 const data = doc.data();
@@ -85,19 +94,40 @@ const articles = {
             commit('SET_ARTICLES', articles);
         },
 
-        async ADD_ARTICLE({ state, commit, }, payload) {
+        async ADD_ARTICLE({ state, commit, dispatch }, payload) {
             payload.created_at = Date.now();
 
             try {
+                const file = payload.file;
+                delete payload.file;
+
+                payload.headerURL = null;
+
                 const response = await DB.collection('articles').add(payload);
-            
+                payload.id = response.id;
+
+                if(file) {
+                    const metadata = { contentType: file.type };
+                    const uploadedPic = await STORAGE.ref("appsell/").child("articles/" + payload.id).put(file, metadata);
+                    const downloadURL = await uploadedPic.ref.getDownloadURL();
+
+                    payload.headerURL = downloadURL;
+
+                    console.log(downloadURL);
+
+                    await dispatch('UPDATE_ARTICLE_BY_FIELD', {
+                        id: payload.id,
+                        key: 'headerURL',
+                        value: downloadURL
+                    });
+                }
+
                 //if LISTEN_TO_ARTICLES is used for article retrieval, mutations for article is not needed
                 if(!state.subscriber) {
-                    payload.id = response.id;
-                    commit('ADD_ARTICLE', payload);
+                    state.articles.unshift(payload);
                 }
                 
-            
+                return payload; 
             } catch(error) {
                 throw error;
             }
@@ -124,12 +154,14 @@ const articles = {
         },
 
         async UPDATE_ARTICLE_BY_FIELD({ state, commit }, payload) {
+            const { id, key, value } = payload;
+
             try {
-                await DB.collection('articles').doc(payload.id).update({ [key]: value });
+                await DB.collection('articles').doc(id).update({ [key]: value });
 
                 //if LISTEN_TO_ARTICLES is used for article retrieval, mutations for article is not needed
                 if(!state.subscriber) {
-                    commit('UPDATE_ARTICLE', payload);
+                    commit('UPDATE_ARTICLE_BY_FIELD', payload);
                 }
                 
             } catch(error) {
@@ -138,15 +170,51 @@ const articles = {
             
         },
         
-        async DELETE_ARTICLE({ state, commit }, id) {
+        async DELETE_ARTICLE({ state, commit }, article) {
+            console.log("starting to delete...")
+            if(article.headerURL) {
+                try {
+                    await STORAGE.ref('appsell/').child('articles/' + article.id).delete();
+                    console.log("header pic has been deleted")
+
+                } catch(error) {
+                    console.log(error);
+                }
+            }
+            
             try {
-                await DB.collection('articles').doc(id).delete();
+                console.log("deleting doc in DB")
+                await DB.collection('articles').doc(article.id).delete();
 
                 //if LISTEN_TO_ARTICLES is used for article retrieval, mutations for article is not needed
                 if(!state.subscriber) {
-                    commit('DELTE_ARTICLE', payload);
+                    commit('DELETE_ARTICLE', article);
                 }
 
+            } catch(error) {
+                throw error;
+            }
+        }, 
+
+        async DELETE_HEADER_PIC({ state, commit }, id) {
+            try {
+                await STORAGE.ref("appsell/").child("articles/" + id).delete();
+                
+            } catch(error) {
+                throw error;
+            }
+        },
+
+        async REPLACE_HEADER_PIC({ state, commit }, payload) {
+            const { id, file } = payload;
+            const metadata = { contentType: file.type };
+
+            try {
+                const response = await STORAGE.ref("appsell/").child("articles/" + id).put(file, metadata);
+                const downloadURL = await response.ref.getDownloadURL();
+                
+                return downloadURL;
+            
             } catch(error) {
                 throw error;
             }
