@@ -98,10 +98,12 @@ const articles = {
             payload.created_at = Date.now();
 
             try {
-                const file = payload.file;
-                delete payload.file;
-
-                payload.headerURL = null;
+                let file;
+                if(payload.hasOwnProperty("file")) {
+                    file = payload.file;
+                    delete payload.file;
+                    payload.headerURL = null;
+                }
 
                 const response = await DB.collection('articles').add(payload);
                 payload.id = response.id;
