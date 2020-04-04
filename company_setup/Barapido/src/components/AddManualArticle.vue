@@ -270,6 +270,7 @@ export default {
 
             headerURL: null,
             newHeaderPic: null,
+            creationMethod: 'manual',
             
             description: null,
             date: null,
@@ -452,13 +453,12 @@ export default {
                 });
                 
                 this.submitLoading = false;
+                this.closeDetailsDialog();
 
                 this.$swal.fire({
                     type: 'success',
                     title: 'Posted!',
                     text: 'The article was posted successfully!'
-                }).then(() => {
-                    this.closeDetailsDialog();
                 });
 
                 this.$refs.headerFile.value = "";
@@ -547,16 +547,13 @@ export default {
                 });
 
                 this.submitLoading = false;
+                this.closeDetailsDialog();
 
                 this.$swal.fire({
                     type: 'success',
                     title: 'Success!',
                     text: 'The article was edited successfully!'
                 });
-
-                this.closeDetailsDialog();
-                
-                
             
             } catch(error) {
                 console.log(error);

@@ -16,7 +16,7 @@
                     </v-flex>
                     <v-flex xs2 offset-xs1>
                         <v-btn
-                            @click="openDetails('add', null)"
+                            @click="openDetails('add', { creationMethod: 'manual'})"
                             color="primary" 
                         >POST NEW ARTICLE</v-btn>
                     </v-flex>
@@ -213,6 +213,7 @@ export default {
 
                     headerURL: null,
                     newHeaderPic: null,
+                    creationMethod: 'manual',
                     
                     description: null,
                     date: null,
