@@ -16,7 +16,6 @@ import StockOrders from '@/pages/StockOrders';
 import StockOrderDetails from '@/pages/StockOrderDetails';
 import MyAccount from '@/pages/MyAccount';
 import ShipmentReport from '@/pages/ShipmentReport';
-import DeliverySettings from '@/pages/DeliverySettings';
 import { AUTH } from '@/config/firebase';
 import store from '@/store';
 
@@ -149,14 +148,6 @@ const router = new Router({
 			path: '/MyAccount',
 			name: 'MyAccount',
 			component: MyAccount,
-			meta: {
-				requiresAuth: true
-			}
-		},
-		{
-			path: '/DeliverySettings',
-			name: 'DeliverySettings',
-			component: DeliverySettings,
 			meta: {
 				requiresAuth: true
 			}

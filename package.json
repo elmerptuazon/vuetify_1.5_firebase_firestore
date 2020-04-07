@@ -14,11 +14,15 @@
     "test-Fetch": "cross-env NODE_ENV=test node config/companySetup.js Fetch",
     "test-Aquitek": "cross-env NODE_ENV=test node config/companySetup.js Aquitek",
     "test-Chicharooms": "cross-env NODE_ENV=test node config/companySetup.js Chicharooms",
+    "test-AppSellTestApp": "cross-env NODE_ENV=test node config/companySetup.js AppSellTestApp",
+    "test-Babae": "cross-env NODE_ENV=test node config/companySetup.js Babae",
+    "test-MotherNurture": "cross-env NODE_ENV=test node config/companySetup.js MotherNurture",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
     "axios": "^0.18.0",
     "clipboard": "^2.0.4",
+    "crypto-js": "^4.0.0",
     "firebase": "^7.2.3",
     "fs-extra": "^8.1.0",
     "moment": "^2.24.0",

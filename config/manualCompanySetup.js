@@ -25,9 +25,11 @@ const prompts = require('prompts');
         message: 'Pick a company to SetUp',
         choices: [
             { title: 'AppSellTestApp', value: 'AppSellTestApp' },
-            { title: 'Ever Bilena', value: 'EverBilena' },
+            { title: 'Ever Bilena', value: 'EverBilena', disabled: true },
             { title: 'Barapido', value: 'Barapido' },
             { title: 'Fetch', value: 'Fetch' },
+            { title: 'Babae', value: 'Babae' },
+            { title: 'Mother Nurture', value: 'MotherNurture' },
             { title: 'Aquitek', value: 'Aquitek' },
             { title: 'Chicharooms', value: 'Chicharooms' },
             { title: 'Mary Kay', value: 'MaryKay', disabled: true },
@@ -65,6 +67,14 @@ const prompts = require('prompts');
             let pageDestination = 'src/pages'
             await fs.copy(pageSource, pageDestination)
             console.log('Pages update success!')
+        } catch (e) {
+            console.log(`Error: ${e}`);
+        }
+        try {
+            let layoutsSource = `company_setup/${answer.value}/src/layouts`;
+            let layoutsDestination = 'src/layouts'
+            await fs.copy(layoutsSource, layoutsDestination)
+            console.log('Layouts update success!')
         } catch (e) {
             console.log(`Error: ${e}`);
         }

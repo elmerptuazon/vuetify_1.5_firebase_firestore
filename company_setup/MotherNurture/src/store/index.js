@@ -12,7 +12,6 @@ import distributors from './modules/distributors';
 import stock_orders from './modules/stock-orders';
 import users from './modules/users';
 import shipment from './modules/shipment';
-import delivery_settings from './modules/delivery-settings';
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -46,11 +45,6 @@ export default new Vuex.Store({
 				icon: 'airport_shuttle',
 				text: 'Stock Orders',
 				url: 'StockOrders',
-			},
-			{
-				icon: 'rv_hookup',
-				text: 'Delivery Settings',
-				url: 'DeliverySettings',
 			},
 			{
 				icon: 'supervisor_account',
@@ -88,7 +82,6 @@ export default new Vuex.Store({
 		distributors,
 		stock_orders,
 		users,
-		shipment,
-		delivery_settings
+		shipment
 	}
 })
