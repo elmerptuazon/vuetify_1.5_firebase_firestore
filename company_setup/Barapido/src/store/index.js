@@ -22,12 +22,6 @@ export default new Vuex.Store({
 		toolbarTitle: null,
 		links: [
 			{
-				icon: 'chrome_reader_mode',
-				text: 'Articles',
-				url: 'Articles',
-
-			},
-			{
 				icon: 'dashboard',
 				text: 'Categories',
 				url: 'Categories',
@@ -69,6 +63,11 @@ export default new Vuex.Store({
 				icon: 'messages',
 				text: 'Messages',
 				url: 'Messages',
+			},
+			{
+				icon: 'chrome_reader_mode',
+				text: 'Articles',
+				url: 'Articles',
 			},
 			{
 				icon: 'contact_support',
