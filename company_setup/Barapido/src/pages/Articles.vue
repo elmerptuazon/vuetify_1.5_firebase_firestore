@@ -104,7 +104,11 @@
                         <div class="headline font-weight-bold">{{ article.title }}</div>
                         <div class="body-1 primary--text mt-2">
                             <v-icon small color="primary">schedule</v-icon>
-                            {{ formatDate(article.publishDate) }}
+                            {{ calculateTime(article.publishDate) }}
+                            <span class="grey--text ml-2">
+                                | <v-icon small color="grey" class="ml-2">visibility</v-icon> 
+                                : {{ article.viewedBy.length }}
+                            </span>
                         </div>
                         <div class="caption font-weight-thin mt-4"> {{ summarizeSource(article.source) | uppercase }}</div>
                     </v-flex>
@@ -122,7 +126,7 @@
                             </template>
                             <span>Delete this Article</span>
                         </v-tooltip>
-                        <v-tooltip bottom>
+                        <v-tooltip top>
                             <template v-slot:activator="{on}">
                                 <v-btn 
                                     fab small dark 
@@ -275,8 +279,18 @@ export default {
             return url.slice(0, firstSlash);
         },
 
-        formatDate(dateTime) {
-            return moment(parseInt(dateTime)).format('MMMM DD YYYY, h:mm a');
+        calculateTime(dateTime) {
+            let verbalizedDateTime = moment(parseInt(dateTime)).calendar();
+
+            if(verbalizedDateTime.includes('Today')) {
+                return moment(parseInt(dateTime)).fromNow();
+            }
+
+            if(verbalizedDateTime.includes('Last') || verbalizedDateTime.includes('Yesterday')) {
+                return verbalizedDateTime;
+            }
+
+            return moment(parseInt(dateTime)).format('MMM D, YYYY @ h:mm a').replace('@', "at");
         },
 
         async changeArticleStatus(article) {
