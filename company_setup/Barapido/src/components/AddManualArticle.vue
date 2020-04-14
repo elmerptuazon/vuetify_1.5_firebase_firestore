@@ -448,6 +448,7 @@ export default {
                     publishDate,
                     description,
                     source,
+                    viewedBy: [],
                     creationMethod: 'manual',
                     file: newHeaderPic || null
                 });

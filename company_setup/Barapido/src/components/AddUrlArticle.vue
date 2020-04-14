@@ -458,6 +458,7 @@ export default {
                 title,
                 publishDate,
                 source,
+                viewedBy: [],
                 creationMethod: 'url',
             }
 
@@ -607,7 +608,6 @@ export default {
                 });
 
                 this.submitLoading = false;
-
             }
 
         },
