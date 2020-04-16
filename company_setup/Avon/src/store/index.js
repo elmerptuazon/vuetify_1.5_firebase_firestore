@@ -39,8 +39,8 @@ export default new Vuex.Store({
 				children: [
 					{ icon: 'insert_emoticon', text: 'Reseller List', url: 'Resellers' },
 					{ icon: 'people', text: 'Customer List', url: 'Customers' },
-					{ icon: 'shopping_basket', text: 'Products Ordered', url: 'Products' },
-					{ icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' },
+					// { icon: 'shopping_basket', text: 'Products Ordered', url: 'Products' },
+					// { icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' },
 					{ icon: 'local_shipping', text: 'Shipments', url: 'ShipmentReport' }
 				]
 			},
