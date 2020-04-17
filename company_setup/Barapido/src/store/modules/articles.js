@@ -18,7 +18,7 @@ const articles = {
         },
 
         ADD_ARTICLE(state, payload) {
-            state.articles.push(payload);
+            state.articles.unshift(payload);
         },
 
         UPDATE_ARTICLE(state, payload) {
@@ -62,7 +62,7 @@ const articles = {
                         data.id = change.doc.id;
 
                         if(change.type === 'added' && !state.articles.length) {
-                            commit('ADD_ARTICLE', data); //push first article to the list, if list is currently empty
+                            state.articles.push(data); //push first article to the list, if list is currently empty
                         
                         } else if(change.type === 'added' && state.articles.length) {
                             //ensure that the latest item is not a duplicate of the last article in the list
@@ -72,7 +72,16 @@ const articles = {
                             }
 
                         } else if(change.type === 'modified') {
-                            commit('UPDATE_ARTICLE', data);
+                            commit('UPDATE_ARTICLE', {
+                                updatedDetails: {...data}
+                            });
+                        
+                        } else if(change.type === 'removed') {
+                            const index = state.articles.findIndex(article => article.id === data.id);
+
+                            if(index !== -1) {
+                                state.articles.splice(index, 1);
+                            }
                         }
 
                     });
