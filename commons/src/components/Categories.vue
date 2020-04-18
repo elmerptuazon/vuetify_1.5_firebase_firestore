@@ -105,7 +105,7 @@
             <td class="text-xs-center">{{ props.item.name }}</td>
             <td class="text-xs-center">{{ props.item.totalProducts }}</td>
             <td class="text-xs-center">
-              {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
+              {{ props.item.created | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-center">
               <a @click.prevent="updatePosition(props.item)">{{
