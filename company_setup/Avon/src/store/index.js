@@ -68,6 +68,7 @@ export default new Vuex.Store({
 				icon: 'chrome_reader_mode',
 				text: 'Articles',
 				url: 'Articles',
+
 			},
 			{
 				icon: 'contact_support',

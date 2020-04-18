@@ -25,13 +25,14 @@ const prompts = require('prompts');
         message: 'Pick a company to SetUp',
         choices: [
             { title: 'AppSellTestApp', value: 'AppSellTestApp' },
-            { title: 'Ever Bilena', value: 'EverBilena', disabled: true },
             { title: 'Barapido', value: 'Barapido' },
+            { title: 'Avon', value: 'Avon' },
             { title: 'Fetch', value: 'Fetch' },
             { title: 'Babae', value: 'Babae' },
             { title: 'Mother Nurture', value: 'MotherNurture' },
             { title: 'Aquitek', value: 'Aquitek' },
             { title: 'Chicharooms', value: 'Chicharooms' },
+            { title: 'Ever Bilena', value: 'EverBilena', disabled: true },
             { title: 'Mary Kay', value: 'MaryKay', disabled: true },
             { title: 'My Natural', value: 'MyNatural', disabled: true }
         ],

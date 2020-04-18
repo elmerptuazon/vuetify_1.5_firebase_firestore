@@ -17,6 +17,7 @@
     "test-AppSellTestApp": "cross-env NODE_ENV=test node config/companySetup.js AppSellTestApp",
     "test-Babae": "cross-env NODE_ENV=test node config/companySetup.js Babae",
     "test-MotherNurture": "cross-env NODE_ENV=test node config/companySetup.js MotherNurture",
+    "test-Avon": "cross-env NODE_ENV=test node config/companySetup.js Avon",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
