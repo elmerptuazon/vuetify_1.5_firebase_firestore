@@ -357,7 +357,7 @@ export default {
   },
   data: () => ({
     pagination: {
-      sortBy: "name"
+      sortBy: "position"
     },
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
@@ -378,7 +378,7 @@ export default {
       },
       {
         text: "Date added",
-        value: "createdAt"
+        value: "created"
       },
       {
         text: "Display Position",
