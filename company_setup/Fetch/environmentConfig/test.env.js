@@ -11,5 +11,5 @@ module.exports = merge(devEnv, {
   messagingSenderId: '"769658614979"',
   appId: '"1:769658614979:web:0c1b3f1f986ddc1c0cde76"',
   primaryColor: '"#C6863F"',
-  lalamoveURL: '"https://sandbox-rest.lalamove.com/v2"'
+  lalamoveURL: '"https://us-central1-fetch-dev-a1f39.cloudfunctions.net/lalamoveAPI"'
 })
