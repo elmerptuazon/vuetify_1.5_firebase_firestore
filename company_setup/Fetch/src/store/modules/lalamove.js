@@ -1,40 +1,7 @@
 import { DB } from '@/config/firebase';
 import axios from 'axios';
-import router from '@/router';
 
-import cryptoJS from 'crypto-js';
-import uuid from 'uuid';
-
-const host = process.env.lalamoveURL;
-
-
-async function generateSigniture(time, path, body, method) {
-    const secret = await DB.collection('providers').doc('lalamove').collection('keys').doc('secret').get();
-    let _encryptedStr = `${time}\r\n${method}\r\n${path}\r\n\r\n`
-    
-    if(method === 'PUT') {
-        return cryptoJS.HmacSHA256(_encryptedStr, secret.data().key);
-    }
-
-    if (method !== 'GET') {
-      let _body = JSON.stringify(body)
-      _encryptedStr = _encryptedStr + _body
-    }
-    
-    return cryptoJS.HmacSHA256(_encryptedStr, secret.data().key)
-}
-
-async function generateHeader(method, path, body) {
-    const key = await DB.collection('providers').doc('lalamove').collection('keys').doc('public').get();
-    let time = new Date().getTime().toString();
-    return {
-        'X-Request-ID': uuid.v4(),
-        'Content-type': 'application/json; charset=utf-8',
-        'Authorization': 'hmac ' + key.data().key + ':' + time + ':' + await generateSigniture(time, path, body, method),
-        'Accept': 'application/json',
-        'X-LLM-Country': 'PH',
-    }
-}
+const lalamoveURL = process.env.lalamoveURL;
 
 const lalamove = {
     namespaced: true,
@@ -66,14 +33,9 @@ const lalamove = {
             console.log('lalamove quotation body: ', payload);
             
             try {
-                let URL = process.env.NODE_ENV === 'development' ? '/lalamove/orders' : `${this.host}/orders`;
-
                 let response = await axios({
                     method: 'post',
-                    // url: `${host}/orders`,
-                    // url: '/lalamove/orders',
-                    url: URL,
-                    headers: await generateHeader('POST', '/v2/orders', body),
+                    url: `${lalamoveURL}/placeOrder`,
                     data: body,
                 });
                 console.log("LALAMOVE PLACING ORDER RESPONSE: ", response);
@@ -83,7 +45,7 @@ const lalamove = {
                 return response;
             }
             catch(error) {
-                console.log("LALAMOVE PLACING ORDER RESPONSE ERROR: ", error.response);
+                console.log("LALAMOVE PLACING ORDER RESPONSE ERROR: ", error);
                 throw error;
             }
         },
@@ -197,8 +159,7 @@ const lalamove = {
             try {
                 let response = await axios({
                     method: 'post',
-                    url: `${host}/v2/quotations`,
-                    headers: await generateHeader('POST', '/v2/quotations', body),
+                    url: `${lalamoveURL}/getQuotation`,
                     data: body,
                 });
                 console.log("LALAMOVE QUOTATION RESPONSE: ", response);
@@ -220,23 +181,24 @@ const lalamove = {
         },
 
         async getOrderStatus({state, commit, dispatch}, payload) {
+            const { customerOrderId, orderRef } = payload;
            
-            // let URL = process.env.NODE_ENV === 'development' 
-            //     ? `/lalamove/orders/${payload.orderRef}` : `${host}/orders/${payload.orderRef}`;
-
             try {
                 let response = await axios({
                     method: 'get',
-                    url: `/lalamove/orders/${payload.orderRef}`,
-                    headers: await generateHeader('GET', `/v2/orders/${payload.orderRef}`, null),
+                    url: `${lalamoveURL}/getOrderStatus`,
+                    params: {
+                        orderRef : orderRef
+                    }
                 });
                 console.log('LALAMOVE GET ORDER STATUS:', response.data);
+                response = response.data;
                 
-                if(response.data.status === 'CANCELED') {
-                    response.data.status = 'CANCELLED';
+                if(response.status === 'CANCELED') {
+                    response.status = 'CANCELLED';
                 }
 
-                return response.data;
+                return response;
             }
             catch(error) {
                 console.log('LALAMOVE GET ORDER STATUS ERROR', error);
@@ -245,26 +207,25 @@ const lalamove = {
         },
 
         async cancelOrder({commit}, payload) {
-            let URL = process.env.NODE_ENV === 'development' 
-                ? `/lalamove/orders/${payload.orderRef}/cancel` : `${this.host}/orders/${payload.orderRef}/cancel`;
-
-            const header = await generateHeader('PUT', `/v2/orders/${payload.orderRef}/cancel`, {});
-            
+            const { customerOrderId, orderRef } = payload;
             try {
                 let response = await axios({
                     method: 'put',
-                    url: URL,
-                    headers: header,
+                    url: `${lalamoveURL}/cancelOrder`,
+                    params: {
+                        orderRef: orderRef
+                    }
                 });
                 console.log('LALAMOVE CANCEL ORDER STATUS:', response);
+                response = response.data;
 
                 return {
                     isSuccessful: true
                 };
             }
             catch(error) {
-                console.log('LALAMOVE CANCEL ORDER STATUS ERROR', error.response);
-                throw error.response;
+                console.log('LALAMOVE CANCEL ORDER STATUS ERROR', error);
+                throw error;
             }
         }
     }
