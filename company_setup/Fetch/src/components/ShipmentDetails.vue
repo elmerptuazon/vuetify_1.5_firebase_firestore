@@ -475,6 +475,11 @@ export default {
       let prevStatus = await this.$store.dispatch('shipment/GetSingleShipment', shipment.id);
       prevStatus = prevStatus.status.toLowerCase();
 
+      if(prevStatus === 'received') {
+        shipment.status = response.status;
+        return;
+      }
+
       let response;
       try {
         response = await this.$store.dispatch("lalamove/getOrderStatus", {
