@@ -320,6 +320,7 @@ export default {
 
         removePhoto() {
             this.article.headerURL = null;
+            this.article.newHeaderPic = null,
             this.$refs.headerFile.value = '';
             this.filename = null;
         },
