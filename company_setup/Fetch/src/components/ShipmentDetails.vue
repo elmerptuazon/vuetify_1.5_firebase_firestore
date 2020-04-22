@@ -668,7 +668,7 @@ export default {
       try {
         await this.$store.dispatch("shipment/UpdateShipment", updateObj);
 
-        if(this.stockOrder.shipmentsToReceive >= 0) {
+        if(this.stockOrder.shipmentsToReceive > 0) {
           let stockOrderUpdateObj = {
             referenceID: shipment.stockOrder.stockOrderId,
             updateObject: {
