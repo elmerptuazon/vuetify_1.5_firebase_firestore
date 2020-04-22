@@ -369,7 +369,7 @@
             <v-spacer></v-spacer>
             <v-btn 
               color="primary" dark
-              :loading="submitLoading" 
+              :loading="submitLoading"
               @click="SubmitShipment"
             >
               Submit Shipment
@@ -638,6 +638,7 @@ export default {
               text: "Shipment has been recorded!"
             });
           } catch (error) {
+            this.submitLoading = false;
             let errorMessage = '';
             switch(error.response.data.message) {
               case("ERR_DELIVERY_MISMATCH"): {
@@ -712,6 +713,7 @@ export default {
               title: "Items to Ship",
               text: "Please select an item and indicate how many items to ship."
             });
+            this.submitLoading = false;
             return;
           }
           try {
@@ -882,6 +884,7 @@ export default {
               //this will ensure that the partialShipment component wont display the previously created partial shipment list
             }
           } catch (error) {
+            this.submitLoading = false;
             console.log(error);
             let errorMessage = '';
             switch(error.response.data.message) {
