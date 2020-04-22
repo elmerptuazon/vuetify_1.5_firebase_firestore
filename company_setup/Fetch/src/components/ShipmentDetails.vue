@@ -722,7 +722,6 @@ export default {
                 title: "Success",
                 text: "Lalamove Delivery cancellation was successful."
               });
-              return;
             }
           }
           catch(error) {
