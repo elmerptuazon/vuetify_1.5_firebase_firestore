@@ -537,7 +537,6 @@ export default {
               return itemToShip;
             });
 
-            
 
             this.shipmentDetails = {
               stockOrder: {
@@ -641,11 +640,65 @@ export default {
               text: "Shipment has been recorded!"
             });
           } catch (error) {
+            let errorMessage = '';
+            switch(error.response.data.message) {
+              case("ERR_DELIVERY_MISMATCH"): {
+                errorMessage = "There's an error in delivery matching.";
+                break;
+              }
+
+              case("ERR_INSUFFICIENT_STOPS"): {
+                errorMessage = "Insufficient stops on delivery.";
+                break;
+              }
+
+              case("ERR_TOO_MANY_STOPS"): {
+                errorMessage = "There are too many delivery stops.";
+                break;
+              }
+
+              case("ERR_INVALID_PAYMENT_METHOD"): {
+                errorMessage = "Invalid payment method.";
+                break;
+              }
+
+              case("ERR_INVALID_PHONE_NUMBER"): {
+                errorMessage = "Invalid phone number.";
+                break;
+              }
+
+              case("ERR_INVALID_SCHEDULE_TIME"): {
+                errorMessage = "Invalid pick-up date and time.";
+                break;
+              }
+
+              case("ERR_INVALID_SERVICE_TYPE"): {
+                errorMessage = "Invalid service type.";
+                break;
+              }
+
+              case("ERR_INVALID_SPECIAL_REQUEST"): {
+                errorMessage = "Invalid special request";
+                break;
+              }
+
+              case("ERR_OUT_OF_SERVICE_AREA"): {
+                errorMessage = "Lalamove is not available on the recepient's area.";
+                break;
+              }
+
+              default: {
+                errorMessage = error.data.message || error.response.data.message;
+                break;
+              }
+            }
+
             this.$swal.fire({
               type: "error",
-              title: "Failed",
-              text: `Shipment creation has failed due to: ${error.data.message}`
+              title: "Error",
+              text: `${errorMessage} Please try again.`
             });
+
           }
         } else {
           //this is the logic for creating partial shipment
@@ -827,10 +880,63 @@ export default {
             }
           } catch (error) {
             console.log(error);
+            let errorMessage = '';
+            switch(error.response.data.message) {
+              case("ERR_DELIVERY_MISMATCH"): {
+                errorMessage = "There's an error in delivery matching.";
+                break;
+              }
+
+              case("ERR_INSUFFICIENT_STOPS"): {
+                errorMessage = "Insufficient stops on delivery.";
+                break;
+              }
+
+              case("ERR_TOO_MANY_STOPS"): {
+                errorMessage = "There are too many delivery stops.";
+                break;
+              }
+
+              case("ERR_INVALID_PAYMENT_METHOD"): {
+                errorMessage = "Invalid payment method.";
+                break;
+              }
+
+              case("ERR_INVALID_PHONE_NUMBER"): {
+                errorMessage = "Invalid phone number.";
+                break;
+              }
+
+              case("ERR_INVALID_SCHEDULE_TIME"): {
+                errorMessage = "Invalid pick-up date and time.";
+                break;
+              }
+
+              case("ERR_INVALID_SERVICE_TYPE"): {
+                errorMessage = "Invalid service type.";
+                break;
+              }
+
+              case("ERR_INVALID_SPECIAL_REQUEST"): {
+                errorMessage = "Invalid special request";
+                break;
+              }
+
+              case("ERR_OUT_OF_SERVICE_AREA"): {
+                errorMessage = "Lalamove is not available on the recepient's area.";
+                break;
+              }
+
+              default: {
+                errorMessage = error.response.data;
+                break;
+              }
+            }
+
             this.$swal.fire({
               type: "error",
               title: "Failed",
-              text: `Partial shipment creation has failed due to: ${error}`
+              text: `Partial shipment creation has failed due to: ${errorMessage}`
             });
 
             this.pickupDate = null;

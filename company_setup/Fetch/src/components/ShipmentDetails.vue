@@ -587,10 +587,64 @@ export default {
         this.rebookBtn = false;
         this.rebookDialog = false;
         this.rebookShipment = {};
+
+        let errorMessage = '';
+        switch(error.response.data.message) {
+          case("ERR_DELIVERY_MISMATCH"): {
+            errorMessage = "There's an error in delivery matching.";
+            break;
+          }
+
+          case("ERR_INSUFFICIENT_STOPS"): {
+            errorMessage = "Insufficient stops on delivery.";
+            break;
+          }
+
+          case("ERR_TOO_MANY_STOPS"): {
+            errorMessage = "There are too many delivery stops.";
+            break;
+          }
+
+          case("ERR_INVALID_PAYMENT_METHOD"): {
+            errorMessage = "Invalid payment method.";
+            break;
+          }
+
+          case("ERR_INVALID_PHONE_NUMBER"): {
+            errorMessage = "Invalid phone number.";
+            break;
+          }
+
+          case("ERR_INVALID_SCHEDULE_TIME"): {
+            errorMessage = "Invalid pick-up date and time.";
+            break;
+          }
+
+          case("ERR_INVALID_SERVICE_TYPE"): {
+            errorMessage = "Invalid service type.";
+            break;
+          }
+
+          case("ERR_INVALID_SPECIAL_REQUEST"): {
+            errorMessage = "Invalid special request";
+            break;
+          }
+
+          case("ERR_OUT_OF_SERVICE_AREA"): {
+            errorMessage = "Lalamove is not available on the recepient's area.";
+            break;
+          }
+
+          default: {
+            errorMessage = "Unknown error.";
+            break;
+          }
+        }
+
         this.$swal.fire({
           type: "error",
           title: "Error",
-          text: "Re-Booking was not successful! Please try again. " + error
+          text: `${errorMessage} Please try again.`
         });
       }
 
@@ -668,12 +722,13 @@ export default {
                 title: "Success",
                 text: "Lalamove Delivery cancellation was successful."
               });
+              return;
             }
           }
           catch(error) {
             this.cancelBtn = false;
             let msg;
-            if(error.data.message === 'ERR_CANCELLATION_FORBIDDEN') {
+            if(error.response.data.message === 'ERR_CANCELLATION_FORBIDDEN') {
               msg = 'You have exceeded the 5-minute cancellation window period.';
             }
             else {
