@@ -472,11 +472,11 @@ export default {
       console.log('Refresh Shipment Status', shipment);
 
       //retrieve any new update on the shipment details
-      let prevStatus = await this.$store.dispatch('shipment/GetSingleShipment', shipment.id);
-      prevStatus = prevStatus.status.toLowerCase();
+      let prevShipmentState = await this.$store.dispatch('shipment/GetSingleShipment', shipment.id);
+      const prevStatus = prevShipmentState.status.toUpperCase();
 
-      if(prevStatus === 'received') {
-        shipment.status = response.status;
+      if(prevStatus === 'RECEIVED') {
+        shipment.status = prevStatus;
         return;
       }
 
