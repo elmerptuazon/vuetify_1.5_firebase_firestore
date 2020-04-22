@@ -414,7 +414,7 @@ import { mapState } from "vuex";
 import { FB } from "@/config/firebase";
 import moment from "moment";
 export default {
-  props: ["stockOrderId", "logisticProvider"],
+  props: ["stockOrderId", "stockOrder", "logisticProvider"],
   data: () => ({
     selectedItem: {},
     headers: [
@@ -657,26 +657,31 @@ export default {
     async UpdateShipmentStatus(shipment) {
       //updates hipmentstatus here
       console.log(shipment);
-      const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
+
       let updateObj = {
         id: shipment.id,
         updatedDetails: {
           status: "Received"
         }
       };
-      let stockOrderUpdateObj = {
-        referenceID: shipment.stockOrder.stockOrderId,
-        updateObject: {
-          shipmentsToReceive: shipmentDecrement
-        }
-      };
+
       try {
         await this.$store.dispatch("shipment/UpdateShipment", updateObj);
 
-        await this.$store.dispatch(
-          "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-          stockOrderUpdateObj
-        );
+        if(this.stockOrder.shipmentsToReceive >= 0) {
+          let stockOrderUpdateObj = {
+            referenceID: shipment.stockOrder.stockOrderId,
+            updateObject: {
+              shipmentsToReceive: FB.firestore.FieldValue.increment(-1)
+            }
+          };
+
+          await this.$store.dispatch(
+            "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+            stockOrderUpdateObj
+          );
+        }
+        
         this.$swal.fire({
           type: "success",
           title: "Success",

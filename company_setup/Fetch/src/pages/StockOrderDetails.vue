@@ -275,7 +275,7 @@
       <v-card-title class="title">Shipment Details</v-card-title>
       <ShipmentDetails 
         ref="shipmentDetails" 
-        :stockOrderId="stockOrder.id" 
+        :stockOrderId="stockOrder.id" :stockOrder="stockOrder"
         :logisticProvider="stockOrder.logisticsDetails.logisticProvider"
       />
     </v-card>
