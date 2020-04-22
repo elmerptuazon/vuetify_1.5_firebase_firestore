@@ -687,6 +687,11 @@ export default {
                 break;
               }
 
+              case("ERR_INSUFFICIENT_CREDIT"): {
+                errorMessage = "You have insufficient credit. Please top up your wallet.";
+                break;
+              }
+
               default: {
                 errorMessage = error.data.message || error.response.data.message;
                 break;
@@ -924,6 +929,11 @@ export default {
 
               case("ERR_OUT_OF_SERVICE_AREA"): {
                 errorMessage = "Lalamove is not available on the recepient's area.";
+                break;
+              }
+
+              case("ERR_INSUFFICIENT_CREDIT"): {
+                errorMessage = "You have insufficient credit. Please top up your wallet.";
                 break;
               }
 

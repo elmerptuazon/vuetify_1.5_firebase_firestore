@@ -635,6 +635,11 @@ export default {
             break;
           }
 
+          case("ERR_INSUFFICIENT_CREDIT"): {
+            errorMessage = "You have insufficient credit. Please top up your wallet.";
+            break;
+          }
+
           default: {
             errorMessage = "Unknown error.";
             break;
@@ -751,7 +756,6 @@ export default {
         };
 
         //move this to Vuex or do this kind of updates in a cloud functions
-        const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
         let stockOrderDataDocument = await FB.firestore()
           .collection("stock_orders")
           .doc(shipment.stockOrder.stockOrderId)
@@ -787,6 +791,7 @@ export default {
           status: stockOrderStatus,
           date: Date.now()
         });
+        const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
         let stockOrderUpdateObj = {
           referenceID: shipment.stockOrder.stockOrderId,
           updateObject: {
@@ -796,6 +801,11 @@ export default {
             statusTimeline: updatedeStatusTimeline
           }
         };
+
+        //dont decrement shipmentsToReceive if it will be delivered through lalamove
+        if(shipment.hasOwnProperty('lalamoveOrderDetails')) {
+          delete stockOrderUpdateObj.updateObject.shipmentsToReceive;
+        }
 
         try {
           await this.$store.dispatch("shipment/UpdateShipment", updateObj);
