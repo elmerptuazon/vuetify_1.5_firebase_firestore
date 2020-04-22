@@ -572,8 +572,6 @@ export default {
 
               this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
               this.shipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
-
-              this.$refs.shipmentDetails.refreshShipmentStatus(this.shipmentDetails);
             }
             
             //call vuex and pass this.shipmentDetails
@@ -938,7 +936,7 @@ export default {
               }
 
               default: {
-                errorMessage = error.response.data;
+                errorMessage = error.response.data || error.message.data;
                 break;
               }
             }
