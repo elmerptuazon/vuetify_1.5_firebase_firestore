@@ -196,6 +196,18 @@
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
+
+                    <v-list-tile
+                      v-if="stockOrder.logisticsDetails.isFreeShipping"
+                      ><v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Is this Free Shipping?</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span>YES</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
                   </v-list>
                 </v-card-text>
               </v-card>
@@ -261,10 +273,14 @@
     <div class="mb-2"></div>
     <v-card>
       <v-card-title class="title">Shipment Details</v-card-title>
-      <ShipmentDetails :stockOrderId="stockOrder.id" />
+      <ShipmentDetails 
+        ref="shipmentDetails" 
+        :stockOrderId="stockOrder.id" :stockOrder="stockOrder"
+        :logisticProvider="stockOrder.logisticsDetails.logisticProvider"
+      />
     </v-card>
 
-    <v-dialog v-model="shipmentDialog" max-width="900">
+    <v-dialog v-model="shipmentDialog" max-width="900" persistent>
       <v-card>
         <v-container grid-list-md>
           <v-card-title class="title">
@@ -273,7 +289,7 @@
           <v-divider></v-divider>
           <v-card-text>
             <v-layout wrap>
-              <v-flex xs8>
+              <v-flex xs6>
                 <v-radio-group v-model="shipmentType" row>
                   <v-radio label="Full Shipment" value="Full"></v-radio>
                   <v-radio label="Partial Shipment" value="Partial"></v-radio>
@@ -286,7 +302,7 @@
                   />
                 </v-radio-group>
               </v-flex>
-              <v-flex xs4>
+              <v-flex xs3>
                 <v-menu
                   lazy
                   :close-on-content-click="false"
@@ -312,12 +328,50 @@
                   ></v-date-picker>
                 </v-menu>
               </v-flex>
+              <v-flex xs3
+                v-if="stockOrder.logisticsDetails.logisticProvider !== 'pick-up'"
+              >
+                <v-menu
+                  ref="menu2"
+                  v-model="menu2"
+                  :close-on-content-click="false"
+                  :nudge-right="40"
+                  :return-value.sync="time"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="290px"
+                  min-width="290px"
+                >
+                  <template v-slot:activator="{ on }">
+                    <v-text-field
+                      v-model="pickupTime"
+                      label="Pick Up Time"
+                      prepend-icon="access_time"
+                      readonly
+                      v-on="on"
+                    ></v-text-field>
+                  </template>
+                  <v-time-picker
+                    v-if="menu2"
+                    v-model="pickupTime"
+                    full-width
+                  >
+                    <v-spacer></v-spacer>
+                    <v-btn color="black" flat @click="menu2 = false">CANCEL</v-btn>
+                    <v-btn color="primary" depressed @click="$refs.menu2.save(time)">OK</v-btn>
+                  </v-time-picker>
+                </v-menu>
+              </v-flex>
             </v-layout>
           </v-card-text>
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" dark @click="SubmitShipment">
+            <v-btn 
+              color="primary" dark
+              :loading="submitLoading"
+              @click="SubmitShipment"
+            >
               Submit Shipment
             </v-btn>
             <v-btn @click="closeShipmentDialog">
@@ -353,7 +407,11 @@ export default {
     shipmentDetails: null,
     partialShipment: false,
     pickupDate: null,
+    pickupTime: null,
     menu: false,
+    menu2: false,
+    time: '',
+    submitLoading: false,
 
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
@@ -378,6 +436,10 @@ export default {
       this.shipmentDialog = false;
       this.completed = true;
       //clears the partial shipment list upon closing the shipment dialog
+
+      this.pickupDate = null;
+      this.pickupTime = null;
+      this.shipmentType = 'Full';
     },
     SetItemsToShip(items) {
       this.itemsToShip = items.map(item => {
@@ -436,6 +498,15 @@ export default {
         return;
       }
 
+      if (!this.pickupTime && this.stockOrder.logisticsDetails.logisticProvider !== 'pick-up') {
+        this.$swal.fire({
+          title: "Missing Pick-Up Time",
+          text: "Please select a pick-up time!",
+          type: "warning"
+        });
+        return;
+      }
+
       const response = await this.$swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -446,7 +517,7 @@ export default {
         confirmButtonText: "Yes, Submit it!"
       });
 
-      const pickupDate = Date.parse(moment(this.pickupDate).startOf("day"));
+      this.submitLoading = true;
 
       if (response.value) {
         if (this.shipmentType === "Full") {
@@ -465,6 +536,8 @@ export default {
               };
               return itemToShip;
             });
+
+
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
@@ -485,15 +558,37 @@ export default {
               itemsToShip: itemsToShip,
               type: "Full Shipment",
               status: "Pending",
-              pickupDate: pickupDate
+              pickupDate: this.pickupDate,
             };
+
+            //if full shipment will be done through lalamove
+            let lalamoveOrderDetails;
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              let quotationBody = this.stockOrder.logisticsDetails.quotationBody;
+              quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              quotationBody.deliveries[0].remarks = `STOCK ORDER: ${this.stockOrder.stockOrderReference}`
+              
+              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', quotationBody);
+
+              this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
+              this.shipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+            }
+            
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
               this.shipmentDetails
             );
-            //console.log(response);
+
+            //update the lalamove order status of the created shipment
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              this.shipmentDetails.id = response.id;
+              this.$refs.shipmentDetails.refreshShipmentStatus(this.shipmentDetails);
+            }
+
             //after saving the Shipment Details, Update the Stock Order Values and Status
+            //console.log(response);
+              
             const remainingStockOrderItems = this.stockOrder.items.map(item => {
               const updatedStockOrder = {
                 attributes: item.attributes,
@@ -513,7 +608,13 @@ export default {
               status: "shipped",
               date: Date.now()
             });
-            const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+
+            //create shipmentsToReceive if this stock order is for pickup
+            let shipmentIncrement = 0;
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
+              shipmentIncrement = FB.firestore.FieldValue.increment(1);  
+            }
+            
             const stockOrderUpdatedData = {
               status: "shipped",
               items: remainingStockOrderItems,
@@ -537,13 +638,74 @@ export default {
               text: "Shipment has been recorded!"
             });
           } catch (error) {
+            this.submitLoading = false;
+            let errorMessage = '';
+            switch(error.response.data.message) {
+              case("ERR_DELIVERY_MISMATCH"): {
+                errorMessage = "There's an error in delivery matching.";
+                break;
+              }
+
+              case("ERR_INSUFFICIENT_STOPS"): {
+                errorMessage = "Insufficient stops on delivery.";
+                break;
+              }
+
+              case("ERR_TOO_MANY_STOPS"): {
+                errorMessage = "There are too many delivery stops.";
+                break;
+              }
+
+              case("ERR_INVALID_PAYMENT_METHOD"): {
+                errorMessage = "Invalid payment method.";
+                break;
+              }
+
+              case("ERR_INVALID_PHONE_NUMBER"): {
+                errorMessage = "Invalid phone number.";
+                break;
+              }
+
+              case("ERR_INVALID_SCHEDULE_TIME"): {
+                errorMessage = "Invalid pick-up date and time.";
+                break;
+              }
+
+              case("ERR_INVALID_SERVICE_TYPE"): {
+                errorMessage = "Invalid service type.";
+                break;
+              }
+
+              case("ERR_INVALID_SPECIAL_REQUEST"): {
+                errorMessage = "Invalid special request";
+                break;
+              }
+
+              case("ERR_OUT_OF_SERVICE_AREA"): {
+                errorMessage = "Lalamove is not available on the recepient's area.";
+                break;
+              }
+
+              case("ERR_INSUFFICIENT_CREDIT"): {
+                errorMessage = "You have insufficient credit. Please top up your wallet.";
+                break;
+              }
+
+              default: {
+                errorMessage = error.data.message || error.response.data.message;
+                break;
+              }
+            }
+
             this.$swal.fire({
               type: "error",
-              title: "Failed",
-              text: `Shipment creation has failed due to: ${error}`
+              title: "Error",
+              text: `${errorMessage} Please try again.`
             });
+
           }
         } else {
+          //this is the logic for creating partial shipment
           //get shipment details from component, then pass the details to vuex that inserts to database
           if (this.itemsToShip.length < 1) {
             this.$swal.fire({
@@ -551,9 +713,11 @@ export default {
               title: "Items to Ship",
               text: "Please select an item and indicate how many items to ship."
             });
+            this.submitLoading = false;
             return;
           }
           try {
+
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
@@ -574,13 +738,33 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              pickupDate: pickupDate
+              pickupDate: this.pickupDate            
             };
+
+            let lalamoveOrderDetails;
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              let quotationBody = this.stockOrder.logisticsDetails.quotationBody;
+              quotationBody.scheduleAt = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              quotationBody.deliveries[0].remarks = `STOCK ORDER: ${this.stockOrder.stockOrderReference}`
+              
+              lalamoveOrderDetails = await this.$store.dispatch('lalamove/placeOrder', quotationBody);
+
+              this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
+              this.shipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
+              
+            }
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
               this.shipmentDetails
             );
+
+            //update the lalamove status of the created shipment
+            if(this.stockOrder.logisticsDetails.logisticProvider === 'lalamove') {
+              this.shipmentDetails.id = response.id;
+              this.$refs.shipmentDetails.refreshShipmentStatus(this.shipmentDetails);
+            }
+
             //after saving the Shipment Details, Update the Stock Order Values and Status
             const remainingStockOrderItems = this.stockOrder.items.map(item => {
               const updatedIndex = this.itemsToShip.findIndex(
@@ -631,14 +815,18 @@ export default {
                 status: "shipped",
                 date: Date.now()
               });
-              const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+
               const stockOrderUpdatedData = {
                 status: "shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
-                shipmentsToReceive: shipmentIncrement
               };
-
+              
+              //create shipmentsToReceive if this stock order is for pickup
+              if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
+                stockOrderUpdatedData.shipmentsToReceive = FB.firestore.FieldValue.increment(1);  
+              }
+              
               const stockOrderUpdateResponse = await this.$store.dispatch(
                 "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
                 {
@@ -660,13 +848,17 @@ export default {
                 status: "partially shipped",
                 date: Date.now()
               });
-              const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+
               const stockOrderUpdatedData = {
                 status: "partially shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
-                shipmentsToReceive: shipmentIncrement
               };
+
+              //create shipmentsToReceive if this stock order is for pickup
+              if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
+                stockOrderUpdatedData.shipmentsToReceive = FB.firestore.FieldValue.increment(1);  
+              }
 
               const stockOrderUpdateResponse = await this.$store.dispatch(
                 "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
@@ -682,6 +874,9 @@ export default {
                 title: "Success",
                 text: "Partial shipment has been recorded!"
               });
+              
+              this.pickupDate = null;
+              this.pickupTime = null;
 
               this.completed = true;
               //"completed" variable has to be true since the created partial shipment
@@ -689,11 +884,74 @@ export default {
               //this will ensure that the partialShipment component wont display the previously created partial shipment list
             }
           } catch (error) {
+            this.submitLoading = false;
+            console.log(error);
+            let errorMessage = '';
+            switch(error.response.data.message) {
+              case("ERR_DELIVERY_MISMATCH"): {
+                errorMessage = "There's an error in delivery matching.";
+                break;
+              }
+
+              case("ERR_INSUFFICIENT_STOPS"): {
+                errorMessage = "Insufficient stops on delivery.";
+                break;
+              }
+
+              case("ERR_TOO_MANY_STOPS"): {
+                errorMessage = "There are too many delivery stops.";
+                break;
+              }
+
+              case("ERR_INVALID_PAYMENT_METHOD"): {
+                errorMessage = "Invalid payment method.";
+                break;
+              }
+
+              case("ERR_INVALID_PHONE_NUMBER"): {
+                errorMessage = "Invalid phone number.";
+                break;
+              }
+
+              case("ERR_INVALID_SCHEDULE_TIME"): {
+                errorMessage = "Invalid pick-up date and time.";
+                break;
+              }
+
+              case("ERR_INVALID_SERVICE_TYPE"): {
+                errorMessage = "Invalid service type.";
+                break;
+              }
+
+              case("ERR_INVALID_SPECIAL_REQUEST"): {
+                errorMessage = "Invalid special request";
+                break;
+              }
+
+              case("ERR_OUT_OF_SERVICE_AREA"): {
+                errorMessage = "Lalamove is not available on the recepient's area.";
+                break;
+              }
+
+              case("ERR_INSUFFICIENT_CREDIT"): {
+                errorMessage = "You have insufficient credit. Please top up your wallet.";
+                break;
+              }
+
+              default: {
+                errorMessage = error.response.data || error.message.data;
+                break;
+              }
+            }
+
             this.$swal.fire({
               type: "error",
               title: "Failed",
-              text: `Partial shipment creation has failed due to: ${error}`
+              text: `Partial shipment creation has failed due to: ${errorMessage}`
             });
+
+            this.pickupDate = null;
+            this.pickupTime = null;
 
             this.completed = true;
             //"completed" variable has to be true since the created partial shipment
@@ -701,7 +959,9 @@ export default {
           }
         }
       }
-      this.date = null;
+      
+      this.submitLoading = false;
+      this.shipmentDialog = false;
     },
     async CancelOrder() {
       const response = await this.$swal.fire({

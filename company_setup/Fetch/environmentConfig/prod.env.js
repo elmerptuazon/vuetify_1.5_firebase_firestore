@@ -8,4 +8,5 @@ module.exports = {
   messagingSenderId: '""',
   appId: '""',
   primaryColor: '""',
+  lalamoveURL: '"https://rest.lalamove.com/v2"'
 }
