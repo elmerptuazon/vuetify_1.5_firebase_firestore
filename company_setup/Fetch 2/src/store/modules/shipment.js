@@ -101,7 +101,7 @@ const shipment = {
                 throw error.response;
             }
         },
-        
+
         async UpdateShipment({ commit, dispatch }, payload) {
             try {
                 console.log(payload);

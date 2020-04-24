@@ -12,10 +12,7 @@ import distributors from './modules/distributors';
 import stock_orders from './modules/stock-orders';
 import users from './modules/users';
 import shipment from './modules/shipment';
-import delivery_settings from './modules/delivery-settings';
-import articles from './modules/articles';
 import lalamove from './modules/lalamove';
-
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -51,11 +48,6 @@ export default new Vuex.Store({
 				url: 'StockOrders',
 			},
 			{
-				icon: 'rv_hookup',
-				text: 'Delivery Settings',
-				url: 'DeliverySettings',
-			},
-			{
 				icon: 'supervisor_account',
 				text: 'New Registrations',
 				url: 'NewRegistrations',
@@ -64,11 +56,6 @@ export default new Vuex.Store({
 				icon: 'messages',
 				text: 'Messages',
 				url: 'Messages',
-			},
-			{
-				icon: 'chrome_reader_mode',
-				text: 'Articles',
-				url: 'Articles',
 			},
 			{
 				icon: 'contact_support',
@@ -97,8 +84,6 @@ export default new Vuex.Store({
 		stock_orders,
 		users,
 		shipment,
-		delivery_settings,
-		articles,
 		lalamove
 	}
 })
