@@ -12,6 +12,9 @@ import distributors from './modules/distributors';
 import stock_orders from './modules/stock-orders';
 import users from './modules/users';
 import shipment from './modules/shipment';
+import delivery_settings from './modules/delivery-settings';
+import articles from './modules/articles';
+
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -36,8 +39,8 @@ export default new Vuex.Store({
 				children: [
 					{ icon: 'insert_emoticon', text: 'Reseller List', url: 'Resellers' },
 					{ icon: 'people', text: 'Customer List', url: 'Customers' },
-					{ icon: 'shopping_basket', text: 'Products Ordered', url: 'Products' },
-					{ icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' },
+					// { icon: 'shopping_basket', text: 'Products Ordered', url: 'Products' },
+					// { icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' },
 					{ icon: 'local_shipping', text: 'Shipments', url: 'ShipmentReport' }
 				]
 			},
@@ -45,6 +48,11 @@ export default new Vuex.Store({
 				icon: 'airport_shuttle',
 				text: 'Stock Orders',
 				url: 'StockOrders',
+			},
+			{
+				icon: 'rv_hookup',
+				text: 'Delivery Settings',
+				url: 'DeliverySettings',
 			},
 			{
 				icon: 'supervisor_account',
@@ -55,6 +63,11 @@ export default new Vuex.Store({
 				icon: 'messages',
 				text: 'Messages',
 				url: 'Messages',
+			},
+			{
+				icon: 'chrome_reader_mode',
+				text: 'Articles',
+				url: 'Articles',
 			},
 			{
 				icon: 'contact_support',
@@ -82,6 +95,8 @@ export default new Vuex.Store({
 		distributors,
 		stock_orders,
 		users,
-		shipment
+		shipment,
+		delivery_settings,
+		articles
 	}
 })
