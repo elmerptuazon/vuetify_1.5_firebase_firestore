@@ -125,6 +125,18 @@
                           >
                           <span
                             v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'GCash'
+                            "
+                            >E-Wallet: GCash</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'GrabPay'
+                            "
+                            >E-Wallet: Grab Pay</span
+                          >
+                          <span
+                            v-else-if="
                               stockOrder.paymentDetails.paymentType === 'COD'
                             "
                             >Cash On Delivery / Upon Pick-Up</span
@@ -140,7 +152,7 @@
                           >Total Amount</v-list-tile-sub-title
                         >
                         <v-list-tile-title
-                          >{{ stockOrder.paymentDetails.amount }}
+                          >{{ stockOrder.paymentDetails.amount | currency("P ") }}
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -183,16 +195,34 @@
                       </v-list-tile-content>
                     </v-list-tile>
 
+                    <!-- Display shipping fee when it is not a free delivery and is not for pick-up -->
                     <v-list-tile
+                      v-if="stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'"
                       ><v-list-tile-content>
                         <v-list-tile-sub-title
                           >Shipping Fee</v-list-tile-sub-title
                         >
                         <v-list-tile-title>
                           <span v-if="stockOrder.logisticsDetails">{{
-                            stockOrder.logisticsDetails.shippingFee
+                            stockOrder.logisticsDetails.shippingFee | currency("P ")
                           }}</span>
                           <span v-else>N/A</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+
+                    <v-list-tile 
+                      v-if="
+                        stockOrder.logisticsDetails.isFreeShipping
+                        && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
+                      ">
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Is this a Free Delivery?</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span v-if="stockOrder.logisticsDetails.isFreeShipping">YES</span>
+                          <span v-else>NO</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -211,6 +241,8 @@
             <v-btn
               color="success"
               @click="updateStatus('processing')"
+              :loading="updateBtnLoading"
+              :disabled="updateBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() != 'pending'
                   ? 'v-btn--disabled '
@@ -239,6 +271,8 @@
             <v-btn
               color="error"
               @click="CancelOrder()"
+              :loading="cancelBtnLoading"
+              :disabled="cancelBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() === 'cancelled'
                   ? 'v-btn--disabled '
@@ -355,6 +389,9 @@ export default {
     pickupDate: null,
     menu: false,
 
+    updateBtnLoading: false,
+    cancelBtnLoading: false,
+
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
     completed: false
@@ -362,7 +399,14 @@ export default {
   async created() {
     this.loading = true;
     try {
-      const id = this.$route.params;
+      const id = this.$route.params.id;
+      
+      if(!this.stockOrder.isRead) {
+        await this.$store.dispatch('stock_orders/UPDATE_STOCK_ORDER_DETAILS', {
+          referenceID: id,
+          updateObject: { isRead: true }
+        });
+      }
 
       if (!id) {
         this.$router.push({ name: "StockOrders" });
@@ -399,6 +443,13 @@ export default {
       console.log(this.itemsToShip);
     },
     async updateStatus(status) {
+      if(status === 'processing') {
+        this.updateBtnLoading = true;
+      }
+      else if(status === 'cancelled') {
+        this.cancelBtnLoading = true;
+      }
+
       try {
         let statusTimeline = this.stockOrder.statusTimeline;
         if (this.stockOrder.statusTimeline) {
@@ -421,6 +472,9 @@ export default {
           "success",
           "Order has been successfully marked as " + status
         );
+
+        this.updateBtnLoading = false;
+        this.cancelBtnLoading = false;
       } catch (error) {
         this.$refs.toast.show("error", "An error occurred");
         console.log(error);
