@@ -25,8 +25,9 @@
                                             v-model="settings.cutOffPrice"
                                             label="Free Delivery Cut-Off Price"
                                             hint="Note: Enter minimum required amount of a Stock Order to mark it as 'Free Delivery'"
-                                            :rules="numberRules"
+                                            type="number"
                                             :disabled="cutOffPriceField"
+                                            :loading="cutOffFieldLoading"
                                             prefix="PHP"
                                         ></v-text-field>
                                     </v-flex>
@@ -73,17 +74,22 @@ import { mapState } from "vuex";
 import moment from "moment";
 
 export default {
+    mixins: [mixins],
     async mounted() {
+        //:rules="numberRules"
+        this.cutOffFieldLoading = true;
         await this.$store.dispatch('delivery_settings/GetDeliverySettings');
         this.settings = this.$store.getters['delivery_settings/GET_DELIVERY_SETTINGS'];
+        this.cutOffFieldLoading = false;
         
-        this.settings.cutOffPrice = (this.settings.cutOffPrice | currency("P"));
         console.log('settings: ', this.settings);
+        
     },
     data: () => ({
         // cutOffPrice: 50000,
         cutOffPriceField: true,
         cutOffPriceBtn: false,
+        cutOffFieldLoading : false,
 
         settings: {
             cutOffPrice: 0.00
@@ -121,7 +127,6 @@ export default {
             }
         },
     },
-    mixins: [mixins],
     computed: {
         
     },

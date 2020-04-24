@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Login from '@/pages/Login';
-import Articles from '@/pages/Articles';
 import ViewCategory from '@/pages/ViewCategory';
 import MultiProductUpload from '@/pages/MultiProductUpload';
 import Resellers from '@/pages/Resellers';
@@ -17,7 +16,6 @@ import StockOrders from '@/pages/StockOrders';
 import StockOrderDetails from '@/pages/StockOrderDetails';
 import MyAccount from '@/pages/MyAccount';
 import ShipmentReport from '@/pages/ShipmentReport';
-import DeliverySettings from '@/pages/DeliverySettings';
 import { AUTH } from '@/config/firebase';
 import store from '@/store';
 
@@ -154,22 +152,6 @@ const router = new Router({
 				requiresAuth: true
 			}
 		},
-		{
-			path: '/DeliverySettings',
-			name: 'DeliverySettings',
-			component: DeliverySettings,
-			meta: {
-				requiresAuth: true
-			}
-		},
-		{
-			path: '/articles',
-			name: 'Articles',
-			component: Articles,
-			meta: {
-				requiresAuth: true
-			}
-		},
 	]
 });
 
@@ -189,7 +171,7 @@ router.beforeEach((to, from, next) => {
 	} else if (to.matched.some(record => !record.meta.requiresAuth)) {
 		if (AUTH.currentUser) {
 			next({
-				path: '/articles',
+				path: '/categories',
 				query: {
 					redirecT: to.fullPath
 				}

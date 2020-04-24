@@ -125,18 +125,6 @@
                           >
                           <span
                             v-else-if="
-                              stockOrder.paymentDetails.paymentType === 'GCash'
-                            "
-                            >E-Wallet: GCash</span
-                          >
-                          <span
-                            v-else-if="
-                              stockOrder.paymentDetails.paymentType === 'GrabPay'
-                            "
-                            >E-Wallet: Grab Pay</span
-                          >
-                          <span
-                            v-else-if="
                               stockOrder.paymentDetails.paymentType === 'COD'
                             "
                             >Cash On Delivery / Upon Pick-Up</span
@@ -152,7 +140,7 @@
                           >Total Amount</v-list-tile-sub-title
                         >
                         <v-list-tile-title
-                          >{{ stockOrder.paymentDetails.amount | currency("P ") }}
+                          >{{ stockOrder.paymentDetails.amount }}
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -195,34 +183,28 @@
                       </v-list-tile-content>
                     </v-list-tile>
 
-                    <!-- Display shipping fee when it is not a free delivery and is not for pick-up -->
                     <v-list-tile
-                      v-if="stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'"
                       ><v-list-tile-content>
                         <v-list-tile-sub-title
                           >Shipping Fee</v-list-tile-sub-title
                         >
                         <v-list-tile-title>
                           <span v-if="stockOrder.logisticsDetails">{{
-                            stockOrder.logisticsDetails.shippingFee | currency("P ")
+                            stockOrder.logisticsDetails.shippingFee
                           }}</span>
                           <span v-else>N/A</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
 
-                    <v-list-tile 
-                      v-if="
-                        stockOrder.logisticsDetails.isFreeShipping
-                        && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
-                      ">
-                      <v-list-tile-content>
+                    <v-list-tile
+                      v-if="stockOrder.logisticsDetails.isFreeShipping"
+                      ><v-list-tile-content>
                         <v-list-tile-sub-title
-                          >Is this a Free Delivery?</v-list-tile-sub-title
+                          >Is this Free Shipping?</v-list-tile-sub-title
                         >
                         <v-list-tile-title>
-                          <span v-if="stockOrder.logisticsDetails.isFreeShipping">YES</span>
-                          <span v-else>NO</span>
+                          <span>YES</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -241,8 +223,6 @@
             <v-btn
               color="success"
               @click="updateStatus('processing')"
-              :loading="updateBtnLoading"
-              :disabled="updateBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() != 'pending'
                   ? 'v-btn--disabled '
@@ -271,8 +251,6 @@
             <v-btn
               color="error"
               @click="CancelOrder()"
-              :loading="cancelBtnLoading"
-              :disabled="cancelBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() === 'cancelled'
                   ? 'v-btn--disabled '
@@ -295,13 +273,14 @@
     <div class="mb-2"></div>
     <v-card>
       <v-card-title class="title">Shipment Details</v-card-title>
-      <ShipmentDetails ref="shipmentDetails" 
+      <ShipmentDetails 
+        ref="shipmentDetails" 
         :stockOrderId="stockOrder.id" :stockOrder="stockOrder"
-        :logisticProvider="stockOrder.logisticsDetails.logisticProvider" 
+        :logisticProvider="stockOrder.logisticsDetails.logisticProvider"
       />
     </v-card>
 
-    <v-dialog v-model="shipmentDialog" max-width="900">
+    <v-dialog v-model="shipmentDialog" max-width="900" persistent>
       <v-card>
         <v-container grid-list-md>
           <v-card-title class="title">
@@ -389,9 +368,9 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn 
-              color="primary" dark 
-              @click="SubmitShipment"
+              color="primary" dark
               :loading="submitLoading"
+              @click="SubmitShipment"
             >
               Submit Shipment
             </v-btn>
@@ -428,16 +407,11 @@ export default {
     shipmentDetails: null,
     partialShipment: false,
     pickupDate: null,
-    menu: false,
-
     pickupTime: null,
     menu: false,
     menu2: false,
     time: '',
     submitLoading: false,
-
-    updateBtnLoading: false,
-    cancelBtnLoading: false,
 
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
@@ -446,14 +420,7 @@ export default {
   async created() {
     this.loading = true;
     try {
-      const id = this.$route.params.id;
-      
-      if(!this.stockOrder.isRead) {
-        await this.$store.dispatch('stock_orders/UPDATE_STOCK_ORDER_DETAILS', {
-          referenceID: id,
-          updateObject: { isRead: true }
-        });
-      }
+      const id = this.$route.params;
 
       if (!id) {
         this.$router.push({ name: "StockOrders" });
@@ -494,13 +461,6 @@ export default {
       console.log(this.itemsToShip);
     },
     async updateStatus(status) {
-      if(status === 'processing') {
-        this.updateBtnLoading = true;
-      }
-      else if(status === 'cancelled') {
-        this.cancelBtnLoading = true;
-      }
-
       try {
         let statusTimeline = this.stockOrder.statusTimeline;
         if (this.stockOrder.statusTimeline) {
@@ -523,9 +483,6 @@ export default {
           "success",
           "Order has been successfully marked as " + status
         );
-
-        this.updateBtnLoading = false;
-        this.cancelBtnLoading = false;
       } catch (error) {
         this.$refs.toast.show("error", "An error occurred");
         console.log(error);
@@ -560,7 +517,7 @@ export default {
         confirmButtonText: "Yes, Submit it!"
       });
 
-      const pickupDate = Date.parse(moment(this.pickupDate).startOf("day"));
+      this.submitLoading = true;
 
       if (response.value) {
         if (this.shipmentType === "Full") {
@@ -579,6 +536,8 @@ export default {
               };
               return itemToShip;
             });
+
+
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
@@ -599,7 +558,7 @@ export default {
               itemsToShip: itemsToShip,
               type: "Full Shipment",
               status: "Pending",
-              pickupDate: pickupDate
+              pickupDate: this.pickupDate,
             };
 
             //if full shipment will be done through lalamove
@@ -614,7 +573,7 @@ export default {
               this.shipmentDetails.lalamoveOrderDetails = lalamoveOrderDetails;
               this.shipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
             }
-
+            
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
@@ -627,8 +586,9 @@ export default {
               this.$refs.shipmentDetails.refreshShipmentStatus(this.shipmentDetails);
             }
 
-            //console.log(response);
             //after saving the Shipment Details, Update the Stock Order Values and Status
+            //console.log(response);
+              
             const remainingStockOrderItems = this.stockOrder.items.map(item => {
               const updatedStockOrder = {
                 attributes: item.attributes,
@@ -654,8 +614,7 @@ export default {
             if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
               shipmentIncrement = FB.firestore.FieldValue.increment(1);  
             }
-
-            const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+            
             const stockOrderUpdatedData = {
               status: "shipped",
               items: remainingStockOrderItems,
@@ -743,9 +702,10 @@ export default {
               title: "Error",
               text: `${errorMessage} Please try again.`
             });
+
           }
         } else {
-          //LOGIC FOR THE CREATION OF PARTIAL SHIPMENT
+          //this is the logic for creating partial shipment
           //get shipment details from component, then pass the details to vuex that inserts to database
           if (this.itemsToShip.length < 1) {
             this.$swal.fire({
@@ -753,9 +713,11 @@ export default {
               title: "Items to Ship",
               text: "Please select an item and indicate how many items to ship."
             });
+            this.submitLoading = false;
             return;
           }
           try {
+
             this.shipmentDetails = {
               stockOrder: {
                 stockOrderReference: this.stockOrder.stockOrderReference,
@@ -776,7 +738,7 @@ export default {
               itemsToShip: this.itemsToShip,
               type: "Partial Shipment",
               status: "Pending",
-              pickupDate: pickupDate
+              pickupDate: this.pickupDate            
             };
 
             let lalamoveOrderDetails;
@@ -791,7 +753,6 @@ export default {
               this.shipmentDetails.pickupDate = new Date(`${this.pickupDate} ${this.pickupTime}`).toISOString();
               
             }
-
             //call vuex and pass this.shipmentDetails
             const response = await this.$store.dispatch(
               "shipment/SubmitShipment",
@@ -854,18 +815,18 @@ export default {
                 status: "shipped",
                 date: Date.now()
               });
-              
+
               const stockOrderUpdatedData = {
                 status: "shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
               };
-
+              
               //create shipmentsToReceive if this stock order is for pickup
               if(this.stockOrder.logisticsDetails.logisticProvider === 'pick-up') {
                 stockOrderUpdatedData.shipmentsToReceive = FB.firestore.FieldValue.increment(1);  
               }
-
+              
               const stockOrderUpdateResponse = await this.$store.dispatch(
                 "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
                 {
@@ -887,12 +848,11 @@ export default {
                 status: "partially shipped",
                 date: Date.now()
               });
-              const shipmentIncrement = FB.firestore.FieldValue.increment(1);
+
               const stockOrderUpdatedData = {
                 status: "partially shipped",
                 items: remainingStockOrderItems,
                 statusTimeline: statusTimeline,
-                shipmentsToReceive: shipmentIncrement
               };
 
               //create shipmentsToReceive if this stock order is for pickup
@@ -914,7 +874,7 @@ export default {
                 title: "Success",
                 text: "Partial shipment has been recorded!"
               });
-
+              
               this.pickupDate = null;
               this.pickupTime = null;
 
@@ -999,8 +959,7 @@ export default {
           }
         }
       }
-      this.date = null;
-
+      
       this.submitLoading = false;
       this.shipmentDialog = false;
     },

@@ -351,7 +351,7 @@ export default {
 
         setTimeout(() => {
           this.scrollDown();
-        }, 1000);
+        }, 500);
       }
     },
 

@@ -75,7 +75,7 @@
                   ><v-card>
                     <v-card-actions class="mb-0 pb-0">
                       <v-spacer> </v-spacer>
-                      <v-btn
+                     <v-btn
                         v-if="shipment.status.toLowerCase() === 'assigning_driver' ||
                           shipment.status.toLowerCase() === 'pending'
                         "
@@ -149,19 +149,6 @@
                             </v-list-tile-title>
                           </v-list-tile-content>
                         </v-list-tile>
-                        <v-list-tile
-                          v-if="shipment.price"
-                          ><v-list-tile-content>
-                            <v-list-tile-sub-title
-                              >Shipment Price
-                            </v-list-tile-sub-title>
-                            <v-list-tile-title>
-                              {{
-                                shipment.price
-                              }}
-                            </v-list-tile-title>
-                          </v-list-tile-content>
-                        </v-list-tile>
                       </v-list>
                       <v-layout align-center align-start mt-2 wrap
                         v-if="shipment.lalamoveOrderDetails"
@@ -178,7 +165,7 @@
                         </v-flex>
                         <v-flex xs12 v-if="shipment.status.toLowerCase() !== 'received'">
                           <div class="primary--text caption font-italic">
-                            *Real-time updates for a Lalamove Delivery order is not yet supported yet.
+                            *Real-time updates for a Lalamove Delivery order is not supported yet.
                             Please click the button above to frequently see updates on your Lalamove Delivery order.
                           </div>
                         </v-flex>
@@ -447,24 +434,9 @@ export default {
     rebookBtn: false,
     cancelBtn: false,
   }),
-  async mounted() {
+  created() {
     //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
-    await this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
-
-    //if this stock order is being delivered through lalamove
-    //re check the lalamove status of each shipments in this stock order
-    // if(this.logisticProvider === 'lalamove') {
-    //   for(const shipment of this.shipmentList) {
-      
-    //     const status = shipment.status.toLowerCase();
-
-    //     if(status === 'assigning_driver' || status === 'on_going') {
-    //       await this.refreshShipmentStatus(shipment);
-        
-    //     }
-    //   }
-    // }
-    
+    this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
   },
   methods: {
     async refreshShipmentStatus(shipment) {
@@ -836,7 +808,7 @@ export default {
     },
     async UpdateShipmentDetails() {
       this.btnloading = true;
-      
+
       if (!this.selectedShipment.logisticSTN) {
         this.$swal.fire({
           type: "error",

@@ -90,6 +90,18 @@ const shipment = {
             }
 
         },
+
+        async GetSingleShipment({}, payload) {
+            let response;
+            try {
+                response = await DB.collection('shipment').doc(payload).get();
+                return response.data();
+            }
+            catch(error) {
+                throw error.response;
+            }
+        },
+
         async UpdateShipment({ commit, dispatch }, payload) {
             try {
                 console.log(payload);
