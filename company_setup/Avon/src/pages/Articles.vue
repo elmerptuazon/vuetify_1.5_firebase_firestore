@@ -12,6 +12,7 @@
                             single-line class="ml-3"
                             placeholder="search an article..."
                             append-icon="search"
+                            clearable
                         ></v-text-field>
                     </v-flex>
                     <v-flex xs2 offset-xs1>
@@ -31,7 +32,7 @@
                 </v-layout>
             </v-container>
 
-            <v-divider class="my-2"></v-divider>
+            <v-divider class="my-1"></v-divider>
 
             <v-container v-if="loading" fluid>
                 <v-layout align-center justify-center>
@@ -54,105 +55,124 @@
                 </v-layout>
             </v-container>
 
-            <v-container v-else fluid>
-                <v-layout 
-                    align-start 
-                    justify-start mb-5 wrap
-                    v-for="article in articles" :key="article.id"
-                >
-                    <v-flex align-start justify-baseline align-content-baseline align-self-baseline xs12>
-                        <v-divider/>
-                    </v-flex>
-                    <v-flex xs3>
-                        <v-img
-                            v-if="article.headerURL"
-                            height="150px"
-                            width="230px"
-                            :src="article.headerURL"
-                            :alt="article.title"
-                            :lazy-src="require('@/assets/no-image.png')"
-                        >
-                            <v-layout
-                                slot="placeholder"
-                                fill-height
-                                align-center
-                                justify-center
-                                ma-0
+            <v-data-iterator
+                v-else
+                :items="articles" :search="search"
+                row wrap class="mt-3 px-4"
+                disable-initial-sort
+                no-data-text="Sorry, no articles posted yet..."
+                no-result-text="Sorry, no article/s related to your search..."
+                :rows-per-page-items="[-1]" hide-actions
+            >
+                <template v-slot:no-results>
+                    <div class="red--text font-weight-bold body-1 mt-3">
+                        Sorry, no articles are related to your search...
+                    </div>
+                </template>
+
+                <template v-slot:no-data>
+                    <div class="red--text font-weight-bold body-1 mt-3">
+                        Sorry, no articles are posted yet...
+                    </div>
+                </template>
+
+                <template v-slot:item="props">
+                    <v-layout align-start justify-end mt-5 px-2 pb-2 wrap row>
+                        <v-flex align-start justify-baseline align-content-baseline align-self-baseline xs12>
+                            <v-divider/>
+                        </v-flex>
+                        <v-flex xs3>
+                            <v-img
+                                v-if="props.item.headerURL"
+                                height="150px"
+                                width="230px"
+                                :src="props.item.headerURL"
+                                :alt="props.item.title"
+                                :lazy-src="require('@/assets/no-image.png')"
                             >
-                                <v-progress-circular
-                                    indeterminate
-                                    color="primary lighten-5"
-                                ></v-progress-circular>
-                            </v-layout>
-                        </v-img>
-                        <v-img
-                            v-else
-                            
-                            height="150px"
-                            width="230px"
-                            :alt="article.title"
-                            :src="require('@/assets/no-image.png')"
-                        >
-                            <div 
-                                slot="placeholder"
-                                fill-height align-center
-                                justify-center ma-0
-                            >No Picture</div>
-                        </v-img>
-                    </v-flex>
-                    <v-flex xs6 mt-2 pl-4>
-                        <div class="headline font-weight-bold">{{ article.title }}</div>
-                        <div class="body-1 primary--text mt-2">
-                            <v-icon small color="primary">schedule</v-icon>
-                            {{ formatDate(article.publishDate) }}
-                        </div>
-                        <div class="caption font-weight-thin mt-4"> {{ summarizeSource(article.source) | uppercase }}</div>
-                    </v-flex>
-                    <v-flex xs3 pl-3 align-self-center>
-                        <v-tooltip left>
-                            <template v-slot:activator="{on}">
-                                <v-btn 
-                                    fab small dark 
-                                    color="red lighten-1" 
-                                    v-on="on"
-                                    @click="deleteArticle(article)"
+                                <v-layout
+                                    slot="placeholder"
+                                    fill-height
+                                    align-center
+                                    justify-center
+                                    ma-0
                                 >
-                                    <v-icon>delete_forever</v-icon>
-                                </v-btn>
-                            </template>
-                            <span>Delete this Article</span>
-                        </v-tooltip>
-                        <v-tooltip bottom>
-                            <template v-slot:activator="{on}">
-                                <v-btn 
-                                    fab small dark 
-                                    color="primary" 
-                                    v-on="on"
-                                    @click="changeArticleStatus(article)"
-                                >
-                                    <v-icon v-if="article.active">visibility_off</v-icon>
-                                    <v-icon v-else>visibility</v-icon>
-                                </v-btn>
-                            </template>
-                            <span v-if="article.active">Hide this Article</span>
-                            <span v-else>Show this Article</span>
-                        </v-tooltip>
-                        <v-tooltip right>
-                            <template v-slot:activator="{on}">
-                                <v-btn 
-                                    fab small dark 
-                                    color="success" 
-                                    v-on="on"
-                                    @click="openDetails('edit', article)"
-                                >
-                                    <v-icon>edit</v-icon>
-                                </v-btn>
-                            </template>
-                            <span>Edit this Article</span>
-                        </v-tooltip>
-                    </v-flex>
-                </v-layout>
-            </v-container>
+                                    <v-progress-circular
+                                        indeterminate
+                                        color="primary lighten-5"
+                                    ></v-progress-circular>
+                                </v-layout>
+                            </v-img>
+                            <v-img
+                                v-else
+                                height="150px"
+                                width="230px"
+                                :alt="props.item.title"
+                                :src="require('@/assets/no-image.png')"
+                            >
+                                <div class="align-center justify-center mt-2 text-xs-center primary--text">
+                                    No Picture
+                                </div>
+                            </v-img>
+                        </v-flex>
+                        <v-flex xs6 mt-2 pl-4>
+                            <div class="headline font-weight-bold">{{ props.item.title }}</div>
+                            <div class="body-1 primary--text mt-2">
+                                <v-icon small color="primary">schedule</v-icon>
+                                {{ calculateTime(props.item.publishDate) }}
+                                <span class="grey--text ml-2">
+                                    | <v-icon small color="grey" class="ml-2">visibility</v-icon> 
+                                    : {{ props.item.viewedBy.length }}
+                                </span>
+                            </div>
+                            <div class="caption font-weight-thin mt-4"> {{ summarizeSource(props.item.source) | uppercase }}</div>
+                        </v-flex>
+                        <v-flex xs3 pl-3 align-self-center>
+                            <v-tooltip left>
+                                <template v-slot:activator="{on}">
+                                    <v-btn 
+                                        fab small dark 
+                                        color="red lighten-1" 
+                                        v-on="on"
+                                        @click="deleteArticle(props.item)"
+                                    >
+                                        <v-icon>delete_forever</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span>Delete this Article</span>
+                            </v-tooltip>
+                            <v-tooltip top>
+                                <template v-slot:activator="{on}">
+                                    <v-btn 
+                                        fab small dark 
+                                        color="primary" 
+                                        v-on="on"
+                                        @click="changeArticleStatus(props.item)"
+                                    >
+                                        <v-icon v-if="props.item.active">visibility_off</v-icon>
+                                        <v-icon v-else>visibility</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span v-if="props.item.active">Hide this Article</span>
+                                <span v-else>Show this Article</span>
+                            </v-tooltip>
+                            <v-tooltip right>
+                                <template v-slot:activator="{on}">
+                                    <v-btn 
+                                        fab small dark 
+                                        color="success" 
+                                        v-on="on"
+                                        @click="openDetails('edit', props.item)"
+                                    >
+                                        <v-icon>edit</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span>Edit this Article</span>
+                            </v-tooltip>
+                        </v-flex>
+                    </v-layout>
+                </template>
+            </v-data-iterator>
         </v-card>
 
         <AddManualArticle ref="manualDialog" :details="selectedArticle"/>
@@ -275,8 +295,18 @@ export default {
             return url.slice(0, firstSlash);
         },
 
-        formatDate(dateTime) {
-            return moment(parseInt(dateTime)).format('MMMM DD YYYY, h:mm a');
+        calculateTime(dateTime) {
+            let verbalizedDateTime = moment(parseInt(dateTime)).calendar();
+
+            if(verbalizedDateTime.includes('Today')) {
+                return moment(parseInt(dateTime)).fromNow();
+            }
+
+            if(verbalizedDateTime.includes('Last') || verbalizedDateTime.includes('Yesterday')) {
+                return verbalizedDateTime;
+            }
+
+            return moment(parseInt(dateTime)).format('MMM D, YYYY @ h:mm a').replace('@', "at");
         },
 
         async changeArticleStatus(article) {
