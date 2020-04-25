@@ -320,7 +320,7 @@ export default {
 
         removePhoto() {
             this.article.headerURL = null;
-            this.article.newHeaderPic = null,
+            this.article.newHeaderPic = null;
             this.$refs.headerFile.value = '';
             this.filename = null;
         },
@@ -344,6 +344,7 @@ export default {
                     title: "Error",
                     text: "The uploaded file is not an image file. Please try again."
                 });
+                this.removePhoto();
 
             } else {
                 this.article.headerURL = URL.createObjectURL(el.target.files[0]);
@@ -459,7 +460,6 @@ export default {
                 title,
                 publishDate,
                 source,
-                viewedBy: [],
                 creationMethod: 'url',
             }
 
@@ -609,6 +609,7 @@ export default {
                 });
 
                 this.submitLoading = false;
+
             }
 
         },

@@ -125,18 +125,6 @@
                           >
                           <span
                             v-else-if="
-                              stockOrder.paymentDetails.paymentType === 'GCash'
-                            "
-                            >E-Wallet: GCash</span
-                          >
-                          <span
-                            v-else-if="
-                              stockOrder.paymentDetails.paymentType === 'GrabPay'
-                            "
-                            >E-Wallet: Grab Pay</span
-                          >
-                          <span
-                            v-else-if="
                               stockOrder.paymentDetails.paymentType === 'COD'
                             "
                             >Cash On Delivery / Upon Pick-Up</span
