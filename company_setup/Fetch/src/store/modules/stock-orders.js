@@ -249,7 +249,16 @@ const stock_orders = {
             commit('SET_STOCK_ORDER', stockOrder)
         },
 
-        
+        async GET_STOCK_ORDER({}, payload) {
+            try {
+                let data = (await DB.collection('stock_orders').doc(payload.id).get()).data();
+                return data;
+            }
+            catch(error) {
+                console.log(error);
+                throw error;
+            }
+        }
     }
 }
 
