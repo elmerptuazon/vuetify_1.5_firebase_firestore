@@ -1,4 +1,4 @@
-import { DB } from '@/config/firebase';
+import { DB, AUTH } from '@/config/firebase';
 import moment from 'moment';
 function GenerateTrackingNumber() {
     var refNumber = `PHTN${BigInt(Date.now()).toString(36).toUpperCase()}`;
@@ -60,7 +60,6 @@ const shipment = {
     },
     actions: {
         LISTEN_TO_SHIPMENTS({ state, commit }) {
-            const user = AUTH.currentUser;
             commit('ClearShipments');
             state.subscriber = DB.collection('shipment')
                 .orderBy('dateSubmitted', 'asc')
