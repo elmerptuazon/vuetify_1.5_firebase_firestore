@@ -64,6 +64,15 @@ const distributors = {
                             ) {
                                 change.isRead = false;
                                 state.resellersList.unshift(change);
+                            
+                            } else if(change.type === 'modified') {
+                                const index = state.resellersList.findIndex((reseller) => {
+                                    return reseller.id === change.id
+                                });
+                                if(index !== -1) {
+                                    state.resellersList[index] = change;
+                                    dispatch('conversations/listenToConversations', null, {root:true});
+                                }
                             }
 
                             delete change.type;
