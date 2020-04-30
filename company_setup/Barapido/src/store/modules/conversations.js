@@ -44,12 +44,7 @@ const messages = {
 					  { root: true }
 					);
 					
-					//only push conversations with approved resellers
-					if(data.user.status.toLowerCase() !== 'pending' 
-						&& data.user.status.toLowerCase() !== 'denied') 
-					{
-						state.conversationsList.push(data);
-					}
+					state.conversationsList.push(data);
 
 				  } else if (change.type === "modified") {
 					const conversationIndex = state.conversationsList.findIndex(

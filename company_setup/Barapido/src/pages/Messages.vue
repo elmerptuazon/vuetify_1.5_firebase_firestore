@@ -399,7 +399,8 @@ export default {
   computed: {
     items() {
       const keyword = this.search.toLowerCase();
-      const conversations = this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];
+      let conversations = this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];
+      conversations = conversations.filter((convo) => convo.user.status.toLowerCase() === 'approved');
       
       const filteredConvo = conversations.filter((convo) => {
         let userFullname = `${convo.user.firstName} ${convo.user.middleInitial} ${convo.user.lastName}`;
