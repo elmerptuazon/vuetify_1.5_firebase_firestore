@@ -36,7 +36,7 @@
                     height="1"
                     single-line
                     class="px-2 mt-2"
-                    placeholder="search conversation..."
+                    placeholder="search reseller..."
                     prepend-inner-icon="search"
                   ></v-text-field>
                 </v-flex>
@@ -399,7 +399,9 @@ export default {
   computed: {
     items() {
       let conversations = this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];
-      
+      conversations = conversations.filter(convo => convo.user.status.toLowerCase() === 'approved');
+      console.log('conversations: ', conversations);
+
       let filteredConvo = [];
       if(this.search) {
         const keyword = this.search.toLowerCase();
@@ -413,7 +415,7 @@ export default {
         });
       }
 
-      if(!filteredConvo.length && keyword) {
+      if(!filteredConvo.length && this.search) {
         return [];
       }
 
