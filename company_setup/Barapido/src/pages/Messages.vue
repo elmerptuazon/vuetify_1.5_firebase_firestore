@@ -248,9 +248,9 @@ export default {
 
       this.search = '';
 
-      await this.$store.dispatch("conversations/listenToNewMessages", item);
       await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
-
+      await this.$store.dispatch("conversations/listenToNewMessages", item);
+      
       this.scrollDown();
       this.loading = false;
       
@@ -374,7 +374,7 @@ export default {
 
         setTimeout(() => {
           this.scrollDown();
-        }, 1000);
+        }, 250);
       }
     },
 
@@ -398,17 +398,20 @@ export default {
   // },
   computed: {
     items() {
-      const keyword = this.search.toLowerCase();
       let conversations = this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];
-      conversations = conversations.filter((convo) => convo.user.status.toLowerCase() === 'approved');
       
-      const filteredConvo = conversations.filter((convo) => {
-        let userFullname = `${convo.user.firstName} ${convo.user.middleInitial} ${convo.user.lastName}`;
-        userFullname = userFullname.toLowerCase();
-        if(userFullname.includes(keyword)) {
-          return convo;
-        }
-      });
+      let filteredConvo = [];
+      if(this.search) {
+        const keyword = this.search.toLowerCase();
+        filteredConvo = conversations.filter((convo) => {
+          let userFullname = `${convo.user.firstName} ${convo.user.middleInitial} ${convo.user.lastName}`;
+          userFullname = userFullname.toLowerCase();
+          
+          if(userFullname.includes(keyword)) {
+            return convo;
+          }
+        });
+      }
 
       if(!filteredConvo.length && keyword) {
         return [];
