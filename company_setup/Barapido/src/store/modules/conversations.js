@@ -9,13 +9,16 @@ const messages = {
 		messagesList: [],
 	},
 	getters: {
-		GET_CONVERSATIONS_LIST: state => state.conversationsList,
+		GET_CONVERSATIONS_LIST(state) {
+			return state.conversationsList;
+		},
 		GET_MESSAGES_LIST: state => state.messagesList,
 		GET_NEW_MESSAGES_COUNT(state) {
 			//filter the conversationsList array with conversation that is not yet opened by the admin
-			const unreadConversations = state.conversationsList.filter(
-				(conversation) => conversation.opened.admin === false
-			);
+			const unreadConversations = state.conversationsList.filter((conversation) => {
+					return conversation.opened.admin === false 
+						&& conversation.user.status.toLowerCase() === 'approved'; 
+			});
 			return unreadConversations.length;
 		}
 	},
@@ -47,13 +50,19 @@ const messages = {
 					state.conversationsList.push(data);
 
 				  } else if (change.type === "modified") {
+					const userIndex = data.users.findIndex(u => u !== user.id);
+					data.user = await dispatch(
+					  "auth/GET_USER",
+					  data.users[userIndex],
+					  { root: true }
+					);
+					
 					const conversationIndex = state.conversationsList.findIndex(
 					  c => c.id === data.id
 					);
 
 					if (conversationIndex !== -1) {
-						state.conversationsList[conversationIndex].updated = data.updated;
-						state.conversationsList[conversationIndex].opened = data.opened;
+						state.conversationsList[conversationIndex] = data;
 					}
 				  }
 				});
