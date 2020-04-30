@@ -434,10 +434,20 @@ export default {
     rebookBtn: false,
     cancelBtn: false,
   }),
-  created() {
-    //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
-    this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
+  computed: {
+    shipmentList() {
+      const shipments = this.$store.getters['shipment/GET_SHIPMENTS'];
+      const shipmentsInStockOrder = shipments.filter((shipment) => {
+        return shipment.stockOrder.stockOrderId === this.stockOrderId;
+      });
+
+      return shipmentsInStockOrder;
+    },
   },
+  // created() {
+  //   //run vuex to get corresponding shipment details for a stockOrder via the stockOrderId
+  //   this.$store.dispatch("shipment/GetShipments", this.stockOrderId);
+  // },
   methods: {
     async refreshShipmentStatus(shipment) {
       this.statusBtn = true;
@@ -479,16 +489,16 @@ export default {
             }
           });
 
-          //if the new lalamove status is picked_up, then increment the shipmentsToReceive counter in DB
-          if(response.status.toLowerCase() === 'picked_up') {
-            const shipmentIncrement =  FB.firestore.FieldValue.increment(1);
-            await this.$store.dispatch("stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-              {
-                updateObject: { shipmentsToReceive: shipmentIncrement },
-                referenceID: this.stockOrderId
-              }
-            ); 
-          }
+          // //if the new lalamove status is picked_up, then increment the shipmentsToReceive counter in DB
+          // if(response.status.toLowerCase() === 'picked_up') {
+          //   const shipmentIncrement =  FB.firestore.FieldValue.increment(1);
+          //   await this.$store.dispatch("stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+          //     {
+          //       updateObject: { shipmentsToReceive: shipmentIncrement },
+          //       referenceID: this.stockOrderId
+          //     }
+          //   ); 
+          // }
         }
       }
       catch(error) {
@@ -552,10 +562,12 @@ export default {
         });
 
         await this.refreshShipmentStatus(this.rebookShipment);
-         delete this.rebookShipment.pickupTime;
+        delete this.rebookShipment.pickupTime;
         this.rebookShipment = {};
       }
       catch(error) {
+        console.log(error);
+
         this.rebookBtn = false;
         this.rebookDialog = false;
         this.rebookShipment = {};
@@ -640,19 +652,19 @@ export default {
       try {
         await this.$store.dispatch("shipment/UpdateShipment", updateObj);
 
-        if(this.stockOrder.shipmentsToReceive > 0) {
-          let stockOrderUpdateObj = {
-            referenceID: shipment.stockOrder.stockOrderId,
-            updateObject: {
-              shipmentsToReceive: FB.firestore.FieldValue.increment(-1)
-            }
-          };
+        // if(this.stockOrder.shipmentsToReceive > 0) {
+        //   let stockOrderUpdateObj = {
+        //     referenceID: shipment.stockOrder.stockOrderId,
+        //     updateObject: {
+        //       shipmentsToReceive: FB.firestore.FieldValue.increment(-1)
+        //     }
+        //   };
 
-          await this.$store.dispatch(
-            "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-            stockOrderUpdateObj
-          );
-        }
+        //   await this.$store.dispatch(
+        //     "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+        //     stockOrderUpdateObj
+        //   );
+        // }
         
         this.$swal.fire({
           type: "success",
@@ -1002,10 +1014,5 @@ export default {
     }
   },
   mixins: [mixins],
-  computed: {
-    ...mapState("shipment", {
-      shipmentList: state => state.shipmentList
-    })
-  }
 };
 </script>
