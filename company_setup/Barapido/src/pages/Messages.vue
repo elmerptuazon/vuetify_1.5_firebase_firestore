@@ -156,6 +156,7 @@
               <v-textarea
                 prepend-inner-icon="insert_photo"
                 @click:prepend-inner="$refs.file.click()"
+                @focus="markConvoAsRead"
                 v-model="text"
                 placeholder="Type a message..."
                 hint='Press "enter" to send this message..."shift" + "enter" to insert new line'
@@ -235,6 +236,10 @@ export default {
     // this.conversationsLoading = false;
   },
   methods: {
+    async markConvoAsRead() {
+      await this.$store.dispatch("conversations/OPEN_UNREAD", this.selectedConversation.id);
+    },
+
     async viewConversation(item) {
       console.log(item);
 
@@ -248,8 +253,8 @@ export default {
 
       this.search = '';
 
-      await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
       await this.$store.dispatch("conversations/listenToNewMessages", item);
+      await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
       
       this.scrollDown();
       this.loading = false;
