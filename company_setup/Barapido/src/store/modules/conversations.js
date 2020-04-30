@@ -14,18 +14,37 @@ const messages = {
 		},
 		GET_MESSAGES_LIST: state => state.messagesList,
 		GET_NEW_MESSAGES_COUNT(state) {
+			const conversations = state.conversationsList.filter(convo => convo.user.status === 'approved');
 			//filter the conversationsList array with conversation that is not yet opened by the admin
-			const unreadConversations = state.conversationsList.filter((conversation) => {
-					return conversation.opened.admin === false 
-						&& conversation.user.status.toLowerCase() === 'approved'; 
+			const unreadConversations = conversations.filter((conversation) => {
+					return conversation.opened.admin === false;
 			});
 			return unreadConversations.length;
 		}
 	},
 	mutations: {
+		AddToConversations(state, payload) {
+			state.conversationsList.push(payload);
+			console.log('added convo', payload);
+		},
+		RemoveToConversations(state, payload) {
+			const index = state.conversationsList.findIndex(convo => convo.id === payload.id);
+			if(index !== -1) {
+				state.conversationsList.splice(index, 1);
+			}
+		},
+		UpdateToConversations(state, payload) {
+			const index = state.conversationsList.findIndex(convo => convo.id === payload.id);
+			if(index !== -1) {
+				Object.keys(payload).forEach((key) => {
+					state.conversationsList[index][key] = payload[key];
+				});
+				console.log('modified convo: ', payload);
+			}
+		}
 	},
 	actions: {
-		async listenToConversations({ state, rootState, dispatch }) {
+		async listenToConversations({ state, rootState, dispatch, commit }) {
 			console.log('listening to conversations');
 			const user = rootState.auth.user;
 			state.conversationsList = [];
@@ -47,7 +66,7 @@ const messages = {
 					  { root: true }
 					);
 					
-					state.conversationsList.push(data);
+					commit('AddToConversations', data);
 
 				  } else if (change.type === "modified") {
 					const userIndex = data.users.findIndex(u => u !== user.id);
@@ -56,14 +75,8 @@ const messages = {
 					  data.users[userIndex],
 					  { root: true }
 					);
-					
-					const conversationIndex = state.conversationsList.findIndex(
-					  c => c.id === data.id
-					);
 
-					if (conversationIndex !== -1) {
-						state.conversationsList[conversationIndex] = data;
-					}
+					commit('UpdateToConversations', data);
 				  }
 				});
 			});
