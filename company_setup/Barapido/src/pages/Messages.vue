@@ -27,6 +27,26 @@
         <v-layout row wrap v-else>
           <v-flex xs5>
             <div id="conversation-container">
+              <v-layout my-1 align-center justify-center wrap>
+                <v-flex xs12 mt-2>
+                  <v-text-field
+                    v-model="search"
+                    clearable
+                    outline dense
+                    height="1"
+                    single-line
+                    class="px-2 mt-2"
+                    placeholder="search reseller..."
+                    prepend-inner-icon="search"
+                  ></v-text-field>
+                </v-flex>
+                <v-flex xs12><v-divider></v-divider></v-flex>
+                <v-flex xs12 mt-3 v-if="!items.length && search">
+                  <div class="subheading red--text text-xs-center font-weight-bold">
+                    No user is related to your search...
+                  </div>
+                </v-flex>
+              </v-layout>
               <v-list class="pa-0">
                 <template v-for="i in orderBy(items, 'updated', -1)">
                   <v-list-tile
@@ -136,6 +156,7 @@
               <v-textarea
                 prepend-inner-icon="insert_photo"
                 @click:prepend-inner="$refs.file.click()"
+                @focus="markConvoAsRead"
                 v-model="text"
                 placeholder="Type a message..."
                 hint='Press "enter" to send this message..."shift" + "enter" to insert new line'
@@ -181,6 +202,7 @@ export default {
     // items: [],
     selectedConversation: {},
     loading: false,
+    search: '',
     // messages: [],
     text: null,
     conversationsLoaded: false,
@@ -214,6 +236,10 @@ export default {
     // this.conversationsLoading = false;
   },
   methods: {
+    async markConvoAsRead() {
+      await this.$store.dispatch("conversations/OPEN_UNREAD", this.selectedConversation.id);
+    },
+
     async viewConversation(item) {
       console.log(item);
 
@@ -225,9 +251,11 @@ export default {
       this.selectedConversation = item;
       this.loading = true;
 
+      this.search = '';
+
       await this.$store.dispatch("conversations/listenToNewMessages", item);
       await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
-
+      
       this.scrollDown();
       this.loading = false;
       
@@ -351,7 +379,7 @@ export default {
 
         setTimeout(() => {
           this.scrollDown();
-        }, 1000);
+        }, 250);
       }
     },
 
@@ -375,7 +403,28 @@ export default {
   // },
   computed: {
     items() {
-      return this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];
+      let conversations = this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];
+      conversations = conversations.filter(convo => convo.user.status.toLowerCase() === 'approved');
+      console.log('conversations: ', conversations);
+
+      let filteredConvo = [];
+      if(this.search) {
+        const keyword = this.search.toLowerCase();
+        filteredConvo = conversations.filter((convo) => {
+          let userFullname = `${convo.user.firstName} ${convo.user.middleInitial} ${convo.user.lastName}`;
+          userFullname = userFullname.toLowerCase();
+          
+          if(userFullname.includes(keyword)) {
+            return convo;
+          }
+        });
+      }
+
+      if(!filteredConvo.length && this.search) {
+        return [];
+      }
+
+      return filteredConvo.length ? filteredConvo : conversations;
     },
     messages() {
       const list = this.$store.getters['conversations/GET_MESSAGES_LIST'];
