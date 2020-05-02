@@ -46,25 +46,74 @@
                 </v-tooltip>
               </template>
 
-              <template slot="items" slot-scope="props">
+              <template v-slot:items="props">
                 <tr 
                   :class="[ 
-                    props.item.availableQTY <= props.item.reOrderLevel ? 'red lighten-3' : '',
+                    props.item.position === 1 ? 'red lighten-3' : '',
                   ]"
                 >
                   <td class="text-xs-left">{{props.item.name}}</td>
                   <td class="text-xs-left">{{props.item.category}}</td>
-                  <td class="text-xs-center">{{props.item.onHandQTY}}</td>
+                  <td class="text-xs-center">
+                    <v-edit-dialog
+                      :return-value.sync="props.item.onHandQTY"
+                      large lazy
+                      @save="updateQTY('onHandQTY', props.item)" 
+                    >
+                      <div class="ml-4">
+                        {{props.item.onHandQTY}}
+                        <v-icon small class="ml-4">edit</v-icon>
+                      </div>
+
+                      <template v-slot:input>
+                        <div class="mt-3 title">Update QTY on Hand</div>
+                      </template>
+                      <template v-slot:input>
+                        <v-text-field
+                          v-model="props.item.onHandQTY"
+                          label='Edit QTY on Hand'
+                          class="mt-4" type="number"
+                          :loading="textfieldLoading"
+                          :disabled="textfieldLoading"
+                        ></v-text-field>
+                      </template>
+                    </v-edit-dialog>
+                  </td>
                   <td class="text-xs-center">{{props.item.allocatedQTY}}</td>
                   <td class="text-xs-center">{{props.item.availableQTY}}</td>
-                  <td class="text-xs-center">{{props.item.reOrderLevel}}</td>
+                  <td class="text-xs-center">
+                    <v-edit-dialog
+                      :return-value.sync="props.item.reOrderLevel"
+                      large lazy
+                      @save="updateQTY('reOrderLevel', props.item)" 
+                    >
+                      <div class="ml-4">
+                        {{props.item.reOrderLevel}}
+                        <v-icon small class="ml-4">edit</v-icon>
+                      </div>
+
+                      <template v-slot:input>
+                        <div class="mt-3 title">Update Re-Order Notification Level</div>
+                      </template>
+                      <template v-slot:input>
+                        <v-text-field
+                          class="mt-4"
+                          v-model="props.item.reOrderLevel"
+                          label="Edit Re-Order Notification Level"
+                          type="number"
+                          :loading="textfieldLoading"
+                          :disabled="textfieldLoading"
+                        ></v-text-field>
+                      </template>
+                    </v-edit-dialog>
+                  </td>
                   <td class="pt-4">
-                    <v-checkbox 
+                    <v-checkbox
                       class="ml-4"
-                      v-model="props.item.isOutOfStock"
+                      @change="markAsOutOfStock(props.item)"
+                      v-model="props.item.isOutofStock"
                     ></v-checkbox>
                   </td>
-                  <v-divider></v-divider>
                 </tr>
               </template>
             </v-data-table>  
@@ -72,6 +121,12 @@
         </v-card>
       </v-flex>
     </v-layout>
+
+    <v-snackbar v-model="snack" :timeout="4000" :color="snackColor">
+      {{ snackText }}
+      <v-btn flat @click="snack = false">Close</v-btn>
+    </v-snackbar>
+
   </v-container>
 </template>
 
@@ -89,6 +144,7 @@ export default {
   },
   data: () => ({
     loading: false,
+    textfieldLoading: false,
     search: null,
     headers: [
       {
@@ -133,43 +189,124 @@ export default {
     ],
 
     pagination: {
-      sortBy: 'availableQTY',
+      sortBy: 'position',
     },
     rowsPerPageItems: [10, 20, 50, {text: 'All', value: -1}],
+
+    snack: false,
+    snackText: '',
+    snackColor: 'primary',
+
   }),
 
   computed: {
+    items() {
+      return this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+    },
+
     products() {
-      const products = this.$store.getters['inventory/GET_ALL_PRODUCTS'];
-      const modifiedProducts = products.map((product) => {
-        const modifiedProduct = {
-          id: product.id,
-          name: product.name,
-          category: product.category,
-          onHandQTY: product.onHandQTY || 0,
-          allocatedQTY: product.allocatedQTY || 0,
-          availableQTY: product.availableQTY || 0,
-          reOrderLevel: product.reOrderLevel || 0,
-          isOutOfStock: product.isOutofStock,
+      this.loading = true;
+      const products = this.items;
+      let modifiedProducts = [];
+      modifiedProducts = products.map((product) => {
+        const modifiedProduct = {};
+
+        modifiedProduct.id = product.id;
+        modifiedProduct.name = product.name;
+        modifiedProduct.category = product.category;
+
+        modifiedProduct.onHandQTY = product.onHandQTY;
+        modifiedProduct.allocatedQTY = product.allocatedQTY;
+        modifiedProduct.availableQTY = parseInt(modifiedProduct.onHandQTY) - parseInt(modifiedProduct.allocatedQTY);
+        modifiedProduct.reOrderLevel = product.reOrderLevel;
+        modifiedProduct.isOutofStock = product.isOutofStock;
+
+        if(product.isOutofStock || modifiedProduct.availableQTY <= modifiedProduct.reOrderLevel) {
+          modifiedProduct.position = 1;
+        
+        } else {
+          modifiedProduct.position = 2;
         }
+
+        if(modifiedProduct.availableQTY === 0) {
+          modifiedProduct.isOutofStock = true;
+        }
+        
         return modifiedProduct;
       });
+
+      this.loading = false;
       return modifiedProducts;
     }
   },
 
-  methods: {
+  watch: {
     
   },
 
-  watch: {
-    products(val) {
-      if(val.length < 5) {
-        this.loading = true;
-      
-      } else this.loading = false;
-    }
+  methods: {
+    async updateQTY(QTYtype, product) {
+      this.textfieldLoading = true;
+      console.log('quantity type: ', QTYtype);
+      console.log('updating product: ', product);
+
+      try {
+
+        await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+          id: product.id,
+          key: QTYtype,
+          value: Number(product[QTYtype])
+        });
+
+        if(product.allocatedQTY === 0 || !product.allocatedQTY) {
+          await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+            id: product.id,
+            key: 'allocatedQTY',
+            value: 0
+          });
+        }
+
+        this.snack = true;
+        this.snackText = `${product.name} was successfully updated!`;
+        this.snackColor="primary";
+        this.textfieldLoading = false;
+
+      } catch(error) {
+        console.log('inventory management error: ', error.response);
+        this.snack = true;
+        this.snackText = `${product.name} was not updated due to error!`;
+        this.snackColor="red";
+        this.textfieldLoading = false;
+      }
+    },
+    async markAsOutOfStock(product) {
+      this.loading = true;
+      console.log('updating product: ', product);
+
+      try {
+        await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+          id: product.id,
+          key: 'isOutofStock',
+          value: product.isOutofStock
+        });
+
+        this.snack = true;
+        this.snackText = `${product.name} was successfully updated!`;
+        this.snackColor="primary";
+        this.textfieldLoading = false;
+
+      } catch(error) {
+        console.log('inventory management error: ', error.response);
+        this.snack = true;
+        this.snackText = `${product.name} was not updated due to error!`;
+        this.snackColor="red";
+        this.textfieldLoading = false;
+      }
+
+      this.loading = false;
+    },
   },
+
 }
 </script>
 
