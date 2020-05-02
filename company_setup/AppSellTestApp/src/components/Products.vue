@@ -239,10 +239,6 @@
                   :rules="decimalOnlyRules"
                   v-model="product.weight"
                 ></v-text-field>
-                <v-checkbox
-                  v-model="product.isOutofStock"
-                  :label="'Out of stock?'"
-                ></v-checkbox>
               </div>
             </v-card>
 
@@ -714,7 +710,7 @@ export default {
             price: this.product.price,
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
-            isOutofStock: this.product.isOutofStock || false,
+            isOutofStock: this.product.isOutofStock,
             weight: Number(this.product.weight),
             //uid: null
             attributes: this.product.attributes,
@@ -809,7 +805,6 @@ export default {
           price: this.product.price,
           resellerPrice: this.product.resellerPrice,
           //promotion: this.product.promotion,
-          isOutofStock: this.product.isOutofStock || null,
           weight: Number(this.product.weight),
           //uid: null
           downloadURL: this.product.downloadURL || null,
