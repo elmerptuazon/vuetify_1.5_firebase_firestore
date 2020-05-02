@@ -9,7 +9,16 @@ const inventory = {
     getters: {
         GET_ALL_PRODUCTS: state => state.products,
         GET_INVENTORY_NOTIF(state) {
-            return state.products.length;
+            let productsWithNotif = 0;
+            state.products.forEach(product => {
+                const availableQTY = parseInt(product.onHandQTY || 0) - parseInt(product.allocatedQTY || 0);
+                
+                if(product.isOutofStock || availableQTY <= product.reOrderLevel) {
+                    productsWithNotif += 1;
+                }
+            });
+
+            return productsWithNotif;
         }
     },
     mutations: {
@@ -44,7 +53,7 @@ const inventory = {
 
                 changes.forEach((change) => {
                     let data = change.doc.data();
-                    data.id = change.doc.id;
+                    data.id = change.doc.id; 
 
                     switch(change.type) {
                         case 'added': {
@@ -87,6 +96,21 @@ const inventory = {
         UNSUBSCRIBE_TO_PRODUCT_STATS({state}) {
             if(state.subscriber) {
                 state.subscriber();
+            }
+        },
+
+        async UPDATE_PRODUCT_DETAIL({}, payload) {
+            const { id, key, value } = payload;
+            try {
+                await DB.collection('products').doc(id).update({ [key]: value });
+
+                return {
+                    isSuccessful: true
+                };
+            
+            } catch(error) {
+                console.log(error);
+                throw error;
             }
         }
 
