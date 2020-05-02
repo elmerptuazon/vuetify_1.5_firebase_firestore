@@ -10,11 +10,25 @@ const distributors = {
         GET_RESELLERS_LIST: state => state.resellersList,
 
         //get the length of the filtered resellerList array of resellers who are pending and not yet been read.
-        GET_NEW_RESELLER_COUNT: state => state.resellersList.filter((reseller) => !reseller.isRead).length
+        GET_NEW_RESELLER_COUNT(state) {
+            const unreadReseller = state.resellersList.filter((reseller) => !reseller.isRead || !reseller.hasOwnProperty('isRead'));
+            return unreadReseller.length;
+        } 
     },
     mutations: {
         SET_RESELLERS_LIST(state, payload) {
             state.resellersList = payload;
+        },
+        ADD_RESELLER(state, payload) {
+            state.resellersList.push(payload);
+        },
+        UPDATE_RESELLER(state, payload) {
+            const index = state.resellersList.findIndex(reseller => reseller.id === payload.id);
+            if(index !== -1) {
+                Object.keys(payload).forEach(key => {
+                    state.resellersList[index][key] = payload[key];
+                });
+            }
         }
     },
     actions: {
@@ -63,13 +77,23 @@ const distributors = {
                                 && (!change.isRead || !change.hasOwnProperty('isRead'))
                             ) {
                                 change.isRead = false;
-                                state.resellersList.unshift(change);
+                                delete change.type;
+                                console.log('added reseller: ', change);
+                                // commit('ADD_RESELLER', change);
+                                state.resellersList.push(change);
+                            
+                            } else if(change.type === 'modified') {
+                                delete change.type;
+                                // commit('UPDATE_RESELLER', change);
+                                const index = state.resellersList.findIndex(reseller => reseller.id === change.id);
+                                if(index !== -1) {
+                                    state.resellersList[index] = Object.assign({}, change);
+                                    console.log('modified reseller: ', change);
+                                    dispatch('conversations/listenToConversations', null, {root:true});
+                                }
                             }
-
-                            delete change.type;
                         })
                     } 
-
                 })
 
             if(accountsToModify.length) {
