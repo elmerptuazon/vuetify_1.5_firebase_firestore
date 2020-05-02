@@ -258,14 +258,6 @@ export default {
           value: Number(product[QTYtype])
         });
 
-        if(product.allocatedQTY === 0 || !product.allocatedQTY) {
-          await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
-            id: product.id,
-            key: 'allocatedQTY',
-            value: 0
-          });
-        }
-
         this.snack = true;
         this.snackText = `${product.name} was successfully updated!`;
         this.snackColor="primary";
