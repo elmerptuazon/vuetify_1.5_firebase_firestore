@@ -139,7 +139,7 @@ export default {
   mixins: [mixins],
   async mounted() {
     this.loading = true;
-    this.lading = false;
+    this.loading = false;
     
   },
   data: () => ({
