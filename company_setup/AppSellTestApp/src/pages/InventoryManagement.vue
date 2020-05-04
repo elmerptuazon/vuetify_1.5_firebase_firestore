@@ -159,7 +159,7 @@ export default {
         text: 'QTY on Hand', align: 'center', value: 'onHandQTY',
         description: 
           'When you receive or produce inventory, add that number to this total. ' + 
-          'When these items leave your warehouse, they are automatically subtracted.'
+          'When these items leave your stock they are automatically subtracted '
       },
       {
         text: 'QTY Allocated', align: 'center', value: 'allocatedQTY',
