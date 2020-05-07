@@ -169,19 +169,14 @@ export default {
     statuses: [],
     statusType: ['Unread', 'Pending', 'Processing', 'Partially Shipped', 'Fully Shipped', 'Cancelled'],
   }),
-  async created() {
-    this.loading = true;
-    // try {
-    //   const data = await this.$store.dispatch("stock_orders/FIND");
-    //   this.items = data.map(order => {
-    //     console.log(order);
-    //     order.discountedTotal = this.applyDiscount(order.resellerPrice);
-    //     return order;
-    //   });
-    // } catch (error) {
-    //   console.log(error);
-    // }
-    this.loading = false;
+  async mounted() {
+    
+  },
+  watch: {
+    items(arr) {
+      if(arr.length) this.loading = false;
+      else this.loading = true;
+    }
   },
   methods: {
     async view(item) {
