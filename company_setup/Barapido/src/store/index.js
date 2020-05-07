@@ -13,6 +13,8 @@ import stock_orders from './modules/stock-orders';
 import users from './modules/users';
 import shipment from './modules/shipment';
 import delivery_settings from './modules/delivery-settings';
+import articles from './modules/articles';
+
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -63,6 +65,11 @@ export default new Vuex.Store({
 				url: 'Messages',
 			},
 			{
+				icon: 'chrome_reader_mode',
+				text: 'Articles',
+				url: 'Articles',
+			},
+			{
 				icon: 'contact_support',
 				text: 'Support',
 				url: 'Support',
@@ -89,6 +96,7 @@ export default new Vuex.Store({
 		stock_orders,
 		users,
 		shipment,
-		delivery_settings
+		delivery_settings,
+		articles
 	}
 })

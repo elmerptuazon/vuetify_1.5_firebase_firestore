@@ -13,8 +13,8 @@
             v-if="item.children"
             v-model="item.model"
             :key="item.text"
-            :prepend-icon="item.model ? item.icon : item['icon-alt']"
-            append-icon=""
+            :append-icon="item.model ? item.icon : item['icon-alt']"
+            prepend-icon="assignment"
           >
             <v-list-tile slot="activator">
               <v-list-tile-content>
@@ -28,14 +28,14 @@
               :key="i"
               :to="{ name: child.url }"
             >
-              <v-list-tile-action v-if="child.icon">
-                <v-icon>{{ child.icon }}</v-icon>
-              </v-list-tile-action>
-              <v-list-tile-content>
-                <v-list-tile-title>
+              <v-list-tile-content class="px-2 font-weight-light">
+                <v-list-tile-title class="pl-5">
                   {{ child.text }}
                 </v-list-tile-title>
               </v-list-tile-content>
+              <v-list-tile-action v-if="child.icon">
+                <v-icon>{{ child.icon }}</v-icon>
+              </v-list-tile-action>
             </v-list-tile>
           </v-list-group>
           <v-list-tile 
@@ -52,9 +52,9 @@
                   <v-flex xs10>
                     {{ item.text }}
                   </v-flex>
-                  <v-flex xs2 >
-                    <v-avatar color="red" size="20" dark v-show="newStockOrdersCount">
-                      <div class="overline white--text">{{ newStockOrdersCount}}</div>
+                  <v-flex xs2>
+                    <v-avatar color="red" size="22" dark v-show="newStockOrdersCount">
+                      <div class="overline font-weight-regular white--text">{{ newStockOrdersCount}}</div>
                     </v-avatar>
                   </v-flex>
                 </v-layout>
@@ -76,8 +76,8 @@
                     {{ item.text }}
                   </v-flex>
                   <v-flex xs2 >
-                    <v-avatar color="red" size="20" dark v-show="newRegistrations">
-                      <div class="overline white--text">{{ newRegistrations }}</div>
+                    <v-avatar color="red" size="22" dark v-show="newRegistrations">
+                      <div class="overline white--text font-weight-regular">{{ newRegistrations }}</div>
                     </v-avatar>
                   </v-flex>
                 </v-layout>
@@ -99,7 +99,7 @@
                     {{ item.text }}
                   </v-flex>
                   <v-flex xs2 >
-                    <v-avatar color="red" size="20" dark v-show="newMessagesCount">
+                    <v-avatar color="red" size="22" dark v-show="newMessagesCount">
                       <div class="overline white--text">{{ newMessagesCount }}</div>
                     </v-avatar>
                   </v-flex>

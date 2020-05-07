@@ -105,7 +105,7 @@
             <td class="text-xs-center">{{ props.item.name }}</td>
             <td class="text-xs-center">{{ props.item.totalProducts }}</td>
             <td class="text-xs-center">
-              {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
+              {{ props.item.created | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-center">
               <a @click.prevent="updatePosition(props.item)">{{
@@ -357,7 +357,7 @@ export default {
   },
   data: () => ({
     pagination: {
-      sortBy: "name"
+      sortBy: "position"
     },
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
@@ -378,7 +378,7 @@ export default {
       },
       {
         text: "Date added",
-        value: "createdAt"
+        value: "created"
       },
       {
         text: "Display Position",
