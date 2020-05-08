@@ -52,7 +52,7 @@ const stock_orders = {
 
 					changes = changes.map((change) => {
 
-                        console.log(change);
+                        // console.log(change);
                         
                         let data = change.doc.data();
                         data.id = change.doc.id;
@@ -67,7 +67,9 @@ const stock_orders = {
                             dispatch('auth/GET_USER', data.userId, { root: true })
                                 .then((res) => {
                                     data.user = res;
-                                    fetchedUsers.push(data.user);
+                                    if(res !== null) {
+                                        fetchedUsers.push(data.user);
+                                    }
                                 })
                                 .catch(error => {
                                     console.log('stock orders listening: ', error);
@@ -94,11 +96,10 @@ const stock_orders = {
                     });
                     
                     console.log('CHANGES IN STOCKORDER: ', changes);
-                    let newOrderCounter = 0;
 
-                    if(!state.stockOrderList || !state.stockOrderList.length) {
+                    if(!state.stockOrderList.length) {
                         commit('SET_STOCK_ORDER_LIST', changes);
-
+                    
                     } else {
                         changes.forEach(change => {
                             //dont add the document that is due to an update on the 'status' field of an existing order
@@ -106,18 +107,19 @@ const stock_orders = {
                                 change.type === 'added' && (!change.isRead || !change.hasOwnProperty('isRead'))
                             ) {
                                 change.isRead = false;
+                                delete change.type;
                                 state.stockOrderList.unshift(change);
-                                // newOrderCounter++;
+                            
+                            } else if(change.type === 'modified') {
+                                delete change.type;
+                                const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === change.id);
+                                if(index !== -1) {
+                                    state.stockOrderList[index] = Object.assign({}, change);
+                                }
                             }
-                                
-                            delete change.type;
-                            // state.newOrderCount = newOrderCounter;
                         });
-                        
                     }
-                    
-                    // state.newOrderCount = newOrderCounter;
-                    console.log('new orders count: ', state.newOrderCount);
+
 				});
 		},
 
