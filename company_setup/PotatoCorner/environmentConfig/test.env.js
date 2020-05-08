@@ -3,13 +3,13 @@ var devEnv = require('./dev.env')
 
 module.exports = merge(devEnv, {
   NODE_ENV: '"testing"',
-  apiKey: '"AIzaSyDAxQ8dvBH2CQNkvoFuklqVRV76KaRyKJ0"',
-  authDomain: '"appselltestapp.firebaseapp.com"',
-  databaseURL: '"https://appselltestapp.firebaseio.com"',
-  projectId: '"appselltestapp"',
-  storageBucket: '"appselltestapp.appspot.com"',
-  messagingSenderId: '"671506060709"',
-  appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
-  measurementId: '"G-XV2JER7LNT"',
-  primaryColor: '"#0E1E38"',
+  apiKey: '"AIzaSyA1p43Hys8LeHoqINSFOItJDEHLmggy4C4"',
+  authDomain: '"potatocornerdev.firebaseapp.com"',
+  databaseURL: '"https://potatocornerdev.firebaseio.com"',
+  projectId: '"potatocornerdev"',
+  storageBucket: '"potatocornerdev.appspot.com"',
+  messagingSenderId: '"846971526982"',
+  appId: '"1:846971526982:web:027bf465e5be6cc53e8f47"',
+  storageCode: '"PotatoCorner"',
+  primaryColor: '"#119247"',
 })
