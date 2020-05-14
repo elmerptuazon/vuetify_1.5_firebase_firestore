@@ -34,9 +34,9 @@
         v-model="selected"
         :headers="headers"
         :items="items"
+        item-key="name"
         select-all
         :pagination.sync="pagination"
-        item-key="name"
         class="elevation-1"
         :loading="items.length === 0"
         :search="search"
@@ -247,10 +247,13 @@
                 Attributes
               </v-card-title>
               <v-divider></v-divider>
-              <v-layout row v-if="!product.attributes.length" px-3>
-                <p class="font-italic text-center">
+              <v-layout row wrap v-if="!product.attributes.length" px-3 mt-2>
+                <p class="font-italic text-xs-center red--text">
                   There is no attributes in this products
                 </p>
+                <v-flex xs12>
+                  <v-divider class="my-2 primary" />
+                </v-flex>
               </v-layout>
 
               <v-layout
@@ -268,8 +271,8 @@
                   <div class="font-weight-bold caption">{{ attrib.name }}</div>
                 </v-flex>
                 <v-flex xs4>
-                  <div class="caption" v-for="item in attrib.items" :key="item">
-                    {{ item }}
+                  <div class="caption" v-for="item in attrib.items" :key="item.sku">
+                    {{ item.sku }} - {{ item.name }}
                   </div>
                 </v-flex>
                 <v-flex xs4>
@@ -301,24 +304,96 @@
                 </v-flex>
               </v-layout>
 
-              <v-layout row wrap align-center justify-end mt-1 pa-3>
+              <v-layout row wrap align-center justify-start mt-3 pa-3>
                 <v-flex xs12 mb-1>
                   <div class="font-weight-bold">Add Product Attribute</div>
                 </v-flex>
-                <v-flex xs12>
+                <v-flex xs12 mt-2>
                   <v-text-field
                     label="Attribute Name"
-                    placeholder="Ex: Color, Size, etc..."
+                    placeholder="Ex: Color, Size, Weight, etc..."
                     v-model="tempAttribName"
                   ></v-text-field>
                 </v-flex>
 
                 <v-flex xs12>
-                  <v-text-field
-                    label="Attribute Item"
-                    placeholder="Seperate each item with a comma. Ex: Blue, Red"
-                    v-model="tempAttribItems"
-                  ></v-text-field>
+                  <v-data-iterator
+                    :items="tempAttribItems"
+                    item-key="sku"
+                    hide-actions
+                    content-tag="v-layout" row wrap
+                    content-class="align-center justify-start"
+                  >
+
+                    <template v-slot:item="props">
+                      <v-flex xs2 mr-4>
+                        <v-text-field
+                          v-model="props.item.sku"
+                          label="SKU"
+                        ></v-text-field>
+                      </v-flex>
+                      <v-flex xs2 mr-3>
+                        <v-text-field
+                          v-model="props.item.name"
+                          label="Name"
+                        ></v-text-field>
+                      </v-flex>
+                      <v-flex xs2 mr-4>
+                        <v-text-field
+                          v-model="props.item.weight"
+                          label="Weight"
+                          suffix="g"
+                          type="number"
+                        ></v-text-field>
+                      </v-flex>
+                      <v-flex xs2 mr-4>
+                        <v-text-field
+                          v-model="props.item.price"
+                          label="Price"
+                          prefix="PHP"
+                          type="number"
+                        ></v-text-field>
+                      </v-flex>
+                      <v-flex xs1 v-if="!props.item.hasOwnProperty('toggleEdit')"> 
+                        <v-tooltip top>
+                          <template v-slot:activator="{on}">
+                            <v-btn 
+                              icon small color="primary" dark 
+                              v-on="on" @click="addVariant(props.item)"
+                              :disabled="isVariantsFieldBlank(props.item)"
+                            >
+                              <v-icon>add</v-icon>
+                            </v-btn>
+                          </template>
+                          <span>Add Variant</span>
+                        </v-tooltip>
+                      </v-flex>
+                      <!-- <v-flex xs1 v-else> 
+                        <v-tooltip top>
+                          <template v-slot:activator="{on}">
+                            <v-btn icon small color="green" dark v-on="on" @click="editVariant(props.item)">
+                              <v-icon small>edit</v-icon>
+                            </v-btn>
+                          </template>
+                          <span>Edit Variant Details</span>
+                        </v-tooltip>
+                      </v-flex> -->
+                      <v-flex xs1> 
+                        <v-tooltip top>
+                          <template v-slot:activator="{on}">
+                            <v-btn 
+                              icon small color="red" dark v-on="on" @click="deleteVariant(props.item)"
+                              :disabled="isVariantsFieldBlank(props.item)"
+                            >
+                              <v-icon small>delete</v-icon>
+                            </v-btn>
+                          </template>
+                          <span>Delete Variant</span>
+                        </v-tooltip>
+                      </v-flex>
+                    </template>
+
+                  </v-data-iterator>
                 </v-flex>
 
                 <v-flex xs12>
@@ -328,7 +403,7 @@
                     small
                     color="secondary"
                     depressed
-                    :disabled="!tempAttribName || !tempAttribItems"
+                    :disabled="!tempAttribName || !tempAttribItems.length"
                     @click="confirmEditProductAttribute"
                   >
                     Confirm Edit on Product Attribute
@@ -340,11 +415,16 @@
                     small
                     color="primary"
                     depressed
-                    :disabled="!tempAttribName || !tempAttribItems"
+                    :disabled="tempAttribItems.length <= 1"
                     @click="addProductAttribute"
                   >
                     Add Product Attribute
                   </v-btn>
+                </v-flex>
+
+                <v-flex xs12 mt-1> 
+                  <v-btn outline block small color="red" 
+                    @click="resetVariantTable" :disabled="tempAttribItems.length <= 1">CANCEL</v-btn>
                 </v-flex>
               </v-layout>
             </v-card>
@@ -531,11 +611,30 @@ export default {
       downloadURL: null,
       isOutofStock: null,
       id: null,
-      attributes: []
+      attributes: [
+        {
+          items: [
+            {
+              sku: null,
+              name: null,
+              price: 0,
+              weight: 0,
+            },
+          ],
+          name: null
+        },
+      ]
     },
 
     tempAttribName: null,
-    tempAttribItems: null,
+    tempAttribItems: [
+      {
+        sku: null,
+        name: null,
+        price: 0,
+        weight: 0,
+      },
+    ],
     showEditConfirmButton: false,
     productIndex: null,
     panel: false,
@@ -569,6 +668,22 @@ export default {
       this.modal.text = text;
       this.$refs.modal.open();
     },
+    resetVariantTable() {
+      this.tempAttribName = null;
+      if(this.tempAttribItems) {
+        const index = this.tempAttribItems.findIndex(variant => !variant.sku || variant.sku === null);
+        if(index !== -1) this.tempAttribItems.splice(index, 1);
+      }
+      
+      this.tempAttribItems = [
+        {
+          sku: null,
+          name: null,
+          price: 0,
+          weight: 0,
+        }
+      ];
+    },
     OpenDialog() {
       this.dialogText = "Add New Product";
       this.addProductDialog = true;
@@ -585,6 +700,8 @@ export default {
       this.tempAttribName = null;
       this.tempAttribItems = null;
       this.product.attributes = [];
+
+      this.resetVariantTable();
     },
     async viewItemDetails(item) {
       this.dialogText = "Edit Product Details";
@@ -601,26 +718,32 @@ export default {
       this.product.weight = item.weight;
       this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
-      this.tempAttribName = null;
-      this.tempAttribItems = null;
+      
+      this.resetVariantTable();
     },
+
     addProductAttribute() {
+      //remove blank variant entry in the variant table
+      const index = this.tempAttribItems.findIndex(variant => variant.sku === null || variant.sku === '');
+      if(index !== -1) this.tempAttribItems.splice(index, 1);
+
       this.product.attributes.push({
         name: this.tempAttribName,
-        items: this.tempAttribItems.split(",").map(attribute => {
-          return attribute.trim();
-        })
+        items: this.tempAttribItems
       });
 
-      this.tempAttribName = null;
-      this.tempAttribItems = null;
+      this.resetVariantTable()
 
       console.log(this.product.attributes);
     },
 
     editAttribute(index) {
       this.tempAttribName = this.product.attributes[index].name;
-      this.tempAttribItems = this.product.attributes[index].items.join(", ");
+      this.tempAttribItems = this.product.attributes[index].items;
+
+      //push a blank object on variant table so that user could add an variant if needed
+      this.tempAttribItems.push({});
+
       this.showEditConfirmButton = true;
       this.productIndex = index;
 
@@ -628,20 +751,20 @@ export default {
     },
 
     confirmEditProductAttribute() {
+      //remove blank variant entry in the variant table
+      const index = this.tempAttribItems.findIndex(variant => variant.sku === null || !variant.sku);
+      if(index !== -1) this.tempAttribItems.splice(index, 1);
+
       this.product.attributes[this.productIndex].name = this.tempAttribName;
-      this.product.attributes[
-        this.productIndex
-      ].items = this.tempAttribItems.split(",").map(attribute => {
-        return attribute.trim();
-      });
+      this.product.attributes[this.productIndex].items = this.tempAttribItems;
       this.showEditConfirmButton = false;
       this.productIndex = null;
 
-      this.tempAttribName = null;
-      this.tempAttribItems = null;
+      this.resetVariantTable();
 
       console.log(this.product.attributes);
     },
+
     async deleteAttribute(index) {
       const r = await this.$swal.fire({
         title: "Warning!",
@@ -657,6 +780,43 @@ export default {
         this.product.attributes.splice(index, 1);
       }
     },
+
+    isVariantsFieldBlank(variants) {
+      let thereIsABlank = false;
+      Object.values(variants).forEach(variant => {
+        if(!variant || variant === null) thereIsABlank = true;
+      });
+      return thereIsABlank;
+    },
+
+    addVariant(item) {
+      console.log('old tempAttribItems: ', this.tempAttribItems);
+      const index = this.tempAttribItems.findIndex(variant => variant.sku === item.sku);
+      if(index !== -1) this.tempAttribItems[index].toggleEdit = true;
+      //for some weird reason, when the user is inputting a variant. 
+      //it is already being edited on the current last element of the this.tempAttribItems array
+      //so we're just pushing a blank object to insert an editable variant row
+      this.tempAttribItems.push({});
+      console.log('new tempAttribItems: ', this.tempAttribItems); 
+    },
+
+    editVariant(item) {
+      const index = this.tempAttribItems.findIndex(variant => variant.sku === item.sku);
+      if(index === -1) {
+        return;
+      }
+
+      this.tempAttribItems[index].toggleEdit = this.tempAttribItems[index].toggleEdit ? false : true;
+      console.log('real toggleEdit', this.tempAttribItems[index].toggleEdit);
+    },
+
+    deleteVariant(item) {
+      const index = this.tempAttribItems.findIndex(variant => variant.sku === item.sku);
+      if(index !== -1) {
+        this.tempAttribItems.splice(index, 1);
+      }
+    },
+    
     closeProductDialog() {
       this.$refs.productFile.value = null;
       this.addProductDialog = false;
@@ -703,6 +863,7 @@ export default {
           const newProduct = {
             active: 1,
             categoryId: this.categoryId,
+            category: this.category.name,
             code: this.product.code,
             createdAt: Date.now(),
             description: this.product.description,
@@ -710,7 +871,7 @@ export default {
             price: this.product.price,
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
-            isOutofStock: this.product.isOutofStock,
+            isOutofStock: true,
             weight: Number(this.product.weight),
             //uid: null
             attributes: this.product.attributes,
@@ -718,7 +879,7 @@ export default {
 
             onHandQTY: 0,
             allocatedQTY: 0,
-            reOrderLevele: 0,
+            reOrderLevel: 0,
 
           };
           console.log(newProduct);
@@ -782,6 +943,8 @@ export default {
           this.addProductDialog = false;
           this.$refs.productFile.value = null;
 
+          this.resetVariantTable();
+
           this.$swal.fire({
             type: "success",
             title: "Success",
@@ -799,6 +962,7 @@ export default {
         const updatedProductData = {
           active: 1,
           categoryId: this.categoryId,
+          category: this.category.name,
           code: this.product.code,
           description: this.product.description,
           name: this.product.name,
@@ -857,6 +1021,7 @@ export default {
 
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
+        this.resetVariantTable();
 
         this.$swal.fire({
           type: "success",
