@@ -736,6 +736,12 @@ export default {
         this.excelButtonLoading = false;
         return;
       } else {
+        this.$swal.fire({
+          type: "warning",
+          title: "Processing excel file...",
+          text: "Please wait as we extract the categories and products from your uploaded excel file..."
+        });
+
         const file = this.$refs.excelFile.files[0];
         const objectURL = window.URL.createObjectURL(file);
         const promise = await axios.get(objectURL, {
@@ -834,7 +840,7 @@ export default {
               //     },
               // discount: p.Discount ? p.Discount : null,
               attributes: [],
-              isOutofStock: false,
+              isOutofStock: true,
               createdAt: Date.now(),
               categoryId: categoryData.id,
               category: categoryData.name,
