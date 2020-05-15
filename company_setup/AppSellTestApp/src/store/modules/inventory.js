@@ -27,6 +27,7 @@ const inventory = {
         },
         AddProduct(state, payload) {
             state.products.unshift(payload);
+
         },
         UpdateProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);
@@ -44,11 +45,13 @@ const inventory = {
         }
     },
     actions: {
-        LISTEN_TO_PRODUCT_STATS({state, commit}) {
+        async LISTEN_TO_PRODUCT_STATS({state, commit, dispatch}) {
             commit('ClearProducts');
             console.log('listening to product changes...');
-            state.subscriber = DB.collection('products').onSnapshot((snapshot) => {
-                
+            
+            state.subscriber = DB.collection('products').doc('details').collection('variants')
+            .onSnapshot((snapshot) => {
+
                 let changes = snapshot.docChanges();
 
                 changes.forEach((change) => {
@@ -90,12 +93,101 @@ const inventory = {
                         }
                     }
                 });
+
             });
         },
 
         UNSUBSCRIBE_TO_PRODUCT_STATS({state}) {
             if(state.subscriber) {
                 state.subscriber();
+            }
+        },
+
+        async CREATE_VARIANTS_FROM_PRODUCT({}, payload) {
+            let isSuccessful = false;
+
+            const { productData } = payload;
+            const productAttributes = productData.attributes;
+
+            const categoryDoc = await DB.collection('catalogues').doc(productData.categoryid).get();
+            const categoryName = categoryDoc.data();
+            
+            //if a product doesnt have an attribute make one entry of it on the variants 
+            if(!productAttributes.length) {
+                try {
+                    await DB.collection('products').doc('details').collection('variants').add({
+                        sku: productData.code,
+                        name: `${productData.name}`,
+                        weight: productData.weight,
+                        price: productData.price,
+                        productId: productData.id,
+                        category: categoryName,
+                        allocatedQTY: 0,
+                        onHandQTY: 0,
+                        reOrderLevel:  0,
+                        isOutofStock: true,
+                    });
+
+                    isSuccessful = true;
+                
+                } catch(error) {
+                    console.log(error);
+                    isSuccessful = false;
+                    throw error;
+                }
+
+                return {
+                    isSuccessful
+                };
+            }
+
+            let batch = DB.batch();
+            const variantsSubCollectionRef = DB.collection('products').doc('details').collection('variants').doc();
+            
+            const itemsInAttributes = productData.attributes.map(attribute => attribute.items);
+            const productVariants = [].concat(...itemsInAttributes);
+            productVariants.forEach(variant => {
+                const { sku, name, weight, price } = variant;
+
+                batch.set(variantsSubCollectionRef, {
+                    sku,
+                    name: `${productData.name} - ${name}`,
+                    weight,
+                    price,
+                    productId: productData.id,
+                    category: categoryName,
+                    allocatedQTY: 0,
+                    onHandQTY: 0,
+                    reOrderLevel:  0,
+                    isOutofStock: true
+                });
+            });
+
+            try {
+                await batch.commit();
+                return {
+                    isSuccessful: true
+                };
+            
+            } catch(error) {
+                console.log(error);
+                throw error;
+            }
+
+        },
+
+        async UPDATE_MULTIPLE_PRODUCT_FIELDS({}, payload) {
+            const { updateDetails, id } = payload;
+            try {
+                await DB.collection('products').doc(id).update(updateDetails);
+
+                return {
+                    isSuccessful: true, 
+                };
+            
+            } catch(error) {
+                console.log(error);
+                throw error;
             }
         },
 
