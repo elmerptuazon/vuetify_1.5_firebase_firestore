@@ -32,15 +32,18 @@ const inventory = {
         UpdateProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);
             if(index !== -1) {
-                Object.keys(payload).forEach((key) => {
-                    state.products[index][key] = payload[key];
-                });
+                // Object.keys(payload).forEach((key) => {
+                //     state.products[index][key] = payload[key];
+                // });
+                state.products[index] = Object.assign({}, payload);
+                state.products = [...state.products];
             }
         },
         RemoveProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);
             if(index !== -1) {
                 state.products.splice(index, 1);
+                state.products = [...state.products];
             }
         }
     },
@@ -83,7 +86,7 @@ const inventory = {
                         }
 
                         case 'removed': {
-                            console.lod('product was removed!', data);
+                            console.log('product was removed!', data);
                             commit('RemoveProduct', data);
                             break;
                         }
@@ -103,25 +106,48 @@ const inventory = {
             }
         },
 
-        async CREATE_VARIANTS_FROM_PRODUCT({}, payload) {
+        COMBINE_ALL_ATTRIBUTES({}, attributes) {
+            if(attributes.length > 1) {
+                return attributes.reduce((a, b) => a.reduce((r, v) => r.concat(b.map(w => [].concat(v, w))), [])).map(i => i.join('-'));
+            
+            } else {
+                //just extract all the element from the 
+                return attributes[0].map(variant => variant);
+            }
+        },
+
+        async CREATE_VARIANTS_FROM_PRODUCT({state, commit, dispatch}, payload) {
             let isSuccessful = false;
 
             const { productData } = payload;
-            const productAttributes = productData.attributes;
 
-            const categoryDoc = await DB.collection('catalogues').doc(productData.categoryid).get();
-            const categoryName = categoryDoc.data();
+            try {
+                var categoryDoc = await DB.collection('catalogues').doc(productData.categoryId).get();
+                var categoryName = categoryDoc.data().name;
             
-            //if a product doesnt have an attribute make one entry of it on the variants 
+            } catch(error) {
+                console.log('inventory/CREATE_VARIANTS_FROM_PRODUCT, getting category name: ', error);
+                throw {
+                    origin: 'inventory/CREATE_VARIANTS_FROM_PRODUCT, getting category name: ',
+                    error
+                };
+            }
+            
+            //if a product doesnt have an attribute 
+            //make a variant that is representative of the product 
+            const productAttributes = productData.attributes;
             if(!productAttributes.length) {
                 try {
                     await DB.collection('products').doc('details').collection('variants').add({
                         sku: productData.code,
-                        name: `${productData.name}`,
+                        name: `${productData.name.toLowerCase()}`,
                         weight: productData.weight,
                         price: productData.price,
+
+                        productName: productData.name,
                         productId: productData.id,
                         category: categoryName,
+
                         allocatedQTY: 0,
                         onHandQTY: 0,
                         reOrderLevel:  0,
@@ -131,55 +157,214 @@ const inventory = {
                     isSuccessful = true;
                 
                 } catch(error) {
-                    console.log(error);
+                    console.log('inventory/CREATE_VARIANTS_FROM_PRODUCT, creating variants in variants subcollection:', error);
                     isSuccessful = false;
-                    throw error;
+                    throw {
+                        origin: 'inventory/CREATE_VARIANTS_FROM_PRODUCT, creating variants in variants subcollection:',
+                        error
+                    };
+                }
+                
+                //early return to terminate this action immediately
+                return {
+                    isSuccessful
+                };
+            }
+            
+            //if the product has attributes, then proceed to the steps below
+            
+            //extract all the variants object from the "items" field in each attributes of the product.
+            const itemsInAttributes = productData.attributes.map(attribute => attribute.items);
+
+            //create variants from all the items that is found in the attributes of the product
+            const productVariants = await dispatch('COMBINE_ALL_ATTRIBUTES', itemsInAttributes); 
+            
+            let skuID = 0;
+            for(const variant of productVariants) {
+                try {
+                    await DB.collection('products').doc('details').collection('variants').add({
+                        sku: `${productData.code}-${skuID++}`,
+                        name: `${variant.toLowerCase()}`,
+                        weight: productData.weight,
+                        price: productData.price,
+                        
+                        productName: productData.name,
+                        productId: productData.id,
+                        category: categoryName,
+
+                        allocatedQTY: 0,
+                        onHandQTY: 0,
+                        reOrderLevel:  0,
+                        isOutofStock: true
+                    });
+                
+                } catch(error) {
+                    console.log(
+                        'inventory/CREATE_VARIANTS_FROM_PRODUCT, creating variants in variants subcollection for loop:', 
+                        error
+                    );
+                    throw {
+                        origin: 'inventory/CREATE_VARIANTS_FROM_PRODUCT, creating variants in variants subcollection for loop:',
+                        error
+                    };
+                }
+
+            }
+
+            return {
+                isSuccessful: true
+            };
+
+        },
+
+        async EDIT_VARIANTS_FROM_PRODUCT({ state, commit, dispatch }, payload) {
+            let isSuccessful = false;
+
+            const { productData } = payload;
+
+            const categoryDoc = await DB.collection('catalogues').doc(productData.categoryId).get();
+            const categoryName = categoryDoc.data().name;
+            
+            //if a product doesnt have an attributes then edit its existing variants 
+            const productAttributes = productData.attributes;
+            if(!productAttributes.length) {
+                try {
+                    //extract from the inventory list the variants associated to the edited product 
+                    const productVariants = state.products.filter(product => product.productId === productData.id);
+                    
+                    //if the product doesnt have variants yet, create one
+                    if(!productVariants.length) {
+                        await DB.collection('products').doc('details').collection('variants').add({
+                            sku: productData.code,
+                            name: `${productData.name.toLowerCase()}`,
+                            weight: productData.weight,
+                            price: productData.price,
+
+                            productName: productData.name,
+                            productId: productData.id,
+                            category: categoryName,
+                            
+                            allocatedQTY: 0,
+                            onHandQTY: 0,
+                            reOrderLevel:  0,
+                            isOutofStock: true
+                        });
+                    
+                    //update the existing single variant of the edited product
+                    } else {
+                        await DB.collection('products').doc('details').collection('variants').doc(productVariants[0].id)
+                        .update({
+                            sku: productData.code,
+                            name: `${productData.name.toLowerCase()}`,
+                            weight: productData.weight,
+                            price: productData.price,
+                            productName: productData.name,
+                            productId: productData.id,
+                            category: categoryName,
+                        });
+                    }
+
+                    isSuccessful = true;
+                
+                } catch(error) {
+                    console.log(
+                        'inventory/EDIT_VARIANTS_FROM_PRODUCT, adding a variant from a product without attributes:', 
+                        error
+                    );
+                    isSuccessful = false;
+                    throw {
+                        origin: 'inventory/EDIT_VARIANTS_FROM_PRODUCT, adding a variant from a product without attributes:',
+                        error
+                    };
                 }
 
                 return {
                     isSuccessful
                 };
             }
-
-            let batch = DB.batch();
-            const variantsSubCollectionRef = DB.collection('products').doc('details').collection('variants').doc();
             
+            //extract the variants that is present in each attributes of the edited product
             const itemsInAttributes = productData.attributes.map(attribute => attribute.items);
-            const productVariants = [].concat(...itemsInAttributes);
-            productVariants.forEach(variant => {
-                const { sku, name, weight, price } = variant;
+            const variantsInAttributes = await dispatch('COMBINE_ALL_ATTRIBUTES', itemsInAttributes);
+            const variantsInInventory = state.products.filter(product => product.id === productData.id);
+            //if there are no variants in the inventory that is associated to the edited product, 
+            //but has attributes on it. Then create the variants
+            if(!variantsInInventory.length && variantsInAttributes.length) {
+                try {
+                    await dispatch('CREATE_VARIANTS_FROM_PRODUCT', { productData });
 
-                batch.set(variantsSubCollectionRef, {
-                    sku,
-                    name: `${productData.name} - ${name}`,
-                    weight,
-                    price,
-                    productId: productData.id,
-                    category: categoryName,
-                    allocatedQTY: 0,
-                    onHandQTY: 0,
-                    reOrderLevel:  0,
-                    isOutofStock: true
+                    return {
+                        isSuccessful: true
+                    }
+
+                } catch(error) {
+                    console.log(
+                        'inventory/EDIT_VARIANTS_FROM_PRODUCT, creating variants for newly added attributes on a product:', 
+                        error
+                    );
+                    throw {
+                        origin: 'inventory/EDIT_VARIANTS_FROM_PRODUCT, creating variants for newly added attributes on a product:', 
+                        error
+                    };
+                }
+            }
+
+            const variantsSubCollectionRef = DB.collection('products').doc('details').collection('variants');
+            const batch = DB.batch();
+            //update all variants associated to the product
+            for(const variant of variantsInInventory) {
+                //remove the top item in the new variants in attributes of the edited product
+                //in order to monitor what variant has been updated
+                const updatedVariantName = variantsInAttributes.shift();
+                batch.update(variantsSubCollectionRef.doc(variant.id), {
+                    name: updatedVariantName.toLowerCase(),
+                    price: productData.price,
+                    weight: productData.weight,
+                    productName: productData.name,
                 });
-            });
+            }
+
+            //if there are still remaining new variants in the attributes of the edited product
+            //just add them to the product's variant
+            if(variantsInAttributes.length) {
+                let skuID = 0;
+                for(const variant of variantsInAttributes) {
+                    batch.add(variantsSubCollectionRef, {
+                        sku: `${productData.code}-${skuID}`,
+                        name: `${variant.toLowerCase()}`,
+                        weight: productData.weight,
+                        price: productData.price,
+
+                        productName: productData.name,
+                        productId: productData.id,
+                        category: categoryName,
+                        
+                        allocatedQTY: 0,
+                        onHandQTY: 0,
+                        reOrderLevel:  0,
+                        isOutofStock: true
+                    });
+                }
+            }
 
             try {
                 await batch.commit();
                 return {
                     isSuccessful: true
-                };
+                }
             
             } catch(error) {
-                console.log(error);
-                throw error;
+                throw {
+                    origin: 'inventory/EDIT_VARIANT_FROM_PRODUCT: batch updating existing variants'
+                }
             }
 
-        },
+        }, 
 
         async UPDATE_MULTIPLE_PRODUCT_FIELDS({}, payload) {
             const { updateDetails, id } = payload;
             try {
-                await DB.collection('products').doc(id).update(updateDetails);
+                await DB.collection('products').doc('details').collection('variants').doc(id).update(updateDetails);
 
                 return {
                     isSuccessful: true, 
@@ -194,7 +379,7 @@ const inventory = {
         async UPDATE_PRODUCT_DETAIL({}, payload) {
             const { id, key, value } = payload;
             try {
-                await DB.collection('products').doc(id).update({ [key]: value });
+                await DB.collection('products').doc('details').collection('variants').doc(id).update({ [key]: value });
 
                 return {
                     isSuccessful: true
@@ -202,6 +387,20 @@ const inventory = {
             
             } catch(error) {
                 console.log(error);
+                throw error;
+            }
+        },
+
+        async DELETE_PRODUCT({}, id) {
+            try {
+                await DB.collection('products').doc('details').collection('variants').doc(id).delete();
+
+                return {
+                    isSuccessful: true,
+                }
+            
+            } catch(error) {
+                console.log('inventory/DELETE_PRODUCT error', error);
                 throw error;
             }
         }
