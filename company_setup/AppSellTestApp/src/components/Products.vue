@@ -261,7 +261,7 @@
                 wrap
                 v-else
                 v-for="(attrib, index) in product.attributes"
-                :key="attrib.name"
+                :key="index"
                 align-center
                 justify-center
                 px-3
@@ -271,8 +271,8 @@
                   <div class="font-weight-bold caption">{{ attrib.name }}</div>
                 </v-flex>
                 <v-flex xs4>
-                  <div class="caption" v-for="item in attrib.items" :key="item.sku">
-                    {{ item.sku }} - {{ item.name }}
+                  <div class="caption" v-for="(item, index) in attrib.items" :key="index">
+                    {{ item }}
                   </div>
                 </v-flex>
                 <v-flex xs4>
@@ -317,83 +317,23 @@
                 </v-flex>
 
                 <v-flex xs12>
-                  <v-data-iterator
-                    :items="tempAttribItems"
-                    item-key="sku"
-                    hide-actions
-                    content-tag="v-layout" row wrap
-                    content-class="align-center justify-start"
+                  <v-combobox
+                    v-model="tempAttribItems"
+                    label="Variant Items"
+                    placeholder="enter name of the variant then press 'Enter/Return'..."
+                    chips multiple
+                    clearable
                   >
-
-                    <template v-slot:item="props">
-                      <v-flex xs2 mr-4>
-                        <v-text-field
-                          v-model="props.item.sku"
-                          label="SKU"
-                        ></v-text-field>
-                      </v-flex>
-                      <v-flex xs2 mr-3>
-                        <v-text-field
-                          v-model="props.item.name"
-                          label="Name"
-                        ></v-text-field>
-                      </v-flex>
-                      <v-flex xs2 mr-4>
-                        <v-text-field
-                          v-model="props.item.weight"
-                          label="Weight"
-                          suffix="g"
-                          type="number"
-                        ></v-text-field>
-                      </v-flex>
-                      <v-flex xs2 mr-4>
-                        <v-text-field
-                          v-model="props.item.price"
-                          label="Price"
-                          prefix="PHP"
-                          type="number"
-                        ></v-text-field>
-                      </v-flex>
-                      <v-flex xs1 v-if="!props.item.hasOwnProperty('toggleEdit')"> 
-                        <v-tooltip top>
-                          <template v-slot:activator="{on}">
-                            <v-btn 
-                              icon small color="primary" dark 
-                              v-on="on" @click="addVariant(props.item)"
-                              :disabled="isVariantsFieldBlank(props.item)"
-                            >
-                              <v-icon>add</v-icon>
-                            </v-btn>
-                          </template>
-                          <span>Add Variant</span>
-                        </v-tooltip>
-                      </v-flex>
-                      <!-- <v-flex xs1 v-else> 
-                        <v-tooltip top>
-                          <template v-slot:activator="{on}">
-                            <v-btn icon small color="green" dark v-on="on" @click="editVariant(props.item)">
-                              <v-icon small>edit</v-icon>
-                            </v-btn>
-                          </template>
-                          <span>Edit Variant Details</span>
-                        </v-tooltip>
-                      </v-flex> -->
-                      <v-flex xs1> 
-                        <v-tooltip top>
-                          <template v-slot:activator="{on}">
-                            <v-btn 
-                              icon small color="red" dark v-on="on" @click="deleteVariant(props.item)"
-                              :disabled="isVariantsFieldBlank(props.item)"
-                            >
-                              <v-icon small>delete</v-icon>
-                            </v-btn>
-                          </template>
-                          <span>Delete Variant</span>
-                        </v-tooltip>
-                      </v-flex>
+                    <template v-slot:selection="data">
+                      <v-chip
+                        :selection="data.selection"
+                        close color="primary" dark
+                        @input="deleteVariant(data.item)"
+                      >
+                        <strong>{{ data.item }}</strong>
+                      </v-chip>
                     </template>
-
-                  </v-data-iterator>
+                  </v-combobox>
                 </v-flex>
 
                 <v-flex xs12>
@@ -415,7 +355,7 @@
                     small
                     color="primary"
                     depressed
-                    :disabled="tempAttribItems.length <= 1"
+                    :disabled="tempAttribItems.length <= 0"
                     @click="addProductAttribute"
                   >
                     Add Product Attribute
@@ -424,7 +364,7 @@
 
                 <v-flex xs12 mt-1> 
                   <v-btn outline block small color="red" 
-                    @click="resetVariantTable" :disabled="tempAttribItems.length <= 1">CANCEL</v-btn>
+                    @click="resetVariantTable" :disabled="tempAttribItems.length <= 0">CANCEL</v-btn>
                 </v-flex>
               </v-layout>
             </v-card>
@@ -670,19 +610,7 @@ export default {
     },
     resetVariantTable() {
       this.tempAttribName = null;
-      if(this.tempAttribItems) {
-        const index = this.tempAttribItems.findIndex(variant => !variant.sku || variant.sku === null);
-        if(index !== -1) this.tempAttribItems.splice(index, 1);
-      }
-      
-      this.tempAttribItems = [
-        {
-          sku: null,
-          name: null,
-          price: 0,
-          weight: 0,
-        }
-      ];
+      this.tempAttribItems = [];
     },
     OpenDialog() {
       this.dialogText = "Add New Product";
@@ -723,10 +651,6 @@ export default {
     },
 
     addProductAttribute() {
-      //remove blank variant entry in the variant table
-      const index = this.tempAttribItems.findIndex(variant => variant.sku === null || variant.sku === '');
-      if(index !== -1) this.tempAttribItems.splice(index, 1);
-
       this.product.attributes.push({
         name: this.tempAttribName,
         items: this.tempAttribItems
@@ -742,7 +666,7 @@ export default {
       this.tempAttribItems = this.product.attributes[index].items;
 
       //push a blank object on variant table so that user could add an variant if needed
-      this.tempAttribItems.push({});
+      // this.tempAttribItems.push({});
 
       this.showEditConfirmButton = true;
       this.productIndex = index;
@@ -751,10 +675,6 @@ export default {
     },
 
     confirmEditProductAttribute() {
-      //remove blank variant entry in the variant table
-      const index = this.tempAttribItems.findIndex(variant => variant.sku === null || !variant.sku);
-      if(index !== -1) this.tempAttribItems.splice(index, 1);
-
       this.product.attributes[this.productIndex].name = this.tempAttribName;
       this.product.attributes[this.productIndex].items = this.tempAttribItems;
       this.showEditConfirmButton = false;
@@ -778,6 +698,8 @@ export default {
 
       if (r.value) {
         this.product.attributes.splice(index, 1);
+
+        this.resetVariantTable();
       }
     },
 
@@ -811,7 +733,7 @@ export default {
     },
 
     deleteVariant(item) {
-      const index = this.tempAttribItems.findIndex(variant => variant.sku === item.sku);
+      const index = this.tempAttribItems.indexOf(item);
       if(index !== -1) {
         this.tempAttribItems.splice(index, 1);
       }
@@ -871,15 +793,10 @@ export default {
             price: this.product.price,
             resellerPrice: this.product.resellerPrice,
             //promotion: this.product.promotion,
-            isOutofStock: true,
             weight: Number(this.product.weight),
             //uid: null
             attributes: this.product.attributes,
             searchTerms: this.product.name.split(" "),
-
-            onHandQTY: 0,
-            allocatedQTY: 0,
-            reOrderLevel: 0,
 
           };
           console.log(newProduct);
@@ -938,6 +855,16 @@ export default {
             productId: newProduct.id,
             productData: newProduct
           });
+
+          try {
+            await this.$store.dispatch("inventory/CREATE_VARIANTS_FROM_PRODUCT", {
+              productData: newProduct
+            });
+          
+          } catch(error) {
+            console.log(error);
+          }
+          
 
           this.addProductButtonDisabled = false;
           this.addProductDialog = false;
@@ -1013,6 +940,17 @@ export default {
             return;
           }
         }
+        
+        //edit the variants that is associated to the edited product
+        try {
+          await this.$store.dispatch("inventory/EDIT_VARIANTS_FROM_PRODUCT", {
+            productData: updatedProductData
+          });
+        
+        } catch(error) {
+          console.log(error);
+        }
+
         //send productData to DB for product update
         await this.$store.dispatch("products/UPDATE_PRODUCT", {
           productId: updatedProductData.id,
