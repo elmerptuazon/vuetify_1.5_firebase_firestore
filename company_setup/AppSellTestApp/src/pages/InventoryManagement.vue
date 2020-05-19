@@ -56,7 +56,8 @@
                     </span>
                   </template>
                   <span>
-                    {{ props.header.description }}
+                    <div class="font-weight-bold body-2">{{ props.header.text }}</div>
+                    <div class="mt-2 body-1">{{ props.header.description }}</div>
                   </span>
                 </v-tooltip>
               </template>
@@ -67,156 +68,29 @@
                     props.item.position === 1 ? 'red lighten-3' : '',
                   ]"
                 >
+                  <td class="text-xs-center">
+                    <v-btn icon color="green" small dark @click="openEditDialog(props.item)">
+                      <v-icon small>edit</v-icon>
+                    </v-btn>
+                  </td>
 
                   <td class="text-xs-left">{{props.item.productName}}</td>
 
                   <td class="text-xs-left">{{props.item.name}}</td>
 
-                  <td class="text-xs-center">
-                    <v-edit-dialog
-                      :return-value.sync="props.item.sku"
-                      large lazy
-                      @save="updateVariantField('sku', props.item)" 
-                    >
-                      <div>
-                        {{props.item.sku}}&nbsp;
-                        <v-divider class="my-1 black"></v-divider>
-                        <!-- <v-icon small>edit</v-icon> -->
-                      </div>
+                  <td class="text-xs-left">{{ props.item.sku }}</td>
+                  
+                  <td class="text-xs-center">{{ props.item.onHandQTY }} pcs.</td>
 
-                      <template v-slot:input>
-                        <div class="mt-3 title">Update Variant SKU</div>
-                      </template>
-                      <template v-slot:input>
-                        <v-text-field
-                          autofocus 
-                          v-model="props.item.sku"
-                          label='Edit Variant SKU'
-                          class="mt-4"
-                          :loading="textfieldLoading"
-                          :disabled="textfieldLoading"
-                        ></v-text-field>
-                      </template>
-                    </v-edit-dialog>
-                  </td>
+                  <td class="text-xs-center">{{props.item.allocatedQTY}} pcs.</td>
 
-                  <td class="text-xs-center">
-                    <v-edit-dialog
-                      :return-value.sync="props.item.onHandQTY"
-                      large lazy
-                      @save="updateVariantField('onHandQTY', props.item)" 
-                    >
-                      <div class="ml-4">
-                        {{props.item.onHandQTY}}&nbsp;
-                        <v-divider class="my-1 black"></v-divider>
-                        <!-- <v-icon small class="ml-4">edit</v-icon> -->
-                      </div>
+                  <td class="text-xs-center">{{props.item.availableQTY}} pcs.</td>
 
-                      <template v-slot:input>
-                        <div class="mt-3 title">Update QTY on Hand</div>
-                      </template>
-                      <template v-slot:input>
-                        <v-text-field
-                          autofocus
-                          v-model="props.item.onHandQTY"
-                          label='Edit QTY on Hand'
-                          class="mt-4" type="number"
-                          :loading="textfieldLoading"
-                          :disabled="textfieldLoading"
-                        ></v-text-field>
-                      </template>
-                    </v-edit-dialog>
-                  </td>
+                  <td class="text-xs-center">{{props.item.reOrderLevel}} pcs.</td>
 
-                  <td class="text-xs-center">{{props.item.allocatedQTY}}</td>
+                  <td class="text-xs-center">{{props.item.weight}} g.</td>
 
-                  <td class="text-xs-center">{{props.item.availableQTY}}</td>
-
-                  <td class="text-xs-center">
-                    <v-edit-dialog
-                      :return-value.sync="props.item.reOrderLevel"
-                      large lazy
-                      @save="updateVariantField('reOrderLevel', props.item)" 
-                    >
-                      <div class="ml-4">
-                        {{props.item.reOrderLevel}}&nbsp;
-                        <v-divider class="my-1 black"></v-divider>
-                        <!-- <v-icon small class="ml-4">edit</v-icon> -->
-                      </div>
-
-                      <template v-slot:input>
-                        <div class="mt-3 title">Update Re-Order Notification Level</div>
-                      </template>
-                      <template v-slot:input>
-                        <v-text-field
-                          class="mt-4"
-                          autofocus
-                          v-model="props.item.reOrderLevel"
-                          label="Edit Re-Order Notification Level"
-                          type="number"
-                          :loading="textfieldLoading"
-                          :disabled="textfieldLoading"
-                        ></v-text-field>
-                      </template>
-                    </v-edit-dialog>
-                  </td>
-
-                  <td class="text-xs-center">
-                    <v-edit-dialog
-                      :return-value.sync="props.item.weight"
-                      large lazy
-                      @save="updateVariantField('weight', props.item)" 
-                    >
-                      <div>
-                        {{props.item.weight}} g.&nbsp;
-                        <v-divider class="my-1 black"></v-divider>
-                        <!-- <v-icon small class="ml-4">edit</v-icon> -->
-                      </div>
-
-                      <template v-slot:input>
-                        <div class="mt-3 title">Update Variant Weight</div>
-                      </template>
-                      <template v-slot:input>
-                        <v-text-field
-                          class="mt-4"
-                          autofocus
-                          v-model="props.item.weight"
-                          label="Edit Variant Weight"
-                          type="number" suffix="grams"
-                          :loading="textfieldLoading"
-                          :disabled="textfieldLoading"
-                        ></v-text-field>
-                      </template>
-                    </v-edit-dialog>
-                  </td>
-
-                  <td class="text-xs-center">
-                    <v-edit-dialog
-                      :return-value.sync="props.item.price"
-                      large lazy 
-                      @save="updateVariantField('price', props.item)" 
-                    >
-                      <div>
-                        {{props.item.price | currency("P ") }}&nbsp;
-                        <v-divider class="my-1 black"></v-divider>
-                        <!-- <v-icon small class="ml-4">edit</v-icon> -->
-                      </div>
-
-                      <template v-slot:input>
-                        <div class="mt-3 title">Update Variant Price</div>
-                      </template>
-                      <template v-slot:input>
-                        <v-text-field
-                          class="mt-4" autofocus
-                          v-model="props.item.price"
-                          label="Edit Variant Price"
-                          type="number" prefix="PHP"
-                          :loading="textfieldLoading"
-                          :disabled="textfieldLoading"
-                        ></v-text-field>
-                      </template>
-                    </v-edit-dialog>
-                  </td>
+                  <td class="text-xs-center">{{props.item.price | currency("&#8369; ")}}</td>
 
                   <td class="pt-4">
                     <v-checkbox
@@ -227,8 +101,9 @@
                   </td>
 
                   <td>
-                    <v-icon medium color="primary" class="ml-4" 
-                      @click="deleteVariant(props.item)">delete_forever</v-icon>
+                    <v-btn icon color="primary" dark small @click="deleteVariant(props.item)">
+                      <v-icon small>delete_forever</v-icon>
+                    </v-btn>
                   </td>
                 </tr>
               </template>
@@ -237,6 +112,233 @@
         </v-card>
       </v-flex>
     </v-layout>
+
+    <v-dialog v-model="showEditDialog" persistent width="550px">
+      <v-card>
+        <v-card-title class="primary dark white--text title font-weight-bold">
+          EDIT PRODUCT VARIANT DETAILS
+          <v-spacer></v-spacer>
+          <v-icon medium color="white" @click="showEditDialog = false">close</v-icon>
+        </v-card-title>
+        <v-container align-center justify-center>
+          <v-layout align-start justify-start wrap>
+            <v-flex xs12>
+              <div class="font-italic body-1 font-weight-bold">Note: Fields with "*" are editable</div>
+            </v-flex>
+          </v-layout>
+          
+          <v-layout align-center justify-start wrap row mt-3>
+            <v-flex xs12>
+              <v-text-field
+                :value="selectedVariant.productName"
+                readonly
+                label="Product Name"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs12>
+              <v-text-field
+                :value="selectedVariant.name"
+                readonly
+                label="Variant Name"
+              ></v-text-field>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-text-field
+                v-model="selectedVariant.sku"
+                outline
+                label="Variant SKU*"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('sku').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('sku').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-text-field
+                v-model="selectedVariant.onHandQTY"
+                outline
+                label="QTY on Hand*"
+                type="number"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('onHandQTY').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('onHandQTY').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-text-field
+                v-model="selectedVariant.availableQTY"
+                readonly
+                label="QTY on Available"
+                type="number"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('availableQTY').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('availableQTY').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-text-field
+                v-model="selectedVariant.allocatedQTY"
+                readonly
+                label="QTY Allocated"
+                type="number"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('allocatedQTY').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('allocatedQTY').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-text-field
+                v-model="selectedVariant.reOrderLevel"
+                outline
+                label="Re-Order Notification Level*"
+                type="number"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('reOrderLevel').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('reOrderLevel').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-text-field
+                v-model="selectedVariant.weight"
+                outline suffix="grams"
+                label="Variant Weight*"
+                type="number"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('weight').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('weight').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-text-field
+                v-model="selectedVariant.price"
+                outline prefix="PHP "
+                label="Variant Price*"
+                type="number"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('price').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('price').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+            <v-flex xs10>
+              <v-checkbox
+                :label="`Is this variant OUT OF STOCK: ${selectedVariant.isOutofStock}`"
+                v-model="selectedVariant.isOutofStock"
+              ></v-checkbox>
+            </v-flex>
+            <v-flex xs1 offset-xs1 pb-4>
+              <v-tooltip right max-width="150">
+                <template v-slot:activator="{ on }">
+                  <span v-on="on">
+                    <v-icon medium color="grey darken-3">help</v-icon>
+                  </span>
+                </template>
+                <span>
+                  <div class="font-weight-bold">{{ fieldDescription('isOutofStock').text.toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">{{ fieldDescription('isOutofStock').description }}</div>
+                </span>
+              </v-tooltip>
+            </v-flex>
+
+          </v-layout>
+        </v-container>
+
+        <v-divider class="my-2"></v-divider>
+
+        <v-card-actions>
+          <v-layout align-start justify-end wrap>
+            <v-flex xs3>
+              <v-btn color="red" dark @click="deleteVariant(selectedVariant)">DELETE VARIANT</v-btn>
+            </v-flex>
+            <v-flex xs2 offset-xs1>
+              <v-btn color="green" dark 
+                :loading="btnLoading" :disabled="btnLoading"
+                @click="editVariant(selectedVariant)"
+              >SAVE</v-btn>
+            </v-flex>
+            <v-flex xs2 offset-xs1>
+              <v-btn outline @click="showEditDialog = false">CANCEL</v-btn>
+            </v-flex>
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <v-snackbar v-model="snack" :timeout="4000" :color="snackColor">
       {{ snackText }}
@@ -263,6 +365,10 @@ export default {
     textfieldLoading: false,
     search: null,
     headers: [
+      {
+        text: 'Edit Variant', align: 'left', value: '', sortable: false,
+        description: 'Click the green icon to edit the details of a product variant.'
+      },
       {
         text: 'Product Name', align: 'left', value: 'productName',
         description: 'The name of the product.'
@@ -330,13 +436,19 @@ export default {
     snackText: '',
     snackColor: 'primary',
 
+    selectedVariant: {},
+    showEditDialog: false,
+    btnLoading: false,
+
   }),
 
   computed: {
-
+    items() {
+      return this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+    },
     products() {
       this.loading = true;
-      const products = [...this.$store.getters['inventory/GET_ALL_PRODUCTS']];
+      const products = this.items;
 
       let modifiedProducts = products.map((product) => {
         product.name = product.name.replace(/-/gi, ' / ');
@@ -371,6 +483,16 @@ export default {
       this.snack = true;
       this.snackText = message;
       this.snackColor = state === 'success' ? 'primary' : 'red';
+    },
+
+    fieldDescription(field) {
+      const fieldObj = this.headers.find(header => header.value.toLowerCase() === field.toLowerCase());
+      
+      if(fieldObj.text.includes("?")) {
+        fieldObj.text = fieldObj.text.replace('?', '');
+      }
+
+      return fieldObj;
     },
 
     async updateVariantField(variantProperty, product) {
@@ -427,6 +549,43 @@ export default {
 
       this.loading = false;
     },
+    
+    openEditDialog(item) {
+      this.showEditDialog = true;
+      this.selectedVariant = Object.assign({}, item);
+    },
+
+    async editVariant() {
+      this.btnLoading = true;
+
+      const { sku, onHandQTY, reOrderLevel, weight, price, isOutofStock } = this.selectedVariant;
+      const updatedVariant = {
+        sku, 
+        onHandQTY, 
+        reOrderLevel, 
+        weight, 
+        price,
+        isOutofStock
+      };
+
+      try {
+        await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
+          id: this.selectedVariant.id,
+          updatedDetails: updatedVariant
+        });
+
+        this.btnLoading = false;
+        this.showEditDialog = false;
+        this.showSnackBar('success', `Updating ${this.selectedVariant.sku} was successful!`);
+      } catch(error) {
+        console.log('error in editVariant method: ', error);
+        this.btnLoading = false;
+        this.showEditDialog = false;
+        this.showSnackBar('error', `Updating ${this.selectedVariant.sku} was not successful! Please try again.`);
+        throw error;
+      }
+    },
+
     async deleteVariant(item) {
       const response = await this.$swal.fire({
         title: "Warning!",
@@ -443,15 +602,21 @@ export default {
       }
 
       try {
+        this.btnLoading = true;
+
         await this.$store.dispatch('inventory/DELETE_PRODUCT', item.id);
         
         this.showSnackBar('success', `${item.sku} was successfully deleted!`);
         this.textfieldLoading = false;
+        this.btnLoading = false;
+        this.showEditDialog = false;
 
       } catch(error) {
         console.log('inventory management error: ', error.response);
         this.showSnackBar('error', `${item.sku} was not deleted!`);
         this.textfieldLoading = false;
+        this.btnLoading = false;
+        this.showEditDialog = false;
       }
     }
   },
