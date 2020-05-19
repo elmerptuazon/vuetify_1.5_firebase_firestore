@@ -286,7 +286,7 @@ const inventory = {
             //extract the variants that is present in each attributes of the edited product
             const itemsInAttributes = productData.attributes.map(attribute => attribute.items);
             const variantsInAttributes = await dispatch('COMBINE_ALL_ATTRIBUTES', itemsInAttributes);
-            const variantsInInventory = state.products.filter(product => product.id === productData.id);
+            const variantsInInventory = state.products.filter(product => product.productId === productData.id);
             //if there are no variants in the inventory that is associated to the edited product, 
             //but has attributes on it. Then create the variants
             if(!variantsInInventory.length && variantsInAttributes.length) {
@@ -362,9 +362,9 @@ const inventory = {
         }, 
 
         async UPDATE_MULTIPLE_PRODUCT_FIELDS({}, payload) {
-            const { updateDetails, id } = payload;
+            const { updatedDetails, id } = payload;
             try {
-                await DB.collection('products').doc('details').collection('variants').doc(id).update(updateDetails);
+                await DB.collection('products').doc('details').collection('variants').doc(id).update(updatedDetails);
 
                 return {
                     isSuccessful: true, 
