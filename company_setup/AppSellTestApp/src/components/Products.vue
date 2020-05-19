@@ -864,7 +864,6 @@ export default {
           } catch(error) {
             console.log(error);
           }
-          
 
           this.addProductButtonDisabled = false;
           this.addProductDialog = false;
@@ -904,6 +903,21 @@ export default {
           attributes: this.product.attributes,
           searchTerms: searchTerms
         };
+
+        //remove unnecessary attributes relating to product QTY
+        if(updatedProductData.hasOwnProperty('allocatedQTY')) {
+          delete updatedProductData.allocatedQTY;
+        }
+        if(updatedProductData.hasOwnProperty('onHandQTY')) {
+          delete updatedProductData.onHandQTY;
+        }
+        if(updatedProductData.hasOwnProperty('reOrderLevel')) {
+          delete updatedProductData.reOrderLevel;
+        }
+        if(updatedProductData.hasOwnProperty('isOutofStock')) {
+          delete updatedProductData.isOutofStock;
+        }
+
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 
         if (this.$refs.productFile.files.length > 0) {
@@ -940,7 +954,13 @@ export default {
             return;
           }
         }
-        
+
+        //send productData to DB for product update
+        await this.$store.dispatch("products/UPDATE_PRODUCT", {
+          productId: updatedProductData.id,
+          productData: updatedProductData
+        });
+
         //edit the variants that is associated to the edited product
         try {
           await this.$store.dispatch("inventory/EDIT_VARIANTS_FROM_PRODUCT", {
@@ -950,12 +970,6 @@ export default {
         } catch(error) {
           console.log(error);
         }
-
-        //send productData to DB for product update
-        await this.$store.dispatch("products/UPDATE_PRODUCT", {
-          productId: updatedProductData.id,
-          productData: updatedProductData
-        });
 
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
