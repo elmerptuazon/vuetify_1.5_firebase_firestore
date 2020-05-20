@@ -9,20 +9,42 @@ const messages = {
 		messagesList: [],
 	},
 	getters: {
-		GET_CONVERSATIONS_LIST: state => state.conversationsList,
+		GET_CONVERSATIONS_LIST(state) {
+			return state.conversationsList;
+		},
 		GET_MESSAGES_LIST: state => state.messagesList,
 		GET_NEW_MESSAGES_COUNT(state) {
+			const conversations = state.conversationsList.filter(convo => convo.user.status === 'approved');
 			//filter the conversationsList array with conversation that is not yet opened by the admin
-			const unreadConversations = state.conversationsList.filter(
-				(conversation) => conversation.opened.admin === false
-			);
+			const unreadConversations = conversations.filter((conversation) => {
+					return conversation.opened.admin === false;
+			});
 			return unreadConversations.length;
 		}
 	},
 	mutations: {
+		AddToConversations(state, payload) {
+			state.conversationsList.push(payload);
+			console.log('added convo', payload);
+		},
+		RemoveToConversations(state, payload) {
+			const index = state.conversationsList.findIndex(convo => convo.id === payload.id);
+			if(index !== -1) {
+				state.conversationsList.splice(index, 1);
+			}
+		},
+		UpdateToConversations(state, payload) {
+			const index = state.conversationsList.findIndex(convo => convo.id === payload.id);
+			if(index !== -1) {
+				Object.keys(payload).forEach((key) => {
+					state.conversationsList[index][key] = payload[key];
+				});
+				console.log('modified convo: ', payload);
+			}
+		}
 	},
 	actions: {
-		async listenToConversations({ state, rootState, dispatch }) {
+		async listenToConversations({ state, rootState, dispatch, commit }) {
 			console.log('listening to conversations');
 			const user = rootState.auth.user;
 			state.conversationsList = [];
@@ -44,22 +66,17 @@ const messages = {
 					  { root: true }
 					);
 					
-					//only push conversations with approved resellers
-					if(data.user.status.toLowerCase() !== 'pending' 
-						&& data.user.status.toLowerCase() !== 'denied') 
-					{
-						state.conversationsList.push(data);
-					}
+					commit('AddToConversations', data);
 
 				  } else if (change.type === "modified") {
-					const conversationIndex = state.conversationsList.findIndex(
-					  c => c.id === data.id
+					const userIndex = data.users.findIndex(u => u !== user.id);
+					data.user = await dispatch(
+					  "auth/GET_USER",
+					  data.users[userIndex],
+					  { root: true }
 					);
 
-					if (conversationIndex !== -1) {
-						state.conversationsList[conversationIndex].updated = data.updated;
-						state.conversationsList[conversationIndex].opened = data.opened;
-					}
+					commit('UpdateToConversations', data);
 				  }
 				});
 			});

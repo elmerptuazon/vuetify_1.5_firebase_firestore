@@ -14,7 +14,8 @@
           </v-avatar>
         </td>
         <td class="text-xs-left">{{ props.item.name }}</td>
-        <td class="text-xs-left">{{ props.item.attributes | capitalize }}</td>
+        <td class="text-xs-left">{{ (props.item.attributes || 'N/A') | capitalize }}</td>
+        <td class="text-xs-left">{{ props.item.sku }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
         <td class="text-xs-center">{{ props.item.remainingQty }}</td>
@@ -35,7 +36,7 @@
         </td>
       </tr> -->
       <tr>
-        <td colspan="7" class="text-xs-right">
+        <td colspan="8" class="text-xs-right">
           <strong>Total: {{ total | currency("P") }}</strong>
         </td>
       </tr>
@@ -66,6 +67,11 @@ export default {
         align: "center"
       },
       {
+        text: "Variant SKU",
+        value: "sku",
+        align: "left"
+      },
+      {
         text: "Order Qty",
         value: "qty",
         align: "center"
@@ -94,7 +100,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr}: ${item.attributes[attr]}`;
+            attributes += `${attr.toUpperCase()}: ${item.attributes[attr]} | `;
           }
         });
 
@@ -106,7 +112,9 @@ export default {
           total: item.qty * item.resellerPrice,
           name: item.name,
           attributes: attributes,
-          image: item.downloadURL
+          image: item.downloadURL,
+          sku: item.sku,
+          variantId: item.variantId
         };
       });
 
