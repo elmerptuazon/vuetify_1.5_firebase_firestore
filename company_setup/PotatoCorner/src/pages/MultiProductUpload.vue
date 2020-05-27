@@ -59,7 +59,7 @@
 					</v-card-text>
 					<v-card-actions>
 						<v-spacer></v-spacer>
-						<v-btn color="black" dark outline @click="removeAllPhotos"></v-btn>
+						<v-btn color="black" dark outline @click="removeAllPhotos" v-show="images.length">Remove all</v-btn>
 						<v-btn class="ml-2" color="primary" dark @click.native="uploadImages">Upload</v-btn>
 					</v-card-actions>
 				</v-card>
