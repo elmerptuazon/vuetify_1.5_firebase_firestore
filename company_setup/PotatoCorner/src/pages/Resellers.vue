@@ -2,15 +2,36 @@
   <v-container fluid>
     <v-card>
       <v-card-title>
-        <div class="headline">Branch Accounts</div>
-        <v-spacer></v-spacer>
-        <v-text-field
-          append-icon="search"
-          label="Search branch..."
-          single-line
-          hide-details
-          v-model="search"
-        ></v-text-field>
+        <v-layout row wrap align-center justify-start>
+          <v-flex xs3>
+            <div class="headline">Branch Accounts</div>
+          </v-flex>
+
+          <v-flex xs4>
+            <v-text-field
+              append-icon="search"
+              label="Search branch..."
+              single-line
+              hide-details
+              v-model="search"
+            ></v-text-field>
+          </v-flex>
+
+          <v-flex xs2 ml-4>
+            <v-btn dark color="primary" @click="addBranch">
+              <v-icon class="mr-2">add</v-icon>
+              ADD A BRANCH
+            </v-btn>
+          </v-flex>
+
+          <v-flex xs2 ml-2>
+            <v-btn dark color="primary" @click="openExcelDialog">
+              <v-icon class="mr-2">insert_drive_file</v-icon>
+              UPLOAD EXCEL FILE
+            </v-btn>
+          </v-flex>
+        </v-layout>
+        
       </v-card-title>
       <v-data-table
         v-model="selected"
