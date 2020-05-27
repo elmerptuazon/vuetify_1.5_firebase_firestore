@@ -55,7 +55,7 @@ export default new Vuex.Store({
 			// 	]
 			// },
 			{
-				icon: 'airport_shuttle',
+				icon: 'receipts',
 				text: 'Stock Orders',
 				url: 'StockOrders',
 			},
