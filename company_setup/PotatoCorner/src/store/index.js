@@ -36,6 +36,11 @@ export default new Vuex.Store({
 				text: 'Branch List', 
 				url: 'Resellers' 
 			},
+			{
+				icon: 'receipts',
+				text: 'Stock Orders',
+				url: 'StockOrders',
+			},
 			{ 
 				icon: 'local_shipping', 
 				text: 'Shipments', 
@@ -54,11 +59,6 @@ export default new Vuex.Store({
 			// 		{ icon: 'local_shipping', text: 'Shipments', url: 'ShipmentReport' }
 			// 	]
 			// },
-			{
-				icon: 'receipts',
-				text: 'Stock Orders',
-				url: 'StockOrders',
-			},
 			// {
 			// 	icon: 'rv_hookup',
 			// 	text: 'Delivery Settings',
