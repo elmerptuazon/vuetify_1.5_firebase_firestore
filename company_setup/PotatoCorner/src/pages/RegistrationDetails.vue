@@ -5,7 +5,7 @@
         <v-btn icon @click="$router.go(-1)">
           <v-icon>arrow_back</v-icon>
         </v-btn>
-        <div class="headline">All Registrations</div>
+        <div class="headline">Branch Details</div>
         <v-spacer></v-spacer>
         <v-avatar v-if="account.downloadURL" size="40">
           <v-img :src="account.downloadURL"></v-img>
