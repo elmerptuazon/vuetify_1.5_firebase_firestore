@@ -316,6 +316,7 @@ export default {
         console.log('encoded branches: ', toRegister);
       }
       
+      this.excelButtonLoading = false;
       this.excelDialog = false;
       this.$swal.fire({ type: "success", title: "Adding Branches was successful!" });
     }
