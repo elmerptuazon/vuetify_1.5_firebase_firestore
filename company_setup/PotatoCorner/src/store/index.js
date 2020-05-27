@@ -31,19 +31,29 @@ export default new Vuex.Store({
 				text: 'Multiple Product Upload',
 				url: 'MultiProductUpload'
 			},
-			{
-				icon: 'keyboard_arrow_up',
-				'icon-alt': 'keyboard_arrow_down',
-				text: 'Reports',
-				model: false,
-				children: [
-					{ icon: 'insert_emoticon', text: 'Reseller List', url: 'Resellers' },
-					{ icon: 'people', text: 'Customer List', url: 'Customers' },
-					// { icon: 'shopping_basket', text: 'Products Ordered', url: 'Products' },
-					// { icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' },
-					{ icon: 'local_shipping', text: 'Shipments', url: 'ShipmentReport' }
-				]
+			{ 
+				icon: 'store_mall_directory', 
+				text: 'Branch List', 
+				url: 'Resellers' 
 			},
+			{ 
+				icon: 'local_shipping', 
+				text: 'Shipments', 
+				url: 'ShipmentReport' 
+			},
+			// {
+			// 	icon: 'keyboard_arrow_up',
+			// 	'icon-alt': 'keyboard_arrow_down',
+			// 	text: 'Reports',
+			// 	model: false,
+			// 	children: [
+			// 		{ icon: 'insert_emoticon', text: 'Reseller List', url: 'Resellers' },
+			// 		{ icon: 'people', text: 'Customer List', url: 'Customers' },
+			// 		// { icon: 'shopping_basket', text: 'Products Ordered', url: 'Products' },
+			// 		// { icon: 'shopping_cart', text: 'Transactions', url: 'Transactions' },
+			// 		{ icon: 'local_shipping', text: 'Shipments', url: 'ShipmentReport' }
+			// 	]
+			// },
 			{
 				icon: 'airport_shuttle',
 				text: 'Stock Orders',
