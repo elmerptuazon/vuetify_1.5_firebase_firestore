@@ -59,16 +59,16 @@ export default new Vuex.Store({
 				text: 'Stock Orders',
 				url: 'StockOrders',
 			},
-			{
-				icon: 'rv_hookup',
-				text: 'Delivery Settings',
-				url: 'DeliverySettings',
-			},
-			{
-				icon: 'supervisor_account',
-				text: 'New Registrations',
-				url: 'NewRegistrations',
-			},
+			// {
+			// 	icon: 'rv_hookup',
+			// 	text: 'Delivery Settings',
+			// 	url: 'DeliverySettings',
+			// },
+			// {
+			// 	icon: 'supervisor_account',
+			// 	text: 'New Registrations',
+			// 	url: 'NewRegistrations',
+			// },
 			{
 				icon: 'messages',
 				text: 'Messages',
