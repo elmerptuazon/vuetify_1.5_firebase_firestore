@@ -18,15 +18,15 @@
           </v-flex>
 
           <v-flex xs2 ml-4>
-            <v-btn dark color="primary" @click="addBranch">
-              <v-icon class="mr-2">add</v-icon>
-              ADD A BRANCH
+            <v-btn dark color="primary" @click="addBranchDialog = true">
+              <!-- <v-icon class="mr-2">add</v-icon> -->
+              REGISTER A BRANCH
             </v-btn>
           </v-flex>
 
           <v-flex xs2 ml-2>
-            <v-btn dark color="primary" @click="openExcelDialog">
-              <v-icon class="mr-2">insert_drive_file</v-icon>
+            <v-btn dark color="primary" @click="excelDialog = true">
+              <!-- <v-icon class="mr-2">insert_drive_file</v-icon> -->
               UPLOAD EXCEL FILE
             </v-btn>
           </v-flex>
@@ -74,18 +74,67 @@
         </template>
       </v-data-table>
     </v-card>
+
+    <v-dialog max-width="500px" v-model="excelDialog" persistent>
+      <v-card>
+        <v-card-title>
+          <div class="title">
+            Adding Multiple Branches through Excel File
+          </div>
+        </v-card-title>
+        <v-card-text>
+          <div class="mb-1">
+            <input
+              type="file"
+              ref="excelFile"
+              value="upload"
+              accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+              @change="validateExcelFile"
+            />
+          </div>
+          <div class="mb-1 caption">
+            <v-icon small>info</v-icon>
+            <span class="font-italic"
+              >the file upload only accepts a specified
+              <a
+                class="font-weight-bold"
+                :href="excelDownloadURL"
+                download="Category Excel Template"
+                >excel template.</a
+              ></span
+            >
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn flat @click.native="excelDialog = false">CANCEL</v-btn>
+          <v-btn
+            color="primary"
+            @click.native="batchRegisterBranch"
+            :loading="excelButtonLoading"
+            >UPLOAD FILE
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <RegisterBranch :addBranchDialog="addBranchDialog" @closeAddBranchDialog="closeBranchDialog"/>
   </v-container>
 </template>
 
 <script>
+import axios from "axios";
+import XLSX from "xlsx";
 import mixins from "@/mixins";
 import { DB } from "@/config/firebase";
-// import userPlaceholder from "@/assets/placeholder.png";
 import userPlaceholder from "@/assets/DefaultBranchPic.png";
-
+import RegisterBranch from "@/components/RegisterBranch.vue";
 const usersCollection = DB.collection("accounts");
 
 export default {
+  async mounted() {
+    this.excelDownloadURL = await this.$store.dispatch('auth/GET_TEMPLATE_EXCEL');
+  },
   data: () => ({
     items: [],
     search: null,
@@ -144,12 +193,23 @@ export default {
       }
     ],
     userPlaceholder: userPlaceholder,
-    loading: false
+    loading: false,
+    addBranchDialog: false,
+    excelDialog: false,
+    excelButtonLoading: false,
+    excelDownloadURL: '',
+    
   }),
-  created() {
-    this.fetchUsers();
+
+  async created() {
+    await this.fetchUsers();
+    this.excelDownloadURL = ''; 
   },
+
   methods: {
+    closeBranchDialog(val) {
+      this.addBranchDialog = val;
+    },
     showFullAddress(address) {
       const { house, streetName, barangay, citymun, province, zipCode } = address; 
       return `${house}, ${streetName}, ${barangay}, ${province}, ${zipCode}`;
@@ -183,8 +243,87 @@ export default {
       }
 
       this.loading = false;
+    },
+
+    async registerABranch() {
+
+    },
+
+    validateExcelFile(el) {
+      if (!el.target.value) {
+        return;
+      }
+
+      const path = el.target.value;
+      const idxDot = path.lastIndexOf(".") + 1;
+      const extFile = path.substr(idxDot, path.length).toLowerCase();
+
+      const acceptedFiles = ["xlsx", "xls", "_xls", "_xlsx"];
+
+      if (!acceptedFiles.includes(extFile)) {
+        this.$refs.excelFile.value = "";
+        this.$swal.fire({
+          type: "error",
+          title: "Error",
+          text: "The uploaded file is not an excel file. Please try again."
+        });
+        return;
+      }
+    },
+
+    async batchRegisterBranch() {
+      this.excelButtonLoading = true;
+      if (!this.$refs.excelFile.files[0]) {
+        this.$swal.fire({ type: "warning", title: "Choose a file first." });
+        this.excelButtonLoading = false;
+        return;
+      }
+
+      const answer = await this.$swal.fire({
+        title: "Are you sure?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if (!answer.value) {
+        this.excelButtonLoading = false;
+        return;
+      }
+
+      const file = this.$refs.excelFile.files[0];
+      const objectURL = window.URL.createObjectURL(file);
+      const promise = await axios.get(objectURL, {
+        responseType: "arraybuffer"
+      });
+
+      //Process Returned Reponse from Axios
+      const data = new Uint8Array(promise.data);
+      const arr = new Array();
+      for (let i = 0; i != data.length; ++i) {
+        arr[i] = String.fromCharCode(data[i]);
+      }
+
+      const workbook = XLSX.read(arr.join(""), { type: "binary" });
+      const workbookSheetsLength = workbook.SheetNames.length;
+      
+      for(let i = 0; i !== workbookSheetsLength; i++) {
+        let worksheet = workbook.Sheets[workbook.SheetNames[i]];
+
+        let toRegister = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+        console.log('encoded branches: ', toRegister);
+      }
+      
+      this.excelDialog = false;
+      this.$swal.fire({ type: "success", title: "Adding Branches was successful!" });
     }
+
   },
-  mixins: [mixins]
+  mixins: [mixins],
+  components: {
+    RegisterBranch
+  }
 };
 </script>
