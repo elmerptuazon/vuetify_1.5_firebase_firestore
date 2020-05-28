@@ -32,6 +32,28 @@ const distributors = {
         }
     },
     actions: {
+        async ADD_BRANCH({}, payload) {
+
+        }, 
+
+        async UPDATE_BRANCH({}, payload) {
+            const { id, updatedDetails } = payload;
+
+            try {
+                delete updatedDetails.id;
+                
+                await DB.collection('accounts').doc(id).update(updatedDetails);
+
+                return {
+                    isSuccessful: true,
+                }
+
+            } catch(error) {
+                console.log(error);
+                throw error;
+            }
+        },
+
         async LISTEN_TO_NEW_REGISTRATIONS({ state, commit, dispatch }) {
             commit('SET_RESELLERS_LIST', []);
             let accountsToModify = [];
