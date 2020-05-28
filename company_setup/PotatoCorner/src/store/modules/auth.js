@@ -32,7 +32,7 @@ const auth = {
 
 					commit('SET_USER', userData);
 					dispatch('stock_orders/LISTEN_TO_STOCK_ORDERS', null, { root: true });
-					dispatch('distributors/LISTEN_TO_NEW_REGISTRATIONS', null, { root: true });
+					// dispatch('distributors/LISTEN_TO_NEW_REGISTRATIONS', null, { root: true });
 					dispatch('conversations/listenToConversations', null, { root: true });
 					return userData;
 				} catch (error) {
@@ -50,7 +50,7 @@ const auth = {
 
 				commit('SET_USER', userData);
 				dispatch('stock_orders/LISTEN_TO_STOCK_ORDERS', null, { root: true });
-				dispatch('distributors/LISTEN_TO_NEW_REGISTRATIONS', null, { root: true });
+				// dispatch('distributors/LISTEN_TO_NEW_REGISTRATIONS', null, { root: true });
 				dispatch('conversations/listenToConversations', null, { root: true });
 				return;
 			} catch (error) {
@@ -94,7 +94,7 @@ const auth = {
 				commit('SET_USER', {});
 				// UNSUBSCRIBE TO ORDERS
 				dispatch('stock_orders/UNSUBSCRIBE_FROM_STOCK_ORDERS', {}, { root: true });
-				dispatch('distributors/UNSUBSCRIBE_FROM_NEW_RESELLERS', {}, { root: true });
+				// dispatch('distributors/UNSUBSCRIBE_FROM_NEW_RESELLERS', {}, { root: true });
 			} catch (error) {
 				throw error;
 			}
