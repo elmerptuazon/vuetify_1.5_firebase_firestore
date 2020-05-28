@@ -6,25 +6,25 @@
           <v-icon>arrow_back</v-icon>
         </v-btn>
         <div class="headline">Branch Details</div>
-        <v-spacer></v-spacer>
+        <!-- <v-spacer></v-spacer>
         <v-avatar v-if="account.downloadURL" size="40">
           <v-img :src="account.downloadURL"></v-img>
         </v-avatar>
         <v-avatar v-else size="40">
           <v-img :src="userPlaceholder"></v-img>
-        </v-avatar>
+        </v-avatar> -->
       </v-card-title>
       <v-divider></v-divider>
       <v-card-text>
         <v-layout row wrap>
-          <v-flex xs4>
+          <!-- <v-flex xs4>
             <div class="text-xs-left ml-3 subheading">
               <strong>
                 Application Date:
                 {{ account.createdAt | momentize("DD-MMM-YYYY") }}
               </strong>
             </div>
-          </v-flex>
+          </v-flex> -->
           <!-- <v-flex xs4>
             <div class="text-xs-center">
               <strong v-if="account.status === 'pending'">
