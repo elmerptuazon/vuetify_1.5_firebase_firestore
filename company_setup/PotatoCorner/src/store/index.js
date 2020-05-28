@@ -33,7 +33,7 @@ export default new Vuex.Store({
 			},
 			{ 
 				icon: 'store_mall_directory', 
-				text: 'Branch List', 
+				text: 'Branches', 
 				url: 'Resellers' 
 			},
 			{
