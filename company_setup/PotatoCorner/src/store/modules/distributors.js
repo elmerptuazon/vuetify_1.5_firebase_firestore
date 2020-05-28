@@ -40,8 +40,10 @@ const distributors = {
             const { id, updatedDetails } = payload;
 
             try {
-                delete updatedDetails.id;
-                
+                if(updatedDetails.hasOwnProperty('id')) {
+                    delete updatedDetails.id;
+                }
+
                 await DB.collection('accounts').doc(id).update(updatedDetails);
 
                 return {
