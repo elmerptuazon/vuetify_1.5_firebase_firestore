@@ -250,6 +250,7 @@
 import mixins from "@/mixins";
 import provinces from "@/assets/provinces.json";
 import moment from 'moment';
+import axios from 'axios';
 
 export default {
     mixins: [mixins],
@@ -365,6 +366,15 @@ export default {
           errorMessage = 'The email address is already in use by another account.';
         
         } else {
+          
+          await axios({
+            method: 'post',
+            url: `${process.env.accountManagementURL}/deleteUser`,
+            data: {
+              email: this.registerData.email
+            }
+          }); 
+          
           errorMessage = 'An error occured during register of the branch. Please try again later.';
         }
 
