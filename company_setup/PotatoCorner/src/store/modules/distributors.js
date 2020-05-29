@@ -122,6 +122,37 @@ const distributors = {
                 throw error;
             }
         },
+
+        async DELETE_BRANCH({}, userDetails) {
+            const { email, id } = userDetails;
+            try {
+                await axios({
+                    method: 'post',
+                    url: `${process.env.accountManagementURL}/deleteUser`,
+                    data: {
+                        email: email
+                    }
+                });
+
+                await DB.collection('accounts').doc(id).delete();
+                const convoToBeDeletedRef = await DB.collection('conversations').where('users', 'array-contains', id).get();
+                const convoData = convoToBeDeletedRef.docs.map(convo => {
+                    const data = convo.data();
+                    data.id = convo.id;
+                    return convo;
+                });
+
+                await DB.collection('conversations').doc(convoData[0].id).delete();
+
+                return {
+                    isSuccessful: true
+                };
+
+            } catch(error) {
+                console.log(error);
+                throw error;
+            }
+        },
         
         async RESEND_ACCOUNT_VERIFICATION({}, userDetails) {
             const { firstName, email } = userDetails;
@@ -170,6 +201,13 @@ const distributors = {
                                 state.resellersList[index] = Object.assign({}, data);
                                 console.log('modified reseller: ', data);
                                 dispatch('conversations/listenToConversations', null, {root:true});
+                            }
+                        
+                        } else if(change.type === 'removed') {
+                            const index = state.resellersList.findIndex(reseller => reseller.id === data.id);
+                            if(index !== -1) {
+                                state.resellersList.splice(index, 1);
+                                console.log('removed reseller: ', data);
                             }
                         }
 
