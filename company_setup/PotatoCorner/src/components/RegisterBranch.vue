@@ -45,19 +45,19 @@
                       ></v-text-field>
                     </v-flex>
                     <v-flex xs12>
-                      <div class="font-weight-bold">Branch Manager Name</div>
+                      <div class="font-weight-bold">Branch Manager's Full Name</div>
                     </v-flex>
                     <v-flex xs12>
                       <v-text-field
                         :rules="basicRules"
                         required
-                        label="Branch Manager's First Name*"
+                        label="First Name*"
                         v-model="registerData.firstName"
                       ></v-text-field>
                     </v-flex>
                     <v-flex xs12>
                       <v-text-field
-                        label="Branch Manager's Middle Name"
+                        label="Middle Initial / Middle Name"
                         v-model="registerData.middleInitial"
                       ></v-text-field>
                     </v-flex>
@@ -65,9 +65,37 @@
                       <v-text-field
                         :rules="basicRules"
                         required
-                        label="Branch Manager's Last Name*"
+                        label="Last Name*"
                         v-model="registerData.lastName"
                       ></v-text-field>
+                    </v-flex>
+                    <v-flex xs12>
+                      <v-menu
+                        ref="menu"
+                        v-model="menu"
+                        :close-on-content-click="false"
+                        :nudge-right="40"
+                        transition="scale-transition"
+                        offset-y
+                        full-width
+                        max-width="290px"
+                        min-width="290px"
+                      >
+                        <template v-slot:activator="{ on }">
+                          <v-text-field
+                            :value="vDateFormatter(registerData.establishDate)"
+                            prepend-inner-icon="event"
+                            required
+                            readonly
+                            v-on="on"
+                          ></v-text-field>
+                        </template>
+                        <v-date-picker
+                          v-model="registerData.establishDate"
+                          @change="menu = false"
+                          no-title
+                        ></v-date-picker>
+                      </v-menu>
                     </v-flex>
                     <v-flex xs12>
                       <v-btn
@@ -142,7 +170,7 @@
                       ></v-text-field>
                     </v-flex>
                   </v-layout>
-				  <v-btn
+				          <v-btn
                     type="submit"
                     depressed block
                     color="primary"
@@ -157,6 +185,7 @@
 
               <v-stepper-content step="3">
                 <v-form
+                  v-model="form3"
                   ref="form3"
                   lazy-validation
                   @submit.prevent="registerBranch"
@@ -167,9 +196,7 @@
                     </v-flex>
                     <v-flex xs12>
                       <v-text-field
-                        :rules="basicRules"
                         label="Facebook URL/Username*"
-                        required
                         v-model="registerData.social.facebook"
                       ></v-text-field>
                     </v-flex>
@@ -190,6 +217,7 @@
                         label="Email address*"
                         v-model="registerData.email"
                         type="email"
+                        required
                       ></v-text-field>
                     </v-flex>
                     <v-flex xs12>
@@ -198,7 +226,7 @@
                         color="primary"
                         block
                         depressed
-                        :disabled="submitBtnDisabled || form3"
+                        :disabled="submitBtnDisabled || !form3"
                         :loading="submitBtnDisabled"
                       >
                         Register Branch
@@ -221,6 +249,7 @@
 <script>
 import mixins from "@/mixins";
 import provinces from "@/assets/provinces.json";
+import moment from 'moment';
 
 export default {
     mixins: [mixins],
@@ -229,97 +258,133 @@ export default {
 		this.provinces = provinces;
 	},
 	data: () => ({
-		frame: 0,
+		frame: 1,
 		form1: false,
 		form2: false,
-		form3: false,
+    form3: false,
+    menu: false,
 		submitBtnDisabled: false,
 		provinces: [],
 		cities: [],
 
-        registerData: {
-            branchName: '',
-            firstName: '',
-            middleInitial: '',
-            lastName: '',
-            email: '',
-            contact: '',
-            social: {
-                facebook: ''
-            },
-            address: {
-                house: '',
-                streetName: '',
-                barangay: '',
-                citymun: '',
-                province: '',
-                zipCode: '',
-            },
-            status: 'approved',
-            type: 'Reseller'
-        }
-    }),
-    computed: {
-        
+    registerData: {
+      branchName: null,
+      firstName: null,
+      middleInitial: null,
+      lastName: null,
+      email: null,
+      contact: null,
+      social: {
+          facebook: null
+      },
+      address: {
+          house: null,
+          streetName: null,
+          barangay: null,
+          citymun: null,
+          province: null,
+          zipCode: null,
+      },
+      status: 'approved',
+      type: 'Reseller',
+      agentId: null,
+    }
+  }),
+  computed: {
+      
+  },
+  methods: {
+    vDateFormatter(date) {
+      return date ? moment(date).format('DD-MMM-YYYY') : null;
     },
-    methods: {
-		closeBranchDialog() {
-			this.$emit('closeAddBranchDialog', false);
-			this.registerData = {
-				branchName: '',
-				firstName: '',
-				middleInitial: '',
-				lastName: '',
-				email: '',
-				contact: '',
-				social: {
-					facebook: ''
-				},
-				address: {
-					house: '',
-					streetName: '',
-					barangay: '',
-					citymun: '',
-					province: '',
-					zipCode: '',
-				},
-				status: 'approved',
-				type: 'Reseller'
-			};
-			
-			this.frame = 1;
-			this.$refs.form1.resetValidation();
-			this.$refs.form2.resetValidation();
-			this.$refs.form3.resetValidation();
-		},
 
-		async registerBranch() {
-			const answer = await this.$swal.fire({
-				title: "Confirmation!",
-				text: "Are you sure you want to register this branch?",
-				type: "warning",
-				showCancelButton: true,
-				confirmButtonText: "Yes",
-				cancelButtonText: "No",
-				showCloseButton: true
-			});
+    closeBranchDialog() {
+      this.$emit('closeAddBranchDialog', false);
+      this.registerData = {
+        branchName: null,
+        firstName: null,
+        middleInitial: null,
+        lastName: null,
+        email: null,
+        contact: null,
+        social: {
+            facebook: null
+        },
+        address: {
+          house: null,
+          streetName: null,
+          barangay: null,
+          citymun: null,
+          province: null,
+          zipCode: null,
+        },
+        status: 'approved',
+        type: 'Reseller',
+        agentId: null,
+      };
+      
+      this.frame = 1;
+      this.$refs.form1.resetValidation();
+      this.$refs.form2.resetValidation();
+      this.$refs.form3.resetValidation();
+    },
 
-			if(!answer.value) return;
-			
-			this.submitBtnDisabled = true;
-			
-			console.log('new branch: ', this.registerData);
-			
-			this.submitBtnDisabled = false;
-			this.closeBranchDialog();
-		}
-	},
-	
-	watch: {
-		"registerData.address.province"(val) {
-      		this.cities = provinces.filter(p => p.name === val)[0].cities;
-    	},
-	}
+    async registerBranch() {
+      const answer = await this.$swal.fire({
+        title: "Confirmation!",
+        text: "Are you sure you want to register this branch?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true
+      });
+
+      if(!answer.value) return;
+      
+      this.submitBtnDisabled = true;
+      
+      try {
+        await this.$store.dispatch('distributors/ADD_BRANCH', this.registerData);
+        this.submitBtnDisabled = false;
+
+        this.$swal.fire({
+          type: 'success',
+          title: 'Success!',
+          text: 'The branch was successfully registered!'
+        });
+
+        this.closeBranchDialog();
+      
+      } catch(error) {
+        console.log(error);
+        this.submitBtnDisabled = false;
+
+        let errorMessage;
+        if(error.code === 'auth/email-already-in-use') {
+          errorMessage = 'The email address is already in use by another account.';
+        
+        } else {
+          errorMessage = 'An error occured during register of the branch. Please try again later.';
+        }
+
+        this.$swal.fire({
+          type: 'error',
+          title: 'An error occurred!',
+          text: errorMessage
+        });
+      }
+      
+    }
+  },
+
+  watch: {
+    "registerData.address.province"(val) {
+      if(val) {
+        this.cities = provinces.filter(p => p.name === val)[0].cities;
+      }
+    },
+  }
 }
 </script>
 
