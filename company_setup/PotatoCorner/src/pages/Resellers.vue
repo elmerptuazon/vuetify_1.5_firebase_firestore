@@ -39,9 +39,10 @@
         :items="items"
         item-key="id"
         class="elevation-1"
-        :loading="loading"
+        :loading="tableLoading"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
+        :pagination.sync="pagination"
       >
         <template slot="items" slot-scope="props">
           <tr @click="viewUser(props.item)">
@@ -61,12 +62,16 @@
             </td>
             <td class="text-xs-left">{{ props.item.agentId }}</td>
             <td class="text-xs-left">{{ props.item.branchName }}</td>
-            <td class="text-xs-left">{{ props.item.firstName }} {{ props.item.middleInitial }} {{ props.item.lastName }}</td>
+            <td class="text-xs-left">
+              <span v-if="!props.item.managersName">{{ props.item.firstName }} {{ props.item.middleInitial }} {{ props.item.lastName }}</span>
+              <span v-else>{{ props.item.managersName }}</span>
+            </td>
             <!-- <td class="text-xs-center">{{ props.item.firstName }}</td>
             <td class="text-xs-center">{{ props.item.middleInitial }}</td>
             <td class="text-xs-center">{{ props.item.lastName }}</td> -->
             <!-- <td class="text-xs-center">{{ props.item.birthday }}</td>
             <td class="text-xs-center">{{ props.item.gender }}</td> -->
+            <td class="text-xs-left">{{ new Date(props.item.createdAt) | momentize('DD-MMM-YYYY') }}</td>
             <td class="text-xs-left">{{ props.item.email }}</td>
             <td class="text-xs-left">{{ props.item.contact }}</td>
             <td class="text-xs-left">{{ showFullAddress(props.item.address) }}</td>
@@ -125,6 +130,7 @@
 <script>
 import axios from "axios";
 import XLSX from "xlsx";
+import moment from 'moment';
 import mixins from "@/mixins";
 import { DB } from "@/config/firebase";
 import userPlaceholder from "@/assets/DefaultBranchPic.png";
@@ -135,11 +141,21 @@ export default {
   async mounted() {
     this.excelDownloadURL = await this.$store.dispatch('auth/GET_TEMPLATE_EXCEL');
   },
+  
+  // async created() {
+  //    await this.fetchUsers();
+  //    this.excelDownloadURL = ''; 
+  // },
+
   data: () => ({
-    items: [],
+    // items: [],
     search: null,
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
+    pagination: {
+      sortBy: 'Approval Date',
+    },
+    tableLoading: false,
     headers: [
       {
         text: "Thumbnail",
@@ -158,6 +174,10 @@ export default {
       {
         text: "Branch Manager Name",
         value: "lastName"
+      },
+      {
+        text: "Approval Date",
+        value: "createdAt"
       },
       // {
       //   text: "First name",
@@ -192,6 +212,7 @@ export default {
         value: "address.home"
       }
     ],
+
     userPlaceholder: userPlaceholder,
     loading: false,
     addBranchDialog: false,
@@ -201,9 +222,12 @@ export default {
     
   }),
 
-  async created() {
-    await this.fetchUsers();
-    this.excelDownloadURL = ''; 
+  computed: {
+    items() {
+      const branches = this.$store.getters['distributors/GET_RESELLERS_LIST'];
+      this.tableLoading = !branches.length ? true : false;
+      return branches; 
+    }
   },
 
   methods: {
@@ -243,10 +267,6 @@ export default {
       }
 
       this.loading = false;
-    },
-
-    async registerABranch() {
-
     },
 
     validateExcelFile(el) {
@@ -293,32 +313,81 @@ export default {
         return;
       }
 
-      const file = this.$refs.excelFile.files[0];
-      const objectURL = window.URL.createObjectURL(file);
-      const promise = await axios.get(objectURL, {
-        responseType: "arraybuffer"
-      });
+      try {
+        const file = this.$refs.excelFile.files[0];
+        const objectURL = window.URL.createObjectURL(file);
+        const promise = await axios.get(objectURL, {
+          responseType: "arraybuffer"
+        });
 
-      //Process Returned Reponse from Axios
-      const data = new Uint8Array(promise.data);
-      const arr = new Array();
-      for (let i = 0; i != data.length; ++i) {
-        arr[i] = String.fromCharCode(data[i]);
+        //Process Returned Reponse from Axios
+        const data = new Uint8Array(promise.data);
+        const arr = new Array();
+        for (let i = 0; i != data.length; ++i) {
+          arr[i] = String.fromCharCode(data[i]);
+        }
+
+        const workbook = XLSX.read(arr.join(""), { type: "binary" });
+        const workbookSheetsLength = workbook.SheetNames.length;
+        
+        for(let i = 0; i !== workbookSheetsLength; i++) {
+          let worksheet = workbook.Sheets[workbook.SheetNames[i]];
+
+          let branches = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+          console.log('extracted branches: ', branches);
+
+          branches = branches.map(branchObj => {
+            let registerData = {
+              branchName: branchObj['BRANCH NAME'],
+              firstName: branchObj['BRANCH MANAGER FIRST NAME'],
+              middleInitial: branchObj['BRANCH MANAGER MIDDLE INITIAL'],
+              lastName: branchObj['BRANCH MANAGER LAST NAME'],
+              establishDate: branchObj['DATE ESTABLISHED'],
+              
+              email: branchObj['EMAIL'],
+              contact: branchObj['CONTACT NUMBER'],
+              social: {
+                facebook: branchObj['FACEBOOK URL']
+              },
+              
+              address: {
+                house: branchObj['LOT / FLOOR NO.'],
+                streetName: branchObj['STREET NAME'],
+                barangay: branchObj['BARANGAY'],
+                citymun: branchObj['CITY / MUNICIPALITY'],
+                province: branchObj['PROVINCE'],
+                zipCode: branchObj['ZIP CODE'],
+              },
+
+            };
+
+            return registerData;
+          });
+
+          for(const branchData of branches) {
+            await this.$store.dispatch('distributors/ADD_BRANCH', branchData);
+          }
+
+        }
+
+        this.excelButtonLoading = false;
+        this.excelDialog = false;
+        this.$swal.fire({ type: "success", title: "Adding Branches was successful!" });
+        this.$refs.excelFile.value = null;
+        this.$refs.excelFile.files = null;
+
+      } catch(error) {
+        console.log(error);
+
+        this.excelButtonLoading = false;
+        this.excelDialog = false;
+        this.$swal.fire({ type: "error", title: "An Error Occurred!", text: 'There was a problem while registering your branches, please try again later' });
+        this.$refs.excelFile.value = null;
+        this.$refs.excelFile.files = null;
+
+        throw error;
       }
-
-      const workbook = XLSX.read(arr.join(""), { type: "binary" });
-      const workbookSheetsLength = workbook.SheetNames.length;
       
-      for(let i = 0; i !== workbookSheetsLength; i++) {
-        let worksheet = workbook.Sheets[workbook.SheetNames[i]];
-
-        let toRegister = XLSX.utils.sheet_to_json(worksheet, { raw: true });
-        console.log('encoded branches: ', toRegister);
-      }
-      
-      this.excelButtonLoading = false;
-      this.excelDialog = false;
-      this.$swal.fire({ type: "success", title: "Adding Branches was successful!" });
     }
 
   },
