@@ -292,6 +292,15 @@
         >CANCEL
         </v-btn>
       </div>
+      <div class="mt-6" v-if="disableEdit">
+        <v-btn
+          color="red darken-2"
+          dark block
+          @click="deleteBranch"
+          :loading="deleteBranchBtn"
+        >DELETE BRANCH
+        </v-btn>
+      </div>
     </v-flex>
 
     <v-dialog v-model="uploadPicDialog" persistent width="350px">
@@ -372,6 +381,7 @@ export default {
     resendEmailBtn: false,
     uploadPicDialog: false,
     uploadPicBtn: false,
+    deleteBranchBtn: false,
   }),
   computed: {
     userPlaceholder() {
@@ -434,6 +444,54 @@ export default {
           type: "error",
           title: "An Error Occurred!",
           text: "An error occured while sending the account verification link! Please try again later."
+        });
+      }
+
+    },
+
+    async deleteBranch() {
+      console.log('deleting branch...');
+      this.deleteBranchBtn = true;
+
+      const answer = await this.$swal.fire({
+        title: "Are you sure?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        showCloseButton: true,
+        text: 'Are you sure you want to delete this branch?'
+      });
+
+      if (!answer.value) {
+        this.deleteBranchBtn = false;
+        return;
+      }
+
+      try {
+
+        await this.$store.dispatch('distributors/DELETE_BRANCH', {
+          id: this.accountData.id,
+          email: this.accountData.email
+        });
+
+        console.log('branch deleted!');
+        this.deleteBranchBtn = false;
+        this.$swal.fire({
+          type: "success",
+          title: "Success!",
+          text: "Branch was deleted!"
+        });
+
+        this.$router.push({ name: "Resellers" });
+
+      } catch(error) {
+        console.log(error);
+        this.deleteBranchBtn = false;
+        this.$swal.fire({
+          type: "error",
+          title: "An Error Occurred!",
+          text: "Branch cant be delete due to an error. Please try again later."
         });
       }
 
