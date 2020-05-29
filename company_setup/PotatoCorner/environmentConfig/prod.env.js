@@ -10,5 +10,5 @@ module.exports = {
   storageCode: '"PotatoCorner"',
   primaryColor: '"#119247"',
   companyName: '"Potato Corner"',
-  verificationGeneratorURL: '"https://us-central1-potatocornerdev.cloudfunctions.net/accounts/sendAccountVerification"',
+  accountManagementURL: '"https://us-central1-potatocornerdev.cloudfunctions.net/accounts"',
 }
