@@ -422,16 +422,16 @@ export default {
         console.log('email verification sent!');
         this.resendEmailBtn = false;
         this.$swal.fire({
-          type: "Error",
-          title: "An Error Occurred!",
-          text: "An error occured while sending the account verification link! Please try again later."
+          type: "success",
+          title: "Success!",
+          text: "Email Verification link was re-sent!"
         });
 
       } catch(error) {
         console.log(error);
         this.resendEmailBtn = false;
         this.$swal.fire({
-          type: "Error",
+          type: "error",
           title: "An Error Occurred!",
           text: "An error occured while sending the account verification link! Please try again later."
         });
