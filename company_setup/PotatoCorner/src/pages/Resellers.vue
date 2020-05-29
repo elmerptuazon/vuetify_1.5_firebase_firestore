@@ -312,6 +312,8 @@ export default {
         this.excelButtonLoading = false;
         return;
       }
+      
+      let branchWithErrors = [];
 
       try {
         const file = this.$refs.excelFile.files[0];
@@ -365,16 +367,34 @@ export default {
           });
 
           for(const branchData of branches) {
-            await this.$store.dispatch('distributors/ADD_BRANCH', branchData);
+            try {
+              await this.$store.dispatch('distributors/ADD_BRANCH', branchData);
+            
+            } catch(error) {
+              branchWithErrors.push({ branchName: branchData.branchName, errorMessage: error.message});
+              continue;
+            }
           }
 
         }
 
         this.excelButtonLoading = false;
         this.excelDialog = false;
-        this.$swal.fire({ type: "success", title: "Adding Branches was successful!" });
         this.$refs.excelFile.value = null;
         this.$refs.excelFile.files = null;
+
+
+        if(branchWithErrors.length) {
+          let message = '';
+          branchWithErrors.forEach(branch => {
+            message += `<p style="align: left;">BRANCH: ${branch.branchName} <br/> ERROR: ${branch.errorMessage}</p>\n`;
+          });
+
+          this.$swal.fire({ type: "warning", title: "Some branches were not uploaded", html: message});
+        
+        } else {
+          this.$swal.fire({ type: "success", title: "All branches were uploaded!"});
+        }
 
       } catch(error) {
         console.log(error);
