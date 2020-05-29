@@ -45,7 +45,7 @@ const distributors = {
 
                 await axios({
                     method: 'post',
-                    url: `${process.env.verificationGeneratorURL}`,
+                    url: `${process.env.accountManagementURL}/sendAccountVerification`,
                     data: {
                         firstName: payload.firstName,
                         email: payload.email,
@@ -95,6 +95,22 @@ const distributors = {
                     delete updatedDetails.id;
                 }
 
+                const oldDetailsRef = await DB.collection('accounts').doc(id).get();
+                const oldDetails = oldDetailsRef.data();
+
+                if(oldDetails.email !== updatedDetails.email) {
+                    await axios({
+                        method: 'post',
+                        url: `${process.env.accountManagementURL}/updateEmail`,
+                        data: {
+                            oldEmail: oldDetails.email,
+                            newEmail: updatedDetails.email,
+                        }
+                    });
+
+                    console.log('email updated!');
+                }
+
                 await DB.collection('accounts').doc(id).update(updatedDetails);
 
                 return {
@@ -113,7 +129,7 @@ const distributors = {
             try {
                 const response = await axios({
                     method: 'post',
-                    url: `${process.env.verificationGeneratorURL}`,
+                    url: `${process.env.accountManagementURL}/sendAccountVerification`,
                     data: {
                         firstName: firstName,
                         email: email,
@@ -139,52 +155,29 @@ const distributors = {
 
                     let changes = snapshot.docChanges();
 
-                    changes = changes.map((change) => {
+                    changes = changes.forEach((change) => {
 
                         let data = change.doc.data();
                         data.id = change.doc.id;
 
-                        data.type = change.type;
+                        if(change.type === 'added') {
+                            console.log('added reseller: ', change);
+                            state.resellersList.unshift(data);
+                        
+                        } else if(change.type === 'modified') {
+                            const index = state.resellersList.findIndex(reseller => reseller.id === data.id);
+                            if(index !== -1) {
+                                state.resellersList[index] = Object.assign({}, data);
+                                console.log('modified reseller: ', data);
+                                dispatch('conversations/listenToConversations', null, {root:true});
+                            }
+                        }
 
                         return data;
                     })
 
-                    if(!state.resellersList || !state.resellersList.length) {
-                        commit('SET_RESELLERS_LIST', changes);
-                    
-                    } else {
-                        changes.forEach((change) => {
-                            if(change.type === 'added') {
-                                change.isRead = false;
-                                delete change.type;
-                                console.log('added reseller: ', change);
-                                // commit('ADD_RESELLER', change);
-                                state.resellersList.unshift(change);
-                            
-                            } else if(change.type === 'modified') {
-                                delete change.type;
-                                // commit('UPDATE_RESELLER', change);
-                                const index = state.resellersList.findIndex(reseller => reseller.id === change.id);
-                                if(index !== -1) {
-                                    state.resellersList[index] = Object.assign({}, change);
-                                    console.log('modified reseller: ', change);
-                                    dispatch('conversations/listenToConversations', null, {root:true});
-                                }
-                            }
-                        })
-                    } 
                 })
 
-            if(accountsToModify.length) {
-                for(const account of accountsToModify) {
-                    console.log('updating isRead of: ', account.id);
-                    await dispatch('UPDATE_STATUS_BY_FIELD', {
-                        uid: account.id,
-                        key: 'isRead',
-                        value: account.isRead,
-                    });
-                }
-            }
 
         },
 
