@@ -41,7 +41,15 @@ const messages = {
 				});
 				console.log('modified convo: ', payload);
 			}
-		}
+		},
+		RemoveToConversations(state, payload) {
+			const index = state.conversationsList.findIndex(convo => convo.id === payload.id);
+			if(index !== -1) {
+				state.conversationsList.splice(index, 1);
+				console.log('removed convo: ', payload);
+			}
+		},
+
 	},
 	actions: {
 		async listenToConversations({ state, rootState, dispatch, commit }) {
@@ -77,7 +85,11 @@ const messages = {
 					);
 
 					commit('UpdateToConversations', data);
+
+				  } else if(change.type === 'removed') {
+					commit('RemoveToConversations', data);
 				  }
+
 				});
 			});
 		},
