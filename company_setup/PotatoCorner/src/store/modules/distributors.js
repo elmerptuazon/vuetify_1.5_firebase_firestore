@@ -1,4 +1,5 @@
-import { DB } from '@/config/firebase';
+import { DB, AUTH } from '@/config/firebase';
+import axios from 'axios';
 
 const distributors = {
     namespaced: true,
@@ -33,6 +34,56 @@ const distributors = {
     },
     actions: {
         async ADD_BRANCH({}, payload) {
+            console.log('adding branch: ', payload);
+            try {
+
+                payload.email = payload.email.toLowerCase();
+                console.log('creating branch account...')
+                const response = await AUTH.createUserWithEmailAndPassword(payload.email, 'potatocorner');
+                
+                console.log('sending account verification...');
+
+                await axios({
+                    method: 'post',
+                    url: `${process.env.verificationGeneratorURL}`,
+                    data: {
+                        firstName: payload.firstName,
+                        email: payload.email,
+                        company: process.env.companyName
+                    }
+                });
+
+                console.log('sending account verification done!');
+                
+                payload.customers = [];
+                payload.type = 'Reseller';
+                payload.status = 'approved';
+                payload.createdAt = Date.now();
+
+                console.log('saving brach details to DB...');
+                await DB.collection('accounts').doc(response.user.uid).set(payload);
+                payload.id = response.user.uid;
+
+                console.log('creating conversation for admin and new branch...')
+                await DB.collection('conversations').add({
+                    created: Date.now(),
+                    updated: Date.now(),
+                    opened: {
+                        [payload.id]: true,
+                        ["admin"]: true
+                    },
+                    users: [payload.id, "admin"]
+                });
+
+                return {
+                    isSuccessful: true
+                };
+                
+
+            } catch(error) {
+                console.log(error);
+                throw error;
+            }
 
         }, 
 
@@ -55,7 +106,27 @@ const distributors = {
                 throw error;
             }
         },
+        
+        async RESEND_ACCOUNT_VERIFICATION({}, userDetails) {
+            const { firstName, email } = userDetails;
 
+            try {
+                const response = await axios({
+                    method: 'post',
+                    url: `${process.env.verificationGeneratorURL}`,
+                    data: {
+                        firstName: firstName,
+                        email: email,
+                        company: process.env.companyName
+                    }
+                });
+
+                return response;
+            
+            } catch(error) {
+                throw error;
+            }
+        },
         async LISTEN_TO_NEW_REGISTRATIONS({ state, commit, dispatch }) {
             commit('SET_RESELLERS_LIST', []);
             let accountsToModify = [];
@@ -75,20 +146,6 @@ const distributors = {
 
                         data.type = change.type;
 
-                        // console.log(data);
-
-                        if(!data.hasOwnProperty('isRead') 
-                            && data.status.toLowerCase() === 'pending'
-                        ) {
-                            
-                            data.isRead = false;
-                            accountsToModify.push(data);
-
-                        } else if(!data.hasOwnProperty('isRead')) {
-                            data.isRead = true;
-                            accountsToModify.push(data);
-                        }
-
                         return data;
                     })
 
@@ -97,14 +154,12 @@ const distributors = {
                     
                     } else {
                         changes.forEach((change) => {
-                            if(change.type === 'added' 
-                                && (!change.isRead || !change.hasOwnProperty('isRead'))
-                            ) {
+                            if(change.type === 'added') {
                                 change.isRead = false;
                                 delete change.type;
                                 console.log('added reseller: ', change);
                                 // commit('ADD_RESELLER', change);
-                                state.resellersList.push(change);
+                                state.resellersList.unshift(change);
                             
                             } else if(change.type === 'modified') {
                                 delete change.type;
