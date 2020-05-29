@@ -246,29 +246,6 @@ export default {
       });
     },
 
-    async fetchUsers() {
-      this.loading = true;
-
-      try {
-        const querySnapshot = await usersCollection
-          .where("type", "==", "Reseller")
-          .where("status", "==", "approved")
-          .get();
-
-        this.items = querySnapshot.docs.map(doc => {
-          const user = doc.data();
-          user.id = doc.id;
-          return user;
-        });
-
-        console.log("Resellers", this.items);
-      } catch (error) {
-        console.log(error);
-      }
-
-      this.loading = false;
-    },
-
     validateExcelFile(el) {
       if (!el.target.value) {
         return;
