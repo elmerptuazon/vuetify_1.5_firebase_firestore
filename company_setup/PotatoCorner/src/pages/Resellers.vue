@@ -71,7 +71,7 @@
             <td class="text-xs-center">{{ props.item.lastName }}</td> -->
             <!-- <td class="text-xs-center">{{ props.item.birthday }}</td>
             <td class="text-xs-center">{{ props.item.gender }}</td> -->
-            <td class="text-xs-left">{{ new Date(props.item.createdAt) | momentize('DD-MMM-YYYY') }}</td>
+            <td class="text-xs-left">{{ new Date(props.item.createdAt) | momentize('D-MMM-YYYY') }}</td>
             <td class="text-xs-left">{{ props.item.email }}</td>
             <td class="text-xs-left">{{ props.item.contact }}</td>
             <td class="text-xs-left">{{ showFullAddress(props.item.address) }}</td>
@@ -172,7 +172,7 @@ export default {
         value: "branchName"
       },
       {
-        text: "Branch Manager Name",
+        text: "Branch Manager",
         value: "lastName"
       },
       {
