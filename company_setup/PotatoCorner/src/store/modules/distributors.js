@@ -176,7 +176,6 @@ const distributors = {
         },
         async LISTEN_TO_NEW_REGISTRATIONS({ state, commit, dispatch }) {
             commit('SET_RESELLERS_LIST', []);
-            let accountsToModify = [];
 
             state.subscriber = DB.collection('accounts')
                 .where('type', '==', 'Reseller')
@@ -200,7 +199,7 @@ const distributors = {
                             if(index !== -1) {
                                 state.resellersList[index] = Object.assign({}, data);
                                 console.log('modified reseller: ', data);
-                                dispatch('conversations/listenToConversations', null, {root:true});
+                                // dispatch('conversations/listenToConversations', null, {root:true});
                             }
                         
                         } else if(change.type === 'removed') {
