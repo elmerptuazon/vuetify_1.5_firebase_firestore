@@ -497,7 +497,8 @@ export default {
 
         await this.$store.dispatch('distributors/DELETE_BRANCH', {
           id: this.accountData.id,
-          email: this.accountData.email
+          email: this.accountData.email,
+          userObj: this.account,
         });
 
         console.log('branch deleted!');
