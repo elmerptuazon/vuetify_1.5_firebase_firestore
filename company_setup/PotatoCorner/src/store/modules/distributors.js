@@ -144,7 +144,6 @@ const distributors = {
                 convoToBeDeletedRef.docs.forEach(convo => {
                     batchOperation.delete(DB.collection('conversations').doc(convo.id));
                 });
-                
 
                 //delete profile picture related to the branch
                 if(userObj.hasOwnProperty('downloadURL') || userObj.downloadURL) {
@@ -158,7 +157,7 @@ const distributors = {
                 });
 
                 //deleting stockorders related to the branch
-                const stockOrderToDeleteRef = await DB.collection('stock_order').where('userId', '==', id).get();
+                const stockOrderToDeleteRef = await DB.collection('stock_orders').where('userId', '==', id).get();
                 stockOrderToDeleteRef.docs.forEach(doc => {
                     batchOperation.delete(DB.collection('stock_orders').doc(doc.id));
                 });
