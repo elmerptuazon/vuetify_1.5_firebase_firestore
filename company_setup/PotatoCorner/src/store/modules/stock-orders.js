@@ -90,7 +90,7 @@ const stock_orders = {
                         } else if(change.type === 'removed') {
                             const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === data.id);
                             if(index !== -1) {
-                                state.stockOrderList.splice(1, index);
+                                state.stockOrderList.splice(index, 1);
                                 console.log('stock order has been removed.');
                             }
                         }
