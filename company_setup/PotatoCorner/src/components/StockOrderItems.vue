@@ -103,7 +103,7 @@ export default {
           shippedQty: item.shippedQty,
           remainingQty: item.qty - item.shippedQty,
           price: item.resellerPrice,
-          total: item.qty * item.resellerPrice,
+          total: item.qty * item.price,
           name: item.name,
           attributes: attributes,
           image: item.downloadURL
@@ -114,7 +114,7 @@ export default {
     },
 
     subTotal() {
-      return this.items.reduce((a, b) => a + b.resellerPrice * b.qty, 0);
+      return this.items.reduce((a, b) => a + b.price * b.qty, 0);
     },
 
     discount() {

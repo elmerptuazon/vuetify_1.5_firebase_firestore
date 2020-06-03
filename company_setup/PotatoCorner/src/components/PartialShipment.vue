@@ -224,7 +224,7 @@ export default {
           attributesString: attributes,
           image: item.downloadURL,
           productId: item.productId,
-          price: item.resellerPrice
+          price: item.price
         };
       });
 
