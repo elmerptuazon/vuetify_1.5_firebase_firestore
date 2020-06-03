@@ -16,7 +16,34 @@
           <v-subheader>Franchise Application Approval Date</v-subheader>
         </v-flex>
         <v-flex xs8>
-          <v-text-field prepend-inner-icon="event" v-model="accountData.createdAt" disabled></v-text-field>
+          <v-menu
+            ref="menu"
+            v-model="menu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            :disabled="disableEdit"
+            transition="scale-transition"
+            offset-y
+            full-width
+            max-width="290px"
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                :value="vDateFormatter(accountData.approvedDate)"
+                prepend-inner-icon="event"
+                :disabled="disableEdit"
+                readonly
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+              v-model="accountData.approvedDate"
+              @change="menu = false"
+              :disabled="disableEdit"
+              no-title
+            ></v-date-picker>
+          </v-menu>
         </v-flex>
       </v-layout>
       
@@ -27,7 +54,7 @@
         <v-flex xs8>
           <v-menu
             ref="menu"
-            v-model="menu"
+            v-model="menu2"
             :close-on-content-click="false"
             :nudge-right="40"
             :disabled="disableEdit"
@@ -48,7 +75,7 @@
             </template>
             <v-date-picker
               v-model="accountData.establishDate"
-              @change="menu = false"
+              @change="menu2 = false"
               :disabled="disableEdit"
               no-title
             ></v-date-picker>
@@ -359,15 +386,12 @@ export default {
   props: ["account"],
   created() {
     this.accountData = Object.assign({}, this.account);
-    this.accountData.createdAt = moment(new Date(this.accountData.createdAt)).format("DD-MMM-YYYY");
-    //format the establishDate into a format that the v-date-picker could understand
+    //format dates into a readable format that v-date-picker could understand
+    this.accountData.approvedDate = this.accountData.approvedDate ? moment(new Date(this.accountData.approvedDate)).format("YYYY-MM-DD") : null;
     this.accountData.establishDate = this.accountData.establishDate ? moment(new Date(this.accountData.establishDate)).format("YYYY-MM-DD") : null;
-    
-    // if(!this.accountData.managersName) {
-    //   this.accountData.managersName = `${this.accountData.firstName} ${(this.accountData.middleInitial + ".") || ""} ${this.accountData.lastName}`;
-    // }
      
   },
+
   data: () => ({
     dialog: false,
     disableEdit: true,
@@ -376,6 +400,7 @@ export default {
 
     date: false,
     menu: false,
+    menu2: false,
 
     updateLoadingBtn: false,
     resendEmailBtn: false,
@@ -395,7 +420,7 @@ export default {
     },
     
     vDateFormatter(date) {
-      return date ? moment(date).format('DD-MMM-YYYY') : null;
+      return date ? moment(new Date(date)).format('DD-MMM-YYYY') : null;
     },
     
     showFullName(account) {

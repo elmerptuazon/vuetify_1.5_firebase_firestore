@@ -83,8 +83,38 @@
                       >
                         <template v-slot:activator="{ on }">
                           <v-text-field
+                            :value="vDateFormatter(registerData.approvedDate)"
+                            prepend-inner-icon="event"
+                            label="Franchise Application Approval Date"
+                            required
+                            readonly
+                            v-on="on"
+                          ></v-text-field>
+                        </template>
+                        <v-date-picker
+                          v-model="registerData.approvedDate"
+                          @change="menu = false"
+                          no-title
+                        ></v-date-picker>
+                      </v-menu>
+                    </v-flex>
+                    <v-flex xs12>
+                      <v-menu
+                        ref="menu"
+                        v-model="menu2"
+                        :close-on-content-click="false"
+                        :nudge-right="40"
+                        transition="scale-transition"
+                        offset-y
+                        full-width
+                        max-width="290px"
+                        min-width="290px"
+                      >
+                        <template v-slot:activator="{ on }">
+                          <v-text-field
                             :value="vDateFormatter(registerData.establishDate)"
                             prepend-inner-icon="event"
+                            label="Branch Opening Date"
                             required
                             readonly
                             v-on="on"
@@ -92,7 +122,7 @@
                         </template>
                         <v-date-picker
                           v-model="registerData.establishDate"
-                          @change="menu = false"
+                          @change="menu2 = false"
                           no-title
                         ></v-date-picker>
                       </v-menu>
@@ -264,6 +294,7 @@ export default {
 		form2: false,
     form3: false,
     menu: false,
+    menu2: false,
 		submitBtnDisabled: false,
 		provinces: [],
 		cities: [],
@@ -273,6 +304,8 @@ export default {
       firstName: null,
       middleInitial: null,
       lastName: null,
+      approvedDate: null,
+      establishDate: null,
       email: null,
       contact: null,
       social: {
@@ -306,6 +339,8 @@ export default {
         firstName: null,
         middleInitial: null,
         lastName: null,
+        approvedDate: null,
+        establishDate: null,
         email: null,
         contact: null,
         social: {

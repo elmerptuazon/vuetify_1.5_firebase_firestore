@@ -71,7 +71,7 @@
             <td class="text-xs-center">{{ props.item.lastName }}</td> -->
             <!-- <td class="text-xs-center">{{ props.item.birthday }}</td>
             <td class="text-xs-center">{{ props.item.gender }}</td> -->
-            <td class="text-xs-left">{{ new Date(props.item.createdAt) | momentize('D-MMM-YYYY') }}</td>
+            <td class="text-xs-left">{{ new Date(props.item.approvedDate) | momentize('D-MMM-YYYY') }}</td>
             <td class="text-xs-left">{{ props.item.email }}</td>
             <td class="text-xs-left">{{ props.item.contact }}</td>
             <td class="text-xs-left">{{ showFullAddress(props.item.address) }}</td>
@@ -153,7 +153,7 @@ export default {
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
     pagination: {
-      sortBy: 'Approval Date',
+      sortBy: 'Approved Date',
     },
     tableLoading: false,
     headers: [
@@ -176,8 +176,8 @@ export default {
         value: "lastName"
       },
       {
-        text: "Approval Date",
-        value: "createdAt"
+        text: "Approved Date",
+        value: "approvedDate"
       },
       // {
       //   text: "First name",
@@ -209,7 +209,7 @@ export default {
       },
       {
         text: "Address",
-        value: "address.home"
+        value: "address.house"
       }
     ],
 
