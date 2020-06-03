@@ -37,7 +37,7 @@ export default new Vuex.Store({
 				url: 'Resellers' 
 			},
 			{
-				icon: 'receipts',
+				icon: 'receipt',
 				text: 'Stock Orders',
 				url: 'StockOrders',
 			},
