@@ -290,6 +290,13 @@ export default {
         const branchesLength = branches.length - 1;
 
         for(let index = 1; index !== branchesLength; index++) {
+          /*
+            "index" has been adjusted to 1 so that it would skip the first row of the excel sheet
+            since that first row is just a guide for the user on how to enter the proper details of a branch
+
+            "branchesLength" has been adjusted to less one row since the last row is just a warning to the user to ignore the 1st row
+            which is a template row. 
+          */
           const branchObj = branches[index]; 
 
           let registerData = {
