@@ -152,7 +152,6 @@ const distributors = {
                 }
 
                 //deleting messages related to the branch
-                
                 const messagesToDeleteRef = await DB.collection('messages').where('sender', '==', id).get();
                 messagesToDeleteRef.docs.forEach(doc => {
                     batchOperation.delete(DB.collection('messages').doc(doc.id));
@@ -168,6 +167,12 @@ const distributors = {
                 const shipmentsToDeleteRef = await DB.collection('shipment').where('userDetails.userId', '==', id).get();
                 shipmentsToDeleteRef.docs.forEach(doc => {
                     batchOperation.delete(DB.collection('shipment').doc(doc.id));
+                });
+
+                //deleting support message related to the branch
+                const supportToDeleteRef = await DB.collection('support').where('uid', '==', id).get();
+                supportToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('support').doc(doc.id));
                 });
 
                 await batchOperation.commit();
