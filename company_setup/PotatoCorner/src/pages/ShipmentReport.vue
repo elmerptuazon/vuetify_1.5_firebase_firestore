@@ -111,8 +111,10 @@
             <td class="text-xs-center">{{ props.item.trackingNumber }}</td>
             <td class="text-xs-left">
               {{ props.item.stockOrder.stockOrderReference }}
+            </td><td class="text-xs-left">
+              {{ props.item.userDetails.branchName }}
             </td>
-            <td class="text-xs-left">
+            <!-- <td class="text-xs-left">
               {{
                 props.item.userDetails.lastName +
                   ", " +
@@ -120,7 +122,7 @@
                   " " +
                   props.item.userDetails.middleInitial
               }}
-            </td>
+            </td> -->
             <td class="text-xs-center">{{ props.item.userDetails.agentId }}</td>
             <td class="text-xs-left">
               {{ props.item.userDetails.address.house }},{{
@@ -189,18 +191,18 @@ export default {
         value: "stockOrder.stockOrderReference"
       },
       {
-        text: "Customer Name",
-        //value: "attributes",
+        text: "Branch Name",
+        value: "userDetails.branchName",
         align: "center"
       },
       {
-        text: "Membership ID",
+        text: "Branch ID",
         value: "userDetails.agentId",
         align: "center"
       },
       {
         text: "Shipping Address",
-        //value: "qty",
+        value: "userDetails.address.house",
         align: "center"
       },
       {
@@ -237,8 +239,8 @@ export default {
       "Date Requested": "dateRequested",
       "Shipment Number": "shipmentNumber",
       "Order Number": "orderNumber",
-      "Customer Name": "customerName",
-      "Membership Id": "membershipId",
+      "Branch Name": "branchName",
+      "Branch Id": "branchId",
       "Shipping Address": "shippingAddress",
       Contact: "contact",
       Item: "itemName",
@@ -277,13 +279,15 @@ export default {
           let data = {
             shipmentNumber: shipment.trackingNumber,
             orderNumber: shipment.stockOrder.stockOrderReference,
-            customerName:
-              shipment.userDetails.lastName +
-              ", " +
-              shipment.userDetails.firstName +
-              " " +
-              shipment.userDetails.middleInitial,
-            membershipId: shipment.userDetails.agentId,
+             branchName:
+              shipment.userDetails.branchName,
+            // customerName:
+            //   shipment.userDetails.lastName +
+            //   ", " +
+            //   shipment.userDetails.firstName +
+            //   " " +
+            //   shipment.userDetails.middleInitial,
+            branchId: shipment.userDetails.agentId,
             shippingAddress:
               shipment.userDetails.address.house +
               "," +

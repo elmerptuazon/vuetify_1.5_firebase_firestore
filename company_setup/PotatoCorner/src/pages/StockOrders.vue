@@ -81,6 +81,9 @@
               {{ props.item.stockOrderReference }}
             </td>
             <td>
+              {{ props.item.user.branchName }}
+            </td>
+            <!-- <td>
               {{ props.item.user.firstName }}
             </td>
             <td>
@@ -88,7 +91,7 @@
             </td>
             <td>
               {{ props.item.user.lastName }}
-            </td>
+            </td> -->
             <td>
               {{ props.item.user.address.citymun }}
             </td>
@@ -99,7 +102,7 @@
             <td>{{ props.item.sku }}</td>
             <td>{{ props.item.status | uppercase }}</td>
             <!-- <td>{{ props.item.discountedTotal | currency("P") }}</td> -->
-            <td>{{ props.item.resellerPrice | currency("P") }}</td>
+            <td>{{ props.item.price | currency("P") }}</td>
           </tr>
         </template>
       </v-data-table>
@@ -130,17 +133,21 @@ export default {
         value: "stockOrderReference"
       },
       {
-        text: "First Name",
-        value: "user.firstName"
+        text: "Branch Name",
+        value: "user.branchName"
       },
-      {
-        text: "Middle Name",
-        value: "user.middleInitial"
-      },
-      {
-        text: "Last Name",
-        value: "user.lastName"
-      },
+      // {
+      //   text: "First Name",
+      //   value: "user.firstName"
+      // },
+      // {
+      //   text: "Middle Name",
+      //   value: "user.middleInitial"
+      // },
+      // {
+      //   text: "Last Name",
+      //   value: "user.lastName"
+      // },
       {
         text: "City",
         value: "user.address.citymun"
@@ -163,7 +170,7 @@ export default {
       },
       {
         text: "Price",
-        value: "resellerPrice"
+        value: "price"
       }
     ],
     statuses: [],
