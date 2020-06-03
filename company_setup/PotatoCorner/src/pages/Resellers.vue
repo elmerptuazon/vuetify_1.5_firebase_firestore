@@ -333,7 +333,7 @@ export default {
 
         let branchWithErrors = [];
 
-        for(const branchData of branches) {
+        for(const branchData of branchToRegister) {
           try {
             await this.$store.dispatch('distributors/ADD_BRANCH', branchData);
           
