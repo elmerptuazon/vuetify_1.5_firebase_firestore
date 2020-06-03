@@ -141,11 +141,6 @@ export default {
   async mounted() {
     this.excelDownloadURL = await this.$store.dispatch('auth/GET_TEMPLATE_EXCEL');
   },
-  
-  // async created() {
-  //    await this.fetchUsers();
-  //    this.excelDownloadURL = ''; 
-  // },
 
   data: () => ({
     // items: [],
@@ -179,26 +174,6 @@ export default {
         text: "Approved Date",
         value: "approvedDate"
       },
-      // {
-      //   text: "First name",
-      //   value: "firstName"
-      // },
-      // {
-      //   text: "Middle initial",
-      //   value: "middleInitial"
-      // },
-      // {
-      //   text: "Last name",
-      //   value: "lastName"
-      // },
-      // {
-      //   text: "Birthday",
-      //   value: "birthday"
-      // },
-      // {
-      //   text: "Gender",
-      //   value: "gender"
-      // },
       {
         text: "Email",
         value: "email"
@@ -290,8 +265,6 @@ export default {
         return;
       }
       
-      let branchWithErrors = [];
-
       try {
         const file = this.$refs.excelFile.files[0];
         const objectURL = window.URL.createObjectURL(file);
@@ -307,52 +280,67 @@ export default {
         }
 
         const workbook = XLSX.read(arr.join(""), { type: "binary" });
-        const workbookSheetsLength = workbook.SheetNames.length;
-        
-        for(let i = 0; i !== workbookSheetsLength; i++) {
-          let worksheet = workbook.Sheets[workbook.SheetNames[i]];
+        // const workbookSheetsLength = workbook.SheetNames.length;
+        let worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-          let branches = XLSX.utils.sheet_to_json(worksheet, { raw: false });
-          console.log('extracted branches: ', branches);
+        let branches = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+        console.log('extracted branches: ', branches);
 
-          branches = branches.map(branchObj => {
-            let registerData = {
-              branchName: branchObj['BRANCH NAME'],
-              firstName: branchObj['BRANCH MANAGER FIRST NAME'],
-              middleInitial: branchObj['BRANCH MANAGER MIDDLE INITIAL'],
-              lastName: branchObj['BRANCH MANAGER LAST NAME'],
-              establishDate: branchObj['DATE ESTABLISHED'],
-              
-              email: branchObj['EMAIL'],
-              contact: branchObj['CONTACT NUMBER'],
-              social: {
-                facebook: branchObj['FACEBOOK URL']
-              },
-              
-              address: {
-                house: branchObj['LOT / FLOOR NO.'],
-                streetName: branchObj['STREET NAME'],
-                barangay: branchObj['BARANGAY'],
-                citymun: branchObj['CITY / MUNICIPALITY'],
-                province: branchObj['PROVINCE'],
-                zipCode: branchObj['ZIP CODE'],
-              },
+        let branchToRegister = [];
+        const branchesLength = branches.length - 1;
 
-            };
+        for(let index = 1; index !== branchesLength; index++) {
+          const branchObj = branches[index]; 
 
-            return registerData;
-          });
-
-          for(const branchData of branches) {
-            try {
-              await this.$store.dispatch('distributors/ADD_BRANCH', branchData);
+          let registerData = {
+            branchName: branchObj['BRANCH NAME'],
+            firstName: branchObj['BRANCH MANAGER FIRST NAME'],
+            middleInitial: branchObj['BRANCH MANAGER MIDDLE INITIAL'],
+            lastName: branchObj['BRANCH MANAGER LAST NAME'],
+            approvedDate: branchObj['FRANCHISE APPLICATION APPROVAL DATE'],
+            establishDate: branchObj['BRANCH OPENING DATE'],
             
-            } catch(error) {
-              branchWithErrors.push({ branchName: branchData.branchName, errorMessage: error.message});
-              continue;
-            }
-          }
+            email: branchObj['EMAIL'],
+            contact: branchObj['CONTACT NUMBER'],
+            social: {
+              facebook: branchObj['FACEBOOK URL']
+            },
+            
+            address: {
+              house: branchObj['LOT / FLOOR NO.'],
+              streetName: branchObj['STREET NAME'],
+              barangay: branchObj['BARANGAY'],
+              citymun: branchObj['CITY / MUNICIPALITY'],
+              province: branchObj['PROVINCE'],
+              zipCode: branchObj['ZIP CODE'],
+            },
 
+          };
+
+          branchToRegister.push(registerData);
+        }
+
+        console.log('extracted branches', branchToRegister);
+
+        if(!branchToRegister.length) {
+          this.excelButtonLoading = false;
+          this.excelDialog = false;
+          this.$refs.excelFile.value = null;
+          this.$refs.excelFile.files = null;
+          this.$swal.fire({ type: "warning", title: "Excel file does not contain any branch registration"});
+          return;
+        }
+
+        let branchWithErrors = [];
+
+        for(const branchData of branches) {
+          try {
+            await this.$store.dispatch('distributors/ADD_BRANCH', branchData);
+          
+          } catch(error) {
+            branchWithErrors.push({ branchName: branchData.branchName, errorMessage: error.message});
+            continue;
+          }
         }
 
         this.excelButtonLoading = false;
