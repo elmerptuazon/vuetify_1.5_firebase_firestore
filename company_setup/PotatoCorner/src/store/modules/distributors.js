@@ -1,4 +1,4 @@
-import { DB, AUTH } from '@/config/firebase';
+import { DB, AUTH, STORAGE } from '@/config/firebase';
 import axios from 'axios';
 
 const distributors = {
@@ -124,7 +124,7 @@ const distributors = {
         },
 
         async DELETE_BRANCH({}, userDetails) {
-            const { email, id } = userDetails;
+            const { email, id, userObj } = userDetails;
             try {
                 await axios({
                     method: 'post',
@@ -133,16 +133,44 @@ const distributors = {
                         email: email
                     }
                 });
+                
+                const batchOperation = DB.batch();
 
+                //deleting account details
                 await DB.collection('accounts').doc(id).delete();
+
+                //deleting conversations relate to the branch
                 const convoToBeDeletedRef = await DB.collection('conversations').where('users', 'array-contains', id).get();
-                const convoData = convoToBeDeletedRef.docs.map(convo => {
-                    const data = convo.data();
-                    data.id = convo.id;
-                    return convo;
+                convoToBeDeletedRef.docs.forEach(convo => {
+                    batchOperation.delete(DB.collection('conversations').doc(convo.id));
+                });
+                
+
+                //delete profile picture related to the branch
+                if(userObj.hasOwnProperty('downloadURL') || userObj.downloadURL) {
+                    await STORAGE.ref('appsell').child('profile-pictures/' + id).delete();
+                }
+
+                //deleting messages related to the branch
+                
+                const messagesToDeleteRef = await DB.collection('messages').where('sender', '==', id).get();
+                messagesToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('messages').doc(doc.id));
                 });
 
-                await DB.collection('conversations').doc(convoData[0].id).delete();
+                //deleting stockorders related to the branch
+                const stockOrderToDeleteRef = await DB.collection('stock_order').where('userId', '==', id).get();
+                stockOrderToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('stock_orders').doc(doc.id));
+                });
+
+                //deleting shipments related to the branch
+                const shipmentsToDeleteRef = await DB.collection('shipment').where('userDetails.userId', '==', id).get();
+                shipmentsToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('shipment').doc(doc.id));
+                });
+
+                await batchOperation.commit();
 
                 return {
                     isSuccessful: true
