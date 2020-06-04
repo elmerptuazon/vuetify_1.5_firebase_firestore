@@ -64,14 +64,20 @@
                     </v-list-tile-avatar>
 
                     <v-list-tile-content>
-                      <v-list-tile-title
+                      <!-- <v-list-tile-title
                         :class="[
                           !i.opened[userId] ? 'blue--text strong-text' : ''
                         ]"
                         >{{ i.user.firstName }}
                         {{ i.user.middleInitial || "" }}
                         {{ i.user.lastName }}</v-list-tile-title
-                      >
+                      > -->
+                      <v-list-tile-title
+                        :class="[
+                          !i.opened[userId] ? 'blue--text strong-text' : ''
+                        ]"
+                        >{{ i.user.branchName }}
+                      </v-list-tile-title>
                     </v-list-tile-content>
 
                     <v-list-tile-action v-show="!i.opened[userId]">
@@ -212,28 +218,13 @@ export default {
     loadingDialog: false
   }),
   async created() {
-    // this.conversationsLoading = true;
-    // this.listenToConversations();
 
-    // console.log(this.items);
-
-    if (this.items.length > 0) {
-      await this.viewConversation(this.items[0]);
+    if(this.items.length > 0) {
+      await this.viewConversation(this.items[this.items.length - 1]);
       this.conversationsLoaded = true;
+    
     }
 
-    // try {
-    //   const conversations = await this.$store.dispatch(
-    //     "conversations/GET_CONVERSATIONS"
-    //   );
-
-    //   this.items = conversations;
-
-      
-    // } catch (error) {
-    //   console.log(error);
-    // }
-    // this.conversationsLoading = false;
   },
   methods: {
     async markConvoAsRead() {
@@ -243,18 +234,17 @@ export default {
     async viewConversation(item) {
       console.log(item);
 
-      // if (this.messagesListener) {
-      //   this.messagesListener();
-      //   this.messagesListener = null;
-      // }
-
-      this.selectedConversation = item;
+      this.selectedConversation = Object.assign({}, item);
       this.loading = true;
 
       this.search = '';
 
       await this.$store.dispatch("conversations/listenToNewMessages", item);
-      await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
+
+      //if the "admin" hasnt opened the conversation, mark it as read
+      if(!this.selectedConversation.opened[1]) {
+        await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
+      }
       
       this.scrollDown();
       this.loading = false;
