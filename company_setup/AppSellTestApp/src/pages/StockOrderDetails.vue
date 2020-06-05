@@ -467,7 +467,7 @@ export default {
           id: this.$route.params.id
         });
 
-        await this.$store.dispatch("stock_order/UPDATE_STOCK_ORDER_DETAILS", {
+        await this.$store.dispatch("stock_orders/UPDATE_STOCK_ORDER_DETAILS", {
           referenceID: this.$route.params.id,
           updateObject: {
             read: false,
