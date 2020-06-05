@@ -463,6 +463,7 @@ export default {
 
         await this.$store.dispatch("stock_orders/UPDATE_STATUS", {
           status: status,
+          read: false,
           statusTimeline: statusTimeline,
           id: this.$route.params.id
         });
