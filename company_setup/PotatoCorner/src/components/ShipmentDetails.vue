@@ -150,14 +150,11 @@
                         <v-list-tile>
                           <v-list-tile-content>
                             <v-list-tile-sub-title
-                              >Customer Name</v-list-tile-sub-title
+                              >Branch Name</v-list-tile-sub-title
                             >
                             <v-list-tile-title>
-                              {{ shipment.userDetails.firstName }}
-                              {{ shipment.userDetails.middleInitial || "" }}
-                              {{
-                                shipment.userDetails.lastName
-                              }}</v-list-tile-title
+                              {{ shipment.userDetails.branchName }}
+                              </v-list-tile-title
                             >
                           </v-list-tile-content>
                         </v-list-tile>

@@ -1,4 +1,5 @@
-import { DB } from '@/config/firebase';
+import { DB, AUTH, STORAGE } from '@/config/firebase';
+import axios from 'axios';
 
 const distributors = {
     namespaced: true,
@@ -32,9 +33,181 @@ const distributors = {
         }
     },
     actions: {
+        async ADD_BRANCH({}, payload) {
+            console.log('adding branch: ', payload);
+            try {
+
+                payload.email = payload.email.toLowerCase();
+                console.log('creating branch account...')
+                const response = await AUTH.createUserWithEmailAndPassword(payload.email, 'potatocorner');
+                
+                console.log('sending account verification...');
+
+                await axios({
+                    method: 'post',
+                    url: `${process.env.accountManagementURL}/sendAccountVerification`,
+                    data: {
+                        firstName: payload.firstName,
+                        email: payload.email,
+                        company: process.env.companyName
+                    }
+                });
+
+                console.log('sending account verification done!');
+                
+                payload.customers = [];
+                payload.type = 'Reseller';
+                payload.status = 'approved';
+                payload.createdAt = Date.now();
+
+                console.log('saving brach details to DB...');
+                await DB.collection('accounts').doc(response.user.uid).set(payload);
+                payload.id = response.user.uid;
+
+                console.log('creating conversation for admin and new branch...')
+                await DB.collection('conversations').add({
+                    created: Date.now(),
+                    updated: Date.now(),
+                    opened: {
+                        [payload.id]: true,
+                        ["admin"]: true
+                    },
+                    users: [payload.id, "admin"]
+                });
+
+                return {
+                    isSuccessful: true
+                };
+                
+
+            } catch(error) {
+                console.log(error);
+                throw error;
+            }
+
+        }, 
+
+        async UPDATE_BRANCH({}, payload) {
+            const { id, updatedDetails } = payload;
+
+            try {
+                if(updatedDetails.hasOwnProperty('id')) {
+                    delete updatedDetails.id;
+                }
+
+                const oldDetailsRef = await DB.collection('accounts').doc(id).get();
+                const oldDetails = oldDetailsRef.data();
+
+                if(oldDetails.email !== updatedDetails.email) {
+                    await axios({
+                        method: 'post',
+                        url: `${process.env.accountManagementURL}/updateEmail`,
+                        data: {
+                            oldEmail: oldDetails.email,
+                            newEmail: updatedDetails.email,
+                        }
+                    });
+
+                    console.log('email updated!');
+                }
+
+                await DB.collection('accounts').doc(id).update(updatedDetails);
+
+                return {
+                    isSuccessful: true,
+                }
+
+            } catch(error) {
+                console.log(error);
+                throw error;
+            }
+        },
+
+        async DELETE_BRANCH({}, userDetails) {
+            const { email, id, userObj } = userDetails;
+            try {
+                await axios({
+                    method: 'post',
+                    url: `${process.env.accountManagementURL}/deleteUser`,
+                    data: {
+                        email: email
+                    }
+                });
+                
+                const batchOperation = DB.batch();
+
+                //deleting account details
+                await DB.collection('accounts').doc(id).delete();
+
+                //deleting conversations relate to the branch
+                const convoToBeDeletedRef = await DB.collection('conversations').where('users', 'array-contains', id).get();
+                convoToBeDeletedRef.docs.forEach(convo => {
+                    batchOperation.delete(DB.collection('conversations').doc(convo.id));
+                });
+
+                //delete profile picture related to the branch
+                if(userObj.hasOwnProperty('downloadURL') || userObj.downloadURL) {
+                    await STORAGE.ref('appsell').child('profile-pictures/' + id).delete();
+                }
+
+                //deleting messages related to the branch
+                const messagesToDeleteRef = await DB.collection('messages').where('sender', '==', id).get();
+                messagesToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('messages').doc(doc.id));
+                });
+
+                //deleting stockorders related to the branch
+                const stockOrderToDeleteRef = await DB.collection('stock_orders').where('userId', '==', id).get();
+                stockOrderToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('stock_orders').doc(doc.id));
+                });
+
+                //deleting shipments related to the branch
+                const shipmentsToDeleteRef = await DB.collection('shipment').where('userDetails.userId', '==', id).get();
+                shipmentsToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('shipment').doc(doc.id));
+                });
+
+                //deleting support message related to the branch
+                const supportToDeleteRef = await DB.collection('support').where('uid', '==', id).get();
+                supportToDeleteRef.docs.forEach(doc => {
+                    batchOperation.delete(DB.collection('support').doc(doc.id));
+                });
+
+                await batchOperation.commit();
+
+                return {
+                    isSuccessful: true
+                };
+
+            } catch(error) {
+                console.log(error);
+                throw error;
+            }
+        },
+        
+        async RESEND_ACCOUNT_VERIFICATION({}, userDetails) {
+            const { firstName, email } = userDetails;
+
+            try {
+                const response = await axios({
+                    method: 'post',
+                    url: `${process.env.accountManagementURL}/sendAccountVerification`,
+                    data: {
+                        firstName: firstName,
+                        email: email,
+                        company: process.env.companyName
+                    }
+                });
+
+                return response;
+            
+            } catch(error) {
+                throw error;
+            }
+        },
         async LISTEN_TO_NEW_REGISTRATIONS({ state, commit, dispatch }) {
             commit('SET_RESELLERS_LIST', []);
-            let accountsToModify = [];
 
             state.subscriber = DB.collection('accounts')
                 .where('type', '==', 'Reseller')
@@ -44,68 +217,36 @@ const distributors = {
 
                     let changes = snapshot.docChanges();
 
-                    changes = changes.map((change) => {
+                    changes = changes.forEach((change) => {
 
                         let data = change.doc.data();
                         data.id = change.doc.id;
 
-                        data.type = change.type;
-
-                        // console.log(data);
-
-                        if(!data.hasOwnProperty('isRead') 
-                            && data.status.toLowerCase() === 'pending'
-                        ) {
-                            
-                            data.isRead = false;
-                            accountsToModify.push(data);
-
-                        } else if(!data.hasOwnProperty('isRead')) {
-                            data.isRead = true;
-                            accountsToModify.push(data);
+                        if(change.type === 'added') {
+                            console.log('added reseller: ', change);
+                            state.resellersList.unshift(data);
+                        
+                        } else if(change.type === 'modified') {
+                            const index = state.resellersList.findIndex(reseller => reseller.id === data.id);
+                            if(index !== -1) {
+                                state.resellersList[index] = Object.assign({}, data);
+                                console.log('modified reseller: ', data);
+                                // dispatch('conversations/listenToConversations', null, {root:true});
+                            }
+                        
+                        } else if(change.type === 'removed') {
+                            const index = state.resellersList.findIndex(reseller => reseller.id === data.id);
+                            if(index !== -1) {
+                                state.resellersList.splice(index, 1);
+                                console.log('removed reseller: ', data);
+                            }
                         }
 
                         return data;
                     })
 
-                    if(!state.resellersList || !state.resellersList.length) {
-                        commit('SET_RESELLERS_LIST', changes);
-                    
-                    } else {
-                        changes.forEach((change) => {
-                            if(change.type === 'added' 
-                                && (!change.isRead || !change.hasOwnProperty('isRead'))
-                            ) {
-                                change.isRead = false;
-                                delete change.type;
-                                console.log('added reseller: ', change);
-                                // commit('ADD_RESELLER', change);
-                                state.resellersList.push(change);
-                            
-                            } else if(change.type === 'modified') {
-                                delete change.type;
-                                // commit('UPDATE_RESELLER', change);
-                                const index = state.resellersList.findIndex(reseller => reseller.id === change.id);
-                                if(index !== -1) {
-                                    state.resellersList[index] = Object.assign({}, change);
-                                    console.log('modified reseller: ', change);
-                                    dispatch('conversations/listenToConversations', null, {root:true});
-                                }
-                            }
-                        })
-                    } 
                 })
 
-            if(accountsToModify.length) {
-                for(const account of accountsToModify) {
-                    console.log('updating isRead of: ', account.id);
-                    await dispatch('UPDATE_STATUS_BY_FIELD', {
-                        uid: account.id,
-                        key: 'isRead',
-                        value: account.isRead,
-                    });
-                }
-            }
 
         },
 

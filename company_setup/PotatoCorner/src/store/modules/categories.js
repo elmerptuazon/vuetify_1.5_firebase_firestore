@@ -54,6 +54,20 @@ const categories = {
                 throw error;
             }
         },
+        async FETCH_ALL_CATEGORIES ({ commit, dispatch }) {
+            try {
+                const querySnapshot = await DB.collection('catalogues').get();
+                const categories = querySnapshot.docs.map((doc) => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    return data;
+                });
+                //return categories;
+                return categories;
+            } catch (error) {
+                throw error;
+            }
+        },
         async GET_CATEGORY_BY_COMPANY ({ commit, dispatch }, companyId) {
             try {
                 const querySnapshot = await DB.collection('catalogues').where('companyId', '==', companyId).get();
@@ -98,7 +112,7 @@ const categories = {
         },
         async GET_EXCEL_TEMPLATE() {
             try {
-                const downloadURL = await STORAGE.ref("appsell").child('CategoryExcelTemplate.zip').getDownloadURL();
+                const downloadURL = STORAGE.ref("appsell").child('CategoryExcelTemplate.zip').getDownloadURL();
                 return downloadURL;
             } catch (error) {
                 throw error;

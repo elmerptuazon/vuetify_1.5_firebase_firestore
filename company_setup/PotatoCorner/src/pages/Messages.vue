@@ -36,7 +36,7 @@
                     height="1"
                     single-line
                     class="px-2 mt-2"
-                    placeholder="search reseller..."
+                    placeholder="search branch..."
                     prepend-inner-icon="search"
                   ></v-text-field>
                 </v-flex>
@@ -64,14 +64,20 @@
                     </v-list-tile-avatar>
 
                     <v-list-tile-content>
-                      <v-list-tile-title
+                      <!-- <v-list-tile-title
                         :class="[
                           !i.opened[userId] ? 'blue--text strong-text' : ''
                         ]"
                         >{{ i.user.firstName }}
                         {{ i.user.middleInitial || "" }}
                         {{ i.user.lastName }}</v-list-tile-title
-                      >
+                      > -->
+                      <v-list-tile-title
+                        :class="[
+                          !i.opened[userId] ? 'blue--text strong-text' : ''
+                        ]"
+                        >{{ i.user.branchName }}
+                      </v-list-tile-title>
                     </v-list-tile-content>
 
                     <v-list-tile-action v-show="!i.opened[userId]">
@@ -212,28 +218,13 @@ export default {
     loadingDialog: false
   }),
   async created() {
-    // this.conversationsLoading = true;
-    // this.listenToConversations();
 
-    // console.log(this.items);
-
-    if (this.items.length > 0) {
-      await this.viewConversation(this.items[0]);
+    if(this.items.length > 0) {
+      await this.viewConversation(this.items[this.items.length - 1]);
       this.conversationsLoaded = true;
+    
     }
 
-    // try {
-    //   const conversations = await this.$store.dispatch(
-    //     "conversations/GET_CONVERSATIONS"
-    //   );
-
-    //   this.items = conversations;
-
-      
-    // } catch (error) {
-    //   console.log(error);
-    // }
-    // this.conversationsLoading = false;
   },
   methods: {
     async markConvoAsRead() {
@@ -243,18 +234,17 @@ export default {
     async viewConversation(item) {
       console.log(item);
 
-      // if (this.messagesListener) {
-      //   this.messagesListener();
-      //   this.messagesListener = null;
-      // }
-
-      this.selectedConversation = item;
+      this.selectedConversation = Object.assign({}, item);
       this.loading = true;
 
       this.search = '';
 
       await this.$store.dispatch("conversations/listenToNewMessages", item);
-      await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
+
+      //if the "admin" hasnt opened the conversation, mark it as read
+      if(!this.selectedConversation.opened[1]) {
+        await this.$store.dispatch("conversations/OPEN_UNREAD", item.id);
+      }
       
       this.scrollDown();
       this.loading = false;
@@ -288,69 +278,6 @@ export default {
         console.log(error);
       }
     },
-    // listenToConversations() {
-      // const user = this.$store.getters["auth/GET_USER"];
-
-      // this.conversationsListener = DB.collection("conversations")
-        // .where("users", "array-contains", "admin")
-        // .onSnapshot(snapshot => {
-          // if (!this.conversationsLoaded) {
-            // return;
-          // }
-
-          // snapshot.docChanges().forEach(async change => {
-            // const data = change.doc.data();
-            // data.id = change.doc.id;
-
-            // if (change.type === "added") {
-              // const userIndex = data.users.findIndex(u => u !== user.id);
-              // data.user = await this.$store.dispatch(
-                // "auth/GET_USER",
-                // data.users[userIndex]
-              // );
-              // this.items.push(data);
-            // } else if (change.type === "modified") {
-              // const conversationIndex = this.items.findIndex(
-                // c => c.id === data.id
-              // );
-              // if (conversationIndex !== -1) {
-                // this.items[conversationIndex].updated = data.updated;
-                // this.items[conversationIndex].opened = data.opened;
-
-                // if (this.selectedConversation.id === data.id) {
-                  // this.items[conversationIndex].opened[user.id] = true;
-                // }
-              // }
-            // }
-          // });
-        // });
-    // },
-
-    // listenToNewMessages(conversation) {
-      // const user = this.$store.getters["auth/GET_USER"];
-      // const asker = conversation.user.id;
-      // this.messagesListener = DB.collection("messages")
-        // .where("conversationId", "==", conversation.id)
-        // .onSnapshot(snapshot => {
-          // this.loading = false;
-
-          // snapshot.docChanges().forEach(change => {
-            // const data = change.doc.data();
-            // data.id = change.doc.id;
-
-            // if (change.type === "added") {
-              // if (asker == data.sender) {
-                // data.you = false;
-              // } else if (data.sender == "admin") {
-                // data.you = true;
-              // }
-              // console.log(data);
-              // this.messages.push(data);
-              // this.scrollDown();
-            // }
-          // });
-        // });
-    // },
 
     async sendAttachment() {
       if (this.$refs.file.files[0]) {
@@ -395,12 +322,7 @@ export default {
       }, 250);
     }
   },
-  // beforeDestroy() {
-  //   this.conversationsListener();
-  //   if (this.messagesListener) {
-  //     this.messagesListener();
-  //   }
-  // },
+ 
   computed: {
     items() {
       let conversations = this.$store.getters['conversations/GET_CONVERSATIONS_LIST'];

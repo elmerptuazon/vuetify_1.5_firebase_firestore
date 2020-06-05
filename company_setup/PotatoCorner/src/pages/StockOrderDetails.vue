@@ -27,11 +27,14 @@
 
                       <v-list-tile-content>
                         <v-list-tile-title>
+                          {{ stockOrder.user.branchName }} - {{ stockOrder.user.agentId }}
+                        </v-list-tile-title>
+                        <!-- <v-list-tile-title>
                           {{ stockOrder.user.firstName }}
                           {{ stockOrder.user.middleInitial || "" }}
                           {{ stockOrder.user.lastName }} -
                           {{ stockOrder.user.agentId }}</v-list-tile-title
-                        >
+                        > -->
                       </v-list-tile-content>
                     </v-list-tile>
                   </v-list>
@@ -513,9 +516,9 @@ export default {
                 qtyToShip: item.qty - item.shippedQty,
                 productName: item.name,
                 productId: item.productId,
-                price: item.resellerPrice,
+                price: item.price,
                 qtyToShipPriceTotal:
-                  item.resellerPrice * (item.qty - item.shippedQty)
+                  item.price * (item.qty - item.shippedQty)
               };
               return itemToShip;
             });
@@ -528,6 +531,7 @@ export default {
               userDetails: {
                 firstName: this.stockOrder.user.firstName,
                 lastName: this.stockOrder.user.lastName,
+                branchName: this.stockOrder.user.branchName,
                 middleInitial: this.stockOrder.user.middleInitial,
                 email: this.stockOrder.user.email,
                 contact: this.stockOrder.user.contact,
@@ -555,7 +559,7 @@ export default {
                 productId: item.productId,
                 qty: item.qty,
                 unique: item.unique,
-                resellerPrice: item.resellerPrice,
+                // resellerPrice: item.price,
                 shippedQty: item.qty - item.shippedQty + item.shippedQty
               };
               return updatedStockOrder;
@@ -618,6 +622,7 @@ export default {
                 firstName: this.stockOrder.user.firstName,
                 lastName: this.stockOrder.user.lastName,
                 middleInitial: this.stockOrder.user.middleInitial,
+                branchName: this.stockOrder.user.branchName,
                 email: this.stockOrder.user.email,
                 contact: this.stockOrder.user.contact,
                 userId: this.stockOrder.user.id,
@@ -647,7 +652,7 @@ export default {
                   productId: item.productId,
                   qty: item.qty,
                   unique: item.unique,
-                  resellerPrice: item.resellerPrice,
+                  // resellerPrice: item.resellerPrice,
                   shippedQty: item.shippedQty
                 };
                 return updatedStockOrder;
@@ -659,7 +664,7 @@ export default {
                   productId: item.productId,
                   qty: item.qty,
                   unique: item.unique,
-                  resellerPrice: item.resellerPrice,
+                  // resellerPrice: item.resellerPrice,
                   shippedQty: item.shippedQty + shippedQty
                 };
                 return updatedStockOrder;

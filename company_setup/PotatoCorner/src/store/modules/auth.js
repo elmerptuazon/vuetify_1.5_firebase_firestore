@@ -1,4 +1,4 @@
-import { DB, AUTH } from '@/config/firebase';
+import { DB, AUTH, STORAGE } from '@/config/firebase';
 import firebase from 'firebase/app';
 const auth = {
 	namespaced: true,
@@ -110,6 +110,14 @@ const auth = {
 				console.log(error)
 				throw error;
 			}
+		},
+		async GET_TEMPLATE_EXCEL() {
+			try {
+                const downloadURL = await STORAGE.ref("appsell").child('BranchAccountsTemplate.xlsx').getDownloadURL();
+                return downloadURL;
+            } catch (error) {
+                throw error;
+            }
 		}
 	}
 }
