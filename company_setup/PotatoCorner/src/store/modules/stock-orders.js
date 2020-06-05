@@ -174,7 +174,7 @@ const stock_orders = {
                 }
 
                 if (status === 'processing' || status === 'cancelled') {
-                    obj.read = true;
+                    obj.read = false;
                 }
 
                 await DB.collection('stock_orders').doc(payload.id).update(obj);
