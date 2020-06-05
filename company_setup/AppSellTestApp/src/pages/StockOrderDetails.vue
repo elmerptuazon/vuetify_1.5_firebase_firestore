@@ -463,9 +463,15 @@ export default {
 
         await this.$store.dispatch("stock_orders/UPDATE_STATUS", {
           status: status,
-          read: false,
           statusTimeline: statusTimeline,
           id: this.$route.params.id
+        });
+
+        await this.$store.dispatch("stock_order/UPDATE_STOCK_ORDER_DETAILS", {
+          referenceID: this.$route.params.id,
+          updateObject: {
+            read: false,
+          }
         });
 
         //this.stockOrder.status = status;
