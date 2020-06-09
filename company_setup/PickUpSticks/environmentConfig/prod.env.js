@@ -8,7 +8,7 @@ module.exports = {
   messagingSenderId: '"846971526982"',
   appId: '"1:846971526982:web:027bf465e5be6cc53e8f47"',
   storageCode: '"PotatoCorner"',
-  primaryColor: '"#119247"',
-  companyName: '"Potato Corner"',
+  primaryColor: '"#f78e20"',
+  companyName: '"Pick Up Sticks"',
   accountManagementURL: '"https://us-central1-potatocornerdev.cloudfunctions.net/accounts"',
 }
