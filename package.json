@@ -19,6 +19,7 @@
     "test-MotherNurture": "cross-env NODE_ENV=test node config/companySetup.js MotherNurture",
     "test-Avon": "cross-env NODE_ENV=test node config/companySetup.js Avon",
     "test-PotatoCorner": "cross-env NODE_ENV=test node config/companySetup.js PotatoCorner",
+    "test-SipAvenue": "cross-env NODE_ENV=test node config/companySetup.js SipAvenue",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
