@@ -10,5 +10,6 @@ module.exports = merge(prodEnv, {
   storageBucket: '"farmfetchdev-7031c.appspot.com"',
   messagingSenderId: '"455899115382"',
   appId: '"1:455899115382:web:512d68156916c929491457"',
-  primaryColor: '"#f2d5bb"',
+  primaryColor: '"#bfa893"',
+  // primaryColor: '"#d9bea7"',
 })
