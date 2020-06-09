@@ -31,6 +31,7 @@ const prompts = require('prompts');
             { title: 'Babae', value: 'Babae' },
             { title: 'Mother Nurture', value: 'MotherNurture' },
             { title: 'Potato Corner', value: 'PotatoCorner' },
+            { title: 'Bente Silog', value: 'BenteSilog' },
             { title: 'Aquitek', value: 'Aquitek', disabled: true },
             { title: 'Chicharooms', value: 'Chicharooms', disabled: true },
             { title: 'Ever Bilena', value: 'EverBilena', disabled: true },
