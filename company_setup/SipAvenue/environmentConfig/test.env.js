@@ -3,14 +3,14 @@ var devEnv = require('./dev.env')
 
 module.exports = merge(devEnv, {
   NODE_ENV: '"testing"',
-  apiKey: '"AIzaSyA1p43Hys8LeHoqINSFOItJDEHLmggy4C4"',
-  authDomain: '"potatocornerdev.firebaseapp.com"',
-  databaseURL: '"https://potatocornerdev.firebaseio.com"',
-  projectId: '"potatocornerdev"',
-  storageBucket: '"potatocornerdev.appspot.com"',
-  messagingSenderId: '"846971526982"',
-  appId: '"1:846971526982:web:027bf465e5be6cc53e8f47"',
-  storageCode: '"PotatoCorner"',
+  projectId: '"sipavenue-dev"',
+  appId: '"1:509789194682:web:150e0de65622e8d347f583"',
+  databaseURL: '"https://sipavenue-dev.firebaseio.com"',
+  storageBucket: '"sipavenue-dev.appspot.com"',
+  apiKey: '"AIzaSyAg7uAQGGRQ5VrzAYrozbjEyur-QJSpBsE"',
+  authDomain: '"sipavenue-dev.firebaseapp.com"',
+  messagingSenderId: '"509789194682"',
+  storageCode: '"SipAvenue"',
   primaryColor: '"#f7a978"',
   companyName: '"Sip Avenue"',
   accountManagementURL: '"https://us-central1-potatocornerdev.cloudfunctions.net/accounts"'
