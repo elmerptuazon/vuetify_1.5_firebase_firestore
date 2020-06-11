@@ -13,5 +13,5 @@ module.exports = merge(devEnv, {
   storageCode: '"BenteSilog"',
   primaryColor: '"#ff9602"',
   companyName: '"Bente Silog"',
-  accountManagementURL: '"https://us-central1-potatocornerdev.cloudfunctions.net/accounts"'
+  accountManagementURL: '"https://us-central1-bentesilog-dev.cloudfunctions.net/accounts"'
 })
