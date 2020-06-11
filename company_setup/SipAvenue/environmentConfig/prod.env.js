@@ -10,5 +10,5 @@ module.exports = {
   storageCode: '"SipAvenue"',
   primaryColor: '"#f7a978"',
   companyName: '"Sip Avenue"',
-  accountManagementURL: '"https://us-central1-potatocornerdev.cloudfunctions.net/accounts"',
+  accountManagementURL: '"https://us-central1-sipavenue-dev.cloudfunctions.net/accounts"',
 }
