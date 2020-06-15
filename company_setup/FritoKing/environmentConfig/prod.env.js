@@ -11,5 +11,5 @@ module.exports = {
   storageCode: '"FritoKing"',
   primaryColor: '"#c11515"',
   companyName: '"Frito King"',
-  accountManagementURL: '"https://us-central1-potatocornerdev.cloudfunctions.net/accounts"',
+  accountManagementURL: '"https://us-central1-my-natural-dev.cloudfunctions.net/accounts"'
 }
