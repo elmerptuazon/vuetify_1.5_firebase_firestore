@@ -31,7 +31,12 @@ const prompts = require('prompts');
             { title: 'Babae', value: 'Babae' },
             { title: 'Mother Nurture', value: 'MotherNurture' },
             { title: 'Potato Corner', value: 'PotatoCorner' },
-            { title: 'Frito King', value: 'FritoKing' },
+            { title: 'Sip Avenue', value: 'SipAvenue' },
+            { title: 'Aquitek', value: 'Aquitek', disabled: true },
+            { title: 'Chicharooms', value: 'Chicharooms', disabled: true },
+            { title: 'Ever Bilena', value: 'EverBilena', disabled: true },
+            { title: 'Mary Kay', value: 'MaryKay', disabled: true },
+            { title: 'My Natural', value: 'MyNatural', disabled: true }
         ],
         initial: 0
     }
