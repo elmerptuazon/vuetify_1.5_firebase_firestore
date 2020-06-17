@@ -64,14 +64,12 @@ const inventory = {
                     switch(change.type) {
                         case 'added': {
                             if(!state.products.length) {
-                                console.log('product was added in!', data);
                                 commit('AddProduct', data);
                             
                             } else {
                                 //avoid pushing the same product on the list
                                 const lastProductAdded = state.products[0];
                                 if(lastProductAdded.id !== data.id) {
-                                    console.log('product was added!', data);
                                     commit('AddProduct', data);
                                 }
                             }

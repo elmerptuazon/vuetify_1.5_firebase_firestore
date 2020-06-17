@@ -77,8 +77,6 @@
                   <td class="text-xs-left">{{props.item.productName}}</td>
 
                   <td class="text-xs-left">{{props.item.name}}</td>
-
-                  <td class="text-xs-left">{{ props.item.sku }}</td>
                   
                   <td class="text-xs-center">{{ props.item.onHandQTY }} pcs.</td>
 
@@ -88,10 +86,6 @@
 
                   <td class="text-xs-center">{{props.item.reOrderLevel}} pcs.</td>
 
-                  <td class="text-xs-center">{{props.item.weight}} g.</td>
-
-                  <td class="text-xs-center">{{props.item.price | currency("&#8369; ")}}</td>
-
                   <td class="pt-4">
                     <v-checkbox
                       class="ml-4"
@@ -100,11 +94,6 @@
                     ></v-checkbox>
                   </td>
 
-                  <td>
-                    <v-btn icon color="primary" dark small @click="deleteVariant(props.item)">
-                      <v-icon small>delete_forever</v-icon>
-                    </v-btn>
-                  </td>
                 </tr>
               </template>
             </v-data-table>  
@@ -158,8 +147,8 @@
                   </span>
                 </template>
                 <span>
-                  <div class="font-weight-bold">{{ fieldDescription('sku').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('sku').description }}</div>
+                  <div class="font-weight-bold">{{new String("Variant SKU").toUpperCase()}}: </div>
+                  <div class="mt-2 body-1">Variant SKU of the product.</div>
                 </span>
               </v-tooltip>
             </v-flex>
@@ -268,8 +257,8 @@
                   </span>
                 </template>
                 <span>
-                  <div class="font-weight-bold">{{ fieldDescription('weight').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('weight').description }}</div>
+                  <div class="font-weight-bold">{{ new String("Variant Weight").toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">Weight of the variant, this weight will be used for shipping calculations.</div>
                 </span>
               </v-tooltip>
             </v-flex>
@@ -290,8 +279,8 @@
                   </span>
                 </template>
                 <span>
-                  <div class="font-weight-bold">{{ fieldDescription('price').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('price').description }}</div>
+                  <div class="font-weight-bold">{{ new String("Variant Price").toUpperCase() }}: </div>
+                  <div class="mt-2 body-1">Price of this particular variant of a product.</div>
                 </span>
               </v-tooltip>
             </v-flex>
@@ -378,10 +367,6 @@ export default {
         description: 'Variant name of the product'
       },
       {
-        text: 'Variant SKU', align: 'left', value: 'sku',
-        description: 'Variant SKU of the product.'
-      },
-      {
         text: 'QTY on Hand', align: 'center', value: 'onHandQTY',
         description: 
           'When you receive or produce inventory, add that number to this total. ' + 
@@ -408,21 +393,9 @@ export default {
           'next to the "Inventory Management" title.'
       },
       {
-        text: 'Variant Weight', align: 'left', value: 'weight',
-        description: 'Weight of the variant, this weight will be used for shipping calculations.'
-      },
-      {
-        text: 'Variant Price', align: 'left', value: 'price',
-        description: 'Price of this particular variant of a product.'
-      },
-      {
         text: 'Out of Stock?', align: 'left', value: 'isOutOfStock',
         description: 'Tick this box, to mark a product as "Out of Stock". \n' + 
           'But this box is automatically ticked, once "QTY on Hand" is zero.'
-      },
-      {
-        text: 'Delete This Variant?', align: 'left', value: 'productId',
-        description: 'Click this icon to delete this variant in your inventory.'
       },
     ],
 
