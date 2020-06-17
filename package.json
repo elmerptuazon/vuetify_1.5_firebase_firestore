@@ -18,8 +18,12 @@
     "test-Babae": "cross-env NODE_ENV=test node config/companySetup.js Babae",
     "test-MotherNurture": "cross-env NODE_ENV=test node config/companySetup.js MotherNurture",
     "test-Avon": "cross-env NODE_ENV=test node config/companySetup.js Avon",
-    "test-PotatoCorner": "cross-env NODE_ENV=test node config/companySetup.js PotatoCorner",
     "test-FarmFetch": "cross-env NODE_ENV=test node config/companySetup.js FarmFetch",
+    "test-PotatoCorner": "cross-env NODE_ENV=test node config/companySetup.js PotatoCorner",
+    "test-BenteSilog": "cross-env NODE_ENV=test node config/companySetup.js BenteSilog",
+    "test-FritoKing": "cross-env NODE_ENV=test node config/companySetup.js FritoKing",
+    "test-PickUpSticks": "cross-env NODE_ENV=test node config/companySetup.js PickUpSticks",
+    "test-SipAvenue": "cross-env NODE_ENV=test node config/companySetup.js SipAvenue",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
