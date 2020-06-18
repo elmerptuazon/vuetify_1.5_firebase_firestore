@@ -27,15 +27,15 @@ export default new Vuex.Store({
 				text: 'Categories',
 				url: 'Categories',
 			},
-			// {
-			// 	icon: 'fa-warehouse',
-			// 	text: 'Inventory Management',
-			// 	url: 'Inventory'
-			// },
 			{
 				icon: 'cloud_upload',
 				text: 'Multiple Product Upload',
 				url: 'MultiProductUpload'
+			},
+			{
+				icon: 'fa-warehouse',
+				text: 'Inventory Management',
+				url: 'Inventory'
 			},
 			{
 				icon: 'keyboard_arrow_up',
