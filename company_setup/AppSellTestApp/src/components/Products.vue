@@ -704,10 +704,9 @@ export default {
     editAttribute(index) {
       this.tempAttribName = this.product.attributes[index].name;
       this.tempAttribItems = this.product.attributes[index].items;
-      this.tempAttribItems.push({sku: null, name: null, showAddButton: true});
 
-      //push a blank object on variant table so that user could add an variant if needed
-      // this.tempAttribItems.push({});
+      //push a blank object on variant table so that user could add a new variant if needed
+      this.tempAttribItems.push({sku: null, name: null, showAddButton: true});
 
       this.showEditConfirmButton = true;
       this.productIndex = index;
@@ -745,13 +744,6 @@ export default {
       }
     },
 
-    isVariantsFieldBlank(variants) {
-      let thereIsABlank = false;
-      Object.values(variants).forEach(variant => {
-        if(!variant || variant === null) thereIsABlank = true;
-      });
-      return thereIsABlank;
-    },
 
     addVariant(item) {
       if(!item.sku || !item.name) return;
