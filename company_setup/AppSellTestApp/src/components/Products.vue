@@ -689,6 +689,7 @@ export default {
     },
 
     addProductAttribute() {
+      //remove the last blank entry on the variants table
       this.tempAttribItems.pop();
 
       this.product.attributes.push({
@@ -715,7 +716,9 @@ export default {
     },
 
     confirmEditProductAttribute() {
+      //remove the last blank entry on the variants table
       this.tempAttribItems.pop();
+
       this.product.attributes[this.productIndex].name = this.tempAttribName;
       this.product.attributes[this.productIndex].items = this.tempAttribItems;
       this.showEditConfirmButton = false;
