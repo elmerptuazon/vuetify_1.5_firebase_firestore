@@ -295,8 +295,6 @@ export default {
       const products = this.items;
 
       let modifiedProducts = products.map((product) => {
-        product.name = product.name.replace(/-/gi, ' / ');
-
         product.availableQTY = parseInt(product.onHandQTY) - parseInt(product.allocatedQTY);
         
         if(product.availableQTY === 0) {
