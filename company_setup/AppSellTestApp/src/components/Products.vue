@@ -377,7 +377,7 @@
                     small
                     color="primary"
                     depressed
-                    :disabled="tempAttribItems.length <= 1"
+                    :disabled="(tempAttribItems.length <= 1) || !tempAttribName"
                     @click="addProductAttribute"
                   >
                     Add Product Variants
@@ -389,7 +389,7 @@
                     small
                     color="secondary"
                     depressed
-                    :disabled="!tempAttribName || !tempAttribItems.length"
+                    :disabled="!tempAttribName || ( tempAttribItems.length <= 1)"
                     @click="confirmEditProductAttribute"
                   >
                     Confirm Edit on Product Variants
