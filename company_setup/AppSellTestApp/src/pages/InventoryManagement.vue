@@ -93,7 +93,7 @@
                       <v-flex xs3>
                         <v-checkbox
                           v-model="props.item.isOutofStock"
-                          @click="markAsOutOfStock(props.item)"
+                          @change="markAsOutOfStock(props.item)"
                         ></v-checkbox>
                       </v-flex>
                     </v-layout>
@@ -186,14 +186,14 @@
 
         <v-card-actions>
           <v-layout align-start justify-end wrap>
-            <v-flex xs2 offset-xs1>
+            <v-flex xs3>
+              <v-btn outline @click="closeEditQuantityDialog">CANCEL</v-btn>
+            </v-flex>
+            <v-flex xs3>
               <v-btn color="green" dark 
-                :loading="btnLoading" :disabled="btnLoading"
+                :loading="btnLoading"
                 @click="editVariant(selectedVariant)"
               >SAVE</v-btn>
-            </v-flex>
-            <v-flex xs2 offset-xs1>
-              <v-btn outline @click="showEditQuantityDialog = false">CANCEL</v-btn>
             </v-flex>
           </v-layout>
         </v-card-actions>
@@ -317,7 +317,16 @@ export default {
   },
 
   watch: {
-    
+    // selectedVariant: {
+    //   handler(entries) {
+    //     const fieldsAreFiled = entries.onHandQTY > 0 && entries.reOrderLevel > 0;
+    //     if(fieldsAreFiled && entries.isOutofStock) {
+    //       entries.isOutofStock = false;
+    //     }
+
+    //   },
+    //   deep: true
+    // }
   },
 
   methods: {
@@ -369,16 +378,26 @@ export default {
         this.textfieldLoading = false;
       }
     },
+
+    openEditQuantityDialog(item) {
+      this.showEditQuantityDialog = true;
+      this.selectedVariant = Object.assign({}, item);
+    },
+
+    closeEditQuantityDialog() {
+      this.showEditQuantityDialog = false;
+      const index = this.products.findIndex(product => product.id === this.selectedVariant.id);
+      this.products[index].isOutofStock = true;
+      this.selectedVariant = {};
+    },
+
     async markAsOutOfStock(product) {
       this.loading = true;
       console.log('updating product: ', product);
       console.log(product);
 
-      if(product.isOutofStock) {
+      if(!product.isOutofStock) {
         this.loading = false;
-        const index = this.products.findIndex(p => p.id === product.id);
-        this.products[index].isOutofStock = true;
-        product.isOutofStock = true;
         this.openEditQuantityDialog(product);
         return;
       }
@@ -402,21 +421,15 @@ export default {
       this.loading = false;
     },
 
-    openEditQuantityDialog(item) {
-      this.showEditQuantityDialog = true;
-      this.selectedVariant = Object.assign({}, item);
-    },
-
+    
     async editVariant() {
       this.btnLoading = true;
 
       const { sku, onHandQTY, reOrderLevel, weight, price, isOutofStock } = this.selectedVariant;
       const updatedVariant = {
         sku, 
-        onHandQTY, 
-        reOrderLevel, 
-        weight, 
-        price,
+        onHandQTY: Number(onHandQTY), 
+        reOrderLevel: Number(reOrderLevel), 
         isOutofStock
       };
 
@@ -428,12 +441,14 @@ export default {
 
         this.btnLoading = false;
         this.showEditQuantityDialog = false;
+        this.selectedVariant = {};
         this.showSnackBar('success', `Updating ${this.selectedVariant.sku} was successful!`);
         
       } catch(error) {
         console.log('error in editVariant method: ', error);
         this.btnLoading = false;
         this.showEditQuantityDialog = false;
+        this.selectedVariant = null;
         this.showSnackBar('error', `Updating ${this.selectedVariant.sku} was not successful! Please try again.`);
         throw error;
       }
