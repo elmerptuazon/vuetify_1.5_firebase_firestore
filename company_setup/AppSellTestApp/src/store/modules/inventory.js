@@ -140,6 +140,7 @@ const inventory = {
                     await DB.collection('products').doc('details').collection('variants').add({
                         sku: productData.code,
                         name: `${productData.name.toLowerCase()}`,
+                        variantName: `${productData.name.toLowerCase()}`,
                         weight: productData.weight,
                         price: productData.price,
                         resellerPrice: productData.resellerPrice,
