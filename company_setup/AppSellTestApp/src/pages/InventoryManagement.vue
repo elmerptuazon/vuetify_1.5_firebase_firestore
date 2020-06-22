@@ -49,21 +49,19 @@
               :pagination.sync="pagination"
             >
               <template v-slot:headerCell="props">
-                <th>
-                  <v-tooltip bottom nudge-bottom max-width="200">
-                    <template v-slot:activator="{ on }">
-                      <span v-on="on" class="text-xs-center">
-                        <div v-for="(word, index) in props.header.text.split(' ')" :key="index">
-                          {{ word }}
-                        </div>
-                      </span>
-                    </template>
-                    <span class="align-center justify-center">
-                      <div class="font-weight-bold body-2">{{ props.header.text }}</div>
-                      <div class="mt-2 body-1">{{ props.header.description }}</div>
+                <v-tooltip bottom nudge-bottom max-width="200">
+                  <template v-slot:activator="{ on }">
+                    <span v-on="on">
+                      <div v-for="(word, index) in props.header.text.split(' ')" :key="index">
+                        {{ word }}
+                      </div>
                     </span>
-                  </v-tooltip>
-                </th>
+                  </template>
+                  <span>
+                    <div class="font-weight-bold body-2">{{ props.header.text }}</div>
+                    <div class="mt-2 body-1">{{ props.header.description }}</div>
+                  </span>
+                </v-tooltip>
               </template>
 
               <template v-slot:items="props">
@@ -72,32 +70,34 @@
                     props.item.position === 1 ? 'red lighten-3' : '',
                   ]"
                 >
-                  <td class="text-xs-center pa-0 ma-0">
+                  <td class="text-xs-center">
                     <v-btn icon color="green" small dark @click="openEditQuantityDialog(props.item)">
                       <v-icon small>edit</v-icon>
                     </v-btn>
                   </td>
 
-                  <td class="text-xs-center pa-0 ma-0">{{props.item.productName}}</td>
+                  <td class="text-xs-center">{{props.item.productName}}</td>
 
-                  <td class="text-xs-center pa-0 ma-0">{{props.item.name}}</td>
+                  <td class="text-xs-center">{{props.item.name}}</td>
                   
-                  <td class="text-xs-center pa-0 ma-0">{{props.item.onHandQTY}}</td>
+                  <td class="text-xs-center">{{props.item.onHandQTY}}</td>
 
-                  <td class="text-xs-center pa-0 ma-0">{{props.item.allocatedQTY}}</td>
+                  <td class="text-xs-center">{{props.item.allocatedQTY}}</td>
 
-                  <td class="text-xs-center pa-0 ma-0">{{props.item.availableQTY}}</td>
+                  <td class="text-xs-center">{{props.item.availableQTY}}</td>
 
-                  <td class="text-xs-center pa-0 ma-0">{{props.item.reOrderLevel}}</td>
+                  <td class="text-xs-center">{{props.item.reOrderLevel}}</td>
 
-                  <td class="pt-4">
-                    <v-checkbox
-                      class="ml-4"
-                      v-model="props.item.isOutofStock"
-                      @click="markAsOutOfStock(props.item)"
-                    ></v-checkbox>
+                  <td class="py-2">
+                    <v-layout align-end justify-space-around pt-4>
+                      <v-flex xs3>
+                        <v-checkbox
+                          v-model="props.item.isOutofStock"
+                          @click="markAsOutOfStock(props.item)"
+                        ></v-checkbox>
+                      </v-flex>
+                    </v-layout>
                   </td>
-
                 </tr>
               </template>
             </v-data-table>  
@@ -226,8 +226,8 @@ export default {
     search: null,
     headers: [
       {
-        text: 'Edit Variant QTYs', align: 'center', value: '', sortable: false, fixed: true,
-        description: 'Click the green icon to edit the details of a product variant.'
+        text: 'Edit Variant QTYs', align: 'center', value: '', sortable: false,
+        description: 'Click the green icon to edit the associated quantities of a product variant.'
       },
       {
         text: 'Product Name', align: 'center', value: 'productName', sortable: true,
