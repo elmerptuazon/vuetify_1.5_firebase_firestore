@@ -317,16 +317,7 @@ export default {
   },
 
   watch: {
-    // selectedVariant: {
-    //   handler(entries) {
-    //     const fieldsAreFiled = entries.onHandQTY > 0 && entries.reOrderLevel > 0;
-    //     if(fieldsAreFiled && entries.isOutofStock) {
-    //       entries.isOutofStock = false;
-    //     }
-
-    //   },
-    //   deep: true
-    // }
+    
   },
 
   methods: {
