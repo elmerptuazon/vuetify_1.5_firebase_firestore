@@ -236,9 +236,9 @@ const inventory = {
                         await DB.collection('products').doc('details').collection('variants').doc().set({
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
-                            weight: productData.weight,
-                            price: productData.price,
-                            resellerPrice: productData.resellerPrice,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
+                            resellerPrice: Number(productData.resellerPrice),
 
                             productName: productData.name,
                             productId: productData.id,
