@@ -403,10 +403,12 @@ export default {
       }
 
       try {
-        await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+        await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
           id: product.id,
-          key: 'isOutofStock',
-          value: product.isOutofStock
+          updatedDetails: {
+            isOutofStock: product.isOutofStock,
+            onHandQTY: 0
+          }
         });
 
         this.showSnackBar('success', `${product.sku} was successfully updated!`);
