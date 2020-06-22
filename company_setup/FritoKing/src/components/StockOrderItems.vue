@@ -94,7 +94,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr}: ${item.attributes[attr]}`;
+            attributes += `${attr}: ${item.attributes[attr].name}`;
           }
         });
 
