@@ -32,9 +32,6 @@ const inventory = {
         UpdateProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);
             if(index !== -1) {
-                // Object.keys(payload).forEach((key) => {
-                //     state.products[index][key] = payload[key];
-                // });
                 state.products[index] = Object.assign({}, payload);
                 state.products = [...state.products];
             }
@@ -249,8 +246,23 @@ const inventory = {
                             isOutofStock: true
                         });
                     
-                    //if there are existing variants, remove them and create a single variant for the product. Based from its details.
+                    } else if(existingVariants.length === 1) {
+                        //if a single variant exist for the product, then just update it
+                        DB.collection('products').doc('details').collection('variants').doc(existingVariants[0].id)
+                        .update({
+                            sku: productData.code,
+                            name: `${productData.name.toLowerCase()}`,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
+
+                            productName: productData.name,
+                            productId: productData.id,
+                            category: categoryName
+                        });
+
                     } else {
+                        //if there are existing variants, remove them and create a single variant for the product. Based from its details.
                         const batch = DB.batch();
                         const variantsCollection = DB.collection('products').doc('details').collection('variants');
                         
