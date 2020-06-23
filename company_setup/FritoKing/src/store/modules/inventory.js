@@ -142,6 +142,7 @@ const inventory = {
                         name: `${productData.name.toLowerCase()}`,
                         weight: productData.weight,
                         price: productData.price,
+                        variantName: null,
 
                         productName: productData.name,
                         productId: productData.id,
@@ -234,7 +235,7 @@ const inventory = {
                         await DB.collection('products').doc('details').collection('variants').doc().set({
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
-                            variantName: `${productData.name.toLowerCase()}`,
+                            variantName: null,
                             weight: Number(productData.weight),
                             price: Number(productData.price),
 
@@ -262,7 +263,7 @@ const inventory = {
                         batch.set(variantsCollection.doc(), {
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
-                            variantName: `${productData.name.toLowerCase()}`,
+                            variantName: null,
                             weight: Number(productData.weight),
                             price: Number(productData.price),
 
