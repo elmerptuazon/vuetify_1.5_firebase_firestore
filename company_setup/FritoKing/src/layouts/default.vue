@@ -107,7 +107,7 @@
               </v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
-           <v-list-tile 
+          <v-list-tile 
             v-else-if="item.url === 'Messages'" 
             :key="item.text" 
             :to="{ name: item.url } "
@@ -124,6 +124,29 @@
                   <v-flex xs2 >
                     <v-avatar color="red" size="22" dark v-show="newMessagesCount">
                       <div class="overline white--text">{{ newMessagesCount }}</div>
+                    </v-avatar>
+                  </v-flex>
+                </v-layout>
+              </v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile 
+            v-else-if="item.url === 'Support'" 
+            :key="item.text" 
+            :to="{ name: item.url } "
+          >
+            <v-list-tile-action>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>
+                <v-layout align-center justify-end>
+                  <v-flex xs10>
+                    {{ item.text }}
+                  </v-flex>
+                  <v-flex xs2 >
+                    <v-avatar color="red" size="22" dark v-show="newSupportMessageCount">
+                      <div class="overline white--text">{{ newSupportMessageCount }}</div>
                     </v-avatar>
                   </v-flex>
                 </v-layout>
@@ -209,25 +232,25 @@ export default {
     ...mapGetters(["GET_COMPANIES", "GET_TOOLBAR_LINKS"]),
 
     newStockOrdersCount() {
-      const count = this.$store.getters['stock_orders/GET_NEW_ORDER_COUNT'];
-      console.log('this is the new default.vue', count);
-      return count;
+      return this.$store.getters['stock_orders/GET_NEW_ORDER_COUNT'];
     },
 
     inventoryNotif() {
-      const count = this.$store.getters['inventory/GET_INVENTORY_NOTIF'];
-      return count;
+      return this.$store.getters['inventory/GET_INVENTORY_NOTIF'];
     },
 
     newRegistrations() {
-      const count = this.$store.getters['distributors/GET_NEW_RESELLER_COUNT'];
-      return count;
+      return this.$store.getters['distributors/GET_NEW_RESELLER_COUNT'];
     },
 
-    newMessagesCount() {
-      const count = this.$store.getters['conversations/GET_NEW_MESSAGES_COUNT'];
-      return count;
+    newMessagesCount() { 
+      return this.$store.getters['conversations/GET_NEW_MESSAGES_COUNT'];
+    },
+
+    newSupportMessageCount() {
+      return this.$store.getters['support/GET_SUPPORT_NOTIF'];
     }
+
   },
   components: {
     Logo, 
