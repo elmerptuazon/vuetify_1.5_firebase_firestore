@@ -14,7 +14,7 @@
           </v-avatar>
         </td>
         <td class="text-xs-left">{{ props.item.name }}</td>
-        <td class="text-xs-left">{{ props.item.attributes | capitalize }}</td>
+        <td class="text-xs-left">{{ (props.item.attributes || "N/A") | capitalize }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
         <td class="text-xs-center">{{ props.item.remainingQty }}</td>
@@ -63,7 +63,7 @@ export default {
       {
         text: "Attributes",
         value: "attributes",
-        align: "center"
+        align: "left"
       },
       {
         text: "Order Qty",
@@ -94,7 +94,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr}: ${item.attributes[attr].name}`;
+            attributes += `${attr}: ${item.attributes[attr]}`;
           }
         });
 
@@ -102,7 +102,7 @@ export default {
           qty: item.qty,
           shippedQty: item.shippedQty,
           remainingQty: item.qty - item.shippedQty,
-          price: item.resellerPrice,
+          price: item.price,
           total: item.qty * item.price,
           name: item.name,
           attributes: attributes,
