@@ -131,7 +131,8 @@
             </v-flex>
             <v-flex xs12 mt-2>
               <span class="subheading">Variant Name: </span>
-              <span class="subheading font-weight-bold">{{ selectedVariant.name }}</span>
+              <span v-if="selectedVariant.variantName" class="subheading font-weight-bold">{{ selectedVariant.name }}</span>
+              <span v-else class="subheading font-weight-bold"> - </span>
             </v-flex>
             <v-flex xs12 mt-3>
               <v-divider></v-divider>
