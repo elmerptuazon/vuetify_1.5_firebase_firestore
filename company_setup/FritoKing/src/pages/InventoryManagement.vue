@@ -111,10 +111,23 @@
         <v-card-title class="primary dark white--text title font-weight-bold">
           EDIT QUANTITY IN PRODUCT VARIANT
           <v-spacer></v-spacer>
-          <v-icon medium color="white" @click="showEditQuantityDialog = false">close</v-icon>
+          <v-icon medium color="white" @click="closeEditQuantityDialog">close</v-icon>
         </v-card-title>
         <v-container align-center justify-center>
-          <v-layout align-center justify-start wrap row mt-3>
+          <v-layout row align-center justify-start wrap>
+            <v-flex xs12>
+              <span class="subheading">Product Name: </span>
+              <span class="subheading font-weight-bold">{{ selectedVariant.productName }}</span>
+            </v-flex>
+            <v-flex xs12 mt-2>
+              <span class="subheading">Variant Name: </span>
+              <span class="subheading font-weight-bold">{{ selectedVariant.name }}</span>
+            </v-flex>
+            <v-flex xs12 mt-3>
+              <v-divider></v-divider>
+            </v-flex>
+          </v-layout>
+          <v-layout align-center justify-start wrap row mt-4>
             <v-flex xs10>
               <v-text-field
                 v-model="selectedVariant.onHandQTY"
@@ -124,7 +137,7 @@
               ></v-text-field>
             </v-flex>
             <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
+              <v-tooltip right max-width="200">
                 <template v-slot:activator="{ on }">
                   <span v-on="on">
                     <v-icon medium color="grey darken-3">help</v-icon>
@@ -146,7 +159,7 @@
               ></v-text-field>
             </v-flex>
             <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
+              <v-tooltip right max-width="200">
                 <template v-slot:activator="{ on }">
                   <span v-on="on">
                     <v-icon medium color="grey darken-3">help</v-icon>
@@ -161,12 +174,12 @@
 
             <v-flex xs10>
               <v-checkbox
-                :label="`Is this variant OUT OF STOCK: ${selectedVariant.isOutofStock}`"
+                :label="`OUT OF STOCK?:  ${selectedVariant.isOutofStock}`"
                 v-model="selectedVariant.isOutofStock"
               ></v-checkbox>
             </v-flex>
             <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
+              <v-tooltip right max-width="200">
                 <template v-slot:activator="{ on }">
                   <span v-on="on">
                     <v-icon medium color="grey darken-3">help</v-icon>
@@ -185,11 +198,11 @@
         <v-divider class="my-2"></v-divider>
 
         <v-card-actions>
-          <v-layout align-start justify-end wrap>
-            <v-flex xs3>
+          <v-layout align-center justify-end wrap>
+            <v-flex xs2>
               <v-btn outline @click="closeEditQuantityDialog">CANCEL</v-btn>
             </v-flex>
-            <v-flex xs3>
+            <v-flex xs2 ml-3>
               <v-btn color="green" dark 
                 :loading="btnLoading"
                 @click="editVariant(selectedVariant)"
@@ -324,7 +337,7 @@ export default {
     showSnackBar(state, message) {
       this.snack = true;
       this.snackText = message;
-      this.snackColor = state === 'success' ? 'primary' : 'red';
+      this.snackColor = state === 'success' ? 'success' : 'red';
     },
 
     fieldDescription(field) {
@@ -378,7 +391,13 @@ export default {
     closeEditQuantityDialog() {
       this.showEditQuantityDialog = false;
       const index = this.products.findIndex(product => product.id === this.selectedVariant.id);
-      this.products[index].isOutofStock = true;
+      if(this.selectedVariant.isOutofStock) {
+        this.products[index].isOutofStock = !this.selectedVariant.isOutofStock;
+      
+      } else {
+        this.products[index].isOutofStock = this.selectedVariant.isOutofStock;
+      }
+      
       this.selectedVariant = {};
     },
 
@@ -402,12 +421,12 @@ export default {
           }
         });
 
-        this.showSnackBar('success', `${product.sku} was successfully updated!`);
+        this.showSnackBar('success', `${product.productName.toUpperCase()} was successfully updated!`);
         this.textfieldLoading = false;
 
       } catch(error) {
         console.log('inventory management error: ', error.response);
-        this.showSnackBar('error', `${product.sku} was not updated due to error!`);
+        this.showSnackBar('error', `${product.productName.toUpperCase()} was not updated due to error!`);
         this.textfieldLoading = false;
       }
 
@@ -434,15 +453,16 @@ export default {
 
         this.btnLoading = false;
         this.showEditQuantityDialog = false;
+        this.showSnackBar('success', `Updating ${this.selectedVariant.productName.toUpperCase()} was successful!`);
         this.selectedVariant = {};
-        this.showSnackBar('success', `Updating ${this.selectedVariant.sku} was successful!`);
         
       } catch(error) {
         console.log('error in editVariant method: ', error);
         this.btnLoading = false;
         this.showEditQuantityDialog = false;
-        this.selectedVariant = null;
-        this.showSnackBar('error', `Updating ${this.selectedVariant.sku} was not successful! Please try again.`);
+        this.showSnackBar('error', `Updating ${this.selectedVariant.productName.toUpperCase()} was not successful! Please try again.`);
+        this.selectedVariant = {};
+        
         throw error;
       }
     },
