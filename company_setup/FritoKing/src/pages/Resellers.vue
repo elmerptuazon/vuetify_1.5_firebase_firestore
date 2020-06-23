@@ -1,13 +1,12 @@
 <template>
   <v-container fluid>
     <v-card>
-      <v-card-title>
-        <v-layout row wrap align-center justify-start>
-          <v-flex xs3>
-            <div class="headline">Branch Accounts</div>
+      <v-container fluid>
+        <v-layout align-center justify-start wrap>
+          <v-flex xs10 md7 lg6>
+            <div class="headline text-xs-start">Branch Accounts</div>
           </v-flex>
-
-          <v-flex xs4>
+          <v-flex xs10 lg6 offset-lg-1>
             <v-text-field
               append-icon="search"
               label="Search branch..."
@@ -16,23 +15,28 @@
               v-model="search"
             ></v-text-field>
           </v-flex>
+        </v-layout>
 
-          <v-flex xs2 ml-4>
+        <v-layout align-start justify-start mt-4>
+          <v-flex xs5 md2 lg2>
             <v-btn dark color="primary" @click="addBranchDialog = true">
-              <!-- <v-icon class="mr-2">add</v-icon> -->
+              <v-icon class="mr-2">add_business</v-icon>
               REGISTER A BRANCH
             </v-btn>
           </v-flex>
 
-          <v-flex xs2 ml-2>
+          <v-flex xs6 md2 lg2 ml-5>
             <v-btn dark color="primary" @click="excelDialog = true">
-              <!-- <v-icon class="mr-2">insert_drive_file</v-icon> -->
+              <v-icon class="mr-2">insert_drive_file</v-icon>
               UPLOAD EXCEL FILE
             </v-btn>
           </v-flex>
         </v-layout>
         
-      </v-card-title>
+      </v-container>
+
+      <!-- <v-divider class="my-2"></v-divider> -->
+      
       <v-data-table
         v-model="selected"
         :headers="headers"

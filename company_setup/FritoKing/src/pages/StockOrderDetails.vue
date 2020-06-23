@@ -470,6 +470,17 @@ export default {
           id: this.$route.params.id
         });
 
+        //adjust the allocatedQTY field of the variants associated to this stockOrder
+        if(status === 'cancelled') {
+          for(const item of this.stockOrder.items) {
+            await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+              id: item.variantId,
+              key: 'allocatedQTY',
+              value: FB.firestore.FieldValue.increment(item.qty * -1), //decrement the allocatedQTY field of the variant
+            });
+          }
+        }
+
         //this.stockOrder.status = status;
         this.$refs.toast.show(
           "success",

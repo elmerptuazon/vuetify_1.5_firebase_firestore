@@ -32,9 +32,6 @@ const inventory = {
         UpdateProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);
             if(index !== -1) {
-                // Object.keys(payload).forEach((key) => {
-                //     state.products[index][key] = payload[key];
-                // });
                 state.products[index] = Object.assign({}, payload);
                 state.products = [...state.products];
             }
@@ -140,10 +137,9 @@ const inventory = {
                     await DB.collection('products').doc('details').collection('variants').add({
                         sku: productData.code,
                         name: `${productData.name.toLowerCase()}`,
-                        variantName: `${productData.name.toLowerCase()}`,
                         weight: productData.weight,
                         price: productData.price,
-                        resellerPrice: productData.resellerPrice,
+                        variantName: null,
 
                         productName: productData.name,
                         productId: productData.id,
@@ -186,8 +182,7 @@ const inventory = {
                         variantName,
                         weight: productData.weight,
                         price: productData.price,
-                        resellerPrice: productData.resellerPrice,
-                        
+
                         productName: productData.name,
                         productId: productData.id,
                         category: categoryName,
@@ -237,9 +232,9 @@ const inventory = {
                         await DB.collection('products').doc('details').collection('variants').doc().set({
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
+                            variantName: null,
                             weight: Number(productData.weight),
                             price: Number(productData.price),
-                            resellerPrice: Number(productData.resellerPrice),
 
                             productName: productData.name,
                             productId: productData.id,
@@ -251,8 +246,23 @@ const inventory = {
                             isOutofStock: true
                         });
                     
-                    //if there are existing variants, remove them and create a single variant for the product. Based from its details.
+                    } else if(existingVariants.length === 1) {
+                        //if a single variant exist for the product, then just update it
+                        DB.collection('products').doc('details').collection('variants').doc(existingVariants[0].id)
+                        .update({
+                            sku: productData.code,
+                            name: `${productData.name.toLowerCase()}`,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
+
+                            productName: productData.name,
+                            productId: productData.id,
+                            category: categoryName
+                        });
+
                     } else {
+                        //if there are existing variants, remove them and create a single variant for the product. Based from its details.
                         const batch = DB.batch();
                         const variantsCollection = DB.collection('products').doc('details').collection('variants');
                         
@@ -265,9 +275,9 @@ const inventory = {
                         batch.set(variantsCollection.doc(), {
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
-                            weight: productData.weight,
-                            price: productData.price,
-                            resellerPrice: productData.resellerPrice,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
 
                             productName: productData.name,
                             productId: productData.id,
@@ -349,9 +359,8 @@ const inventory = {
                         variantName,
                         category: categoryName,
                         productName: productData.name,
-                        price: productData.price,
-                        resellerPrice: productData.resellerPrice,
-                        weight: productData.weight
+                        price: Number(productData.price),
+                        weight: Number(productData.weight)
                     });
 
                     //remove from the existing variant list the variant that has been edited
@@ -372,9 +381,8 @@ const inventory = {
                     sku: newVariant.sku,
                     name: newVariant.name,
                     variantName, 
-                    weight: productData.weight,
-                    price: productData.price,
-                    resellerPrice: productData.resellerPrice,
+                    weight: Number(productData.weight),
+                    price: Number(productData.price),
 
                     productName: productData.name,
                     productId: productData.id,

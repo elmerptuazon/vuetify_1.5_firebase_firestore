@@ -100,7 +100,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr.toUpperCase()}: ${item.attributes[attr]} | `;
+            attributes += `${attr.toUpperCase()}: ${item.attributes[attr].name} | `;
           }
         });
 
