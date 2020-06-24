@@ -401,11 +401,6 @@ export default {
 
     closeEditQuantityDialog() {
       this.showEditQuantityDialog = false;
-      const index = this.products.findIndex(product => product.id === this.selectedVariant.id);
-      if(!this.selectedVariant.isOutofStock) {
-        this.products[index].isOutofStock = !this.selectedVariant.isOutofStock;
-      } 
-      
       this.selectedVariant = {};
     },
 
