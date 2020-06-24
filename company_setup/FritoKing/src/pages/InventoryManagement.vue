@@ -165,7 +165,7 @@
               <v-text-field
                 v-model="selectedVariant.reOrderLevel"
                 outline
-                label="Re-Order Notification Level*"
+                label="Re-Order Level*"
                 type="number"
               ></v-text-field>
             </v-flex>
@@ -183,7 +183,7 @@
               </v-tooltip>
             </v-flex>
 
-            <v-flex xs10>
+            <!-- <v-flex xs10>
               <v-checkbox
                 :label="`OUT OF STOCK?:  ${selectedVariant.isOutofStock}`"
                 v-model="selectedVariant.isOutofStock"
@@ -201,7 +201,7 @@
                   <div class="mt-2 body-1">{{ fieldDescription('isOutofStock').description }}</div>
                 </span>
               </v-tooltip>
-            </v-flex>
+            </v-flex> -->
 
           </v-layout>
         </v-container>
@@ -395,19 +395,16 @@ export default {
     },
 
     openEditQuantityDialog(item) {
-      this.showEditQuantityDialog = true;
       this.selectedVariant = Object.assign({}, item);
+      this.showEditQuantityDialog = true;
     },
 
     closeEditQuantityDialog() {
       this.showEditQuantityDialog = false;
       const index = this.products.findIndex(product => product.id === this.selectedVariant.id);
-      if(this.selectedVariant.isOutofStock) {
+      if(!this.selectedVariant.isOutofStock) {
         this.products[index].isOutofStock = !this.selectedVariant.isOutofStock;
-      
-      } else {
-        this.products[index].isOutofStock = this.selectedVariant.isOutofStock;
-      }
+      } 
       
       this.selectedVariant = {};
     },
