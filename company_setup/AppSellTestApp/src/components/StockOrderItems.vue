@@ -13,9 +13,9 @@
             <v-img :src="props.item.image" contain width="50"></v-img>
           </v-avatar>
         </td>
-        <td class="text-xs-left">{{ props.item.name }}</td>
-        <td class="text-xs-left">{{ (props.item.attributes || 'N/A') | capitalize }}</td>
-        <td class="text-xs-left">{{ props.item.sku }}</td>
+        <td class="text-xs-center">{{ props.item.name }}</td>
+        <td class="text-xs-center">{{ (props.item.attributes || '-') | capitalize }}</td>
+        <td class="text-xs-center">{{ props.item.sku }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
         <td class="text-xs-center">{{ props.item.remainingQty }}</td>
@@ -62,7 +62,7 @@ export default {
         align: "center"
       },
       {
-        text: "Attributes",
+        text: "Variant",
         value: "attributes",
         align: "center"
       },
@@ -100,7 +100,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr.toUpperCase()}: ${item.attributes[attr].name} | `;
+            attributes += `${attr.toUpperCase()}: ${item.attributes[attr]}`;
           }
         });
 
