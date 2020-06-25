@@ -33,12 +33,12 @@
       <v-data-table
         v-model="selected"
         :headers="headers"
-        :items="productList"
+        :items="items"
         item-key="name"
         select-all
         :pagination.sync="pagination"
         class="elevation-1"
-        :loading="productList.length === 0"
+        :loading="items.length === 0"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
         no-data-text="No products yet..."
@@ -546,12 +546,12 @@ const uuidv4 = require("uuid/v4");
 export default {
   props: ["items", "categoryId", "category"],
   async created() {
-    this.loading = true;
-    this.productList = this.items;
-    this.loading = false;
+    // this.loading = true;
+    // this.productList = this.items;
+    // this.loading = false;
   },
   data: () => ({
-    productList: [],
+    // productList: [],
     pagination: {
       sortBy: "name"
     },
@@ -951,9 +951,6 @@ export default {
 
           this.resetVariantTable();
 
-          //update the product displayed on this page
-          this.updateProductList(newProduct)
-
           this.$swal.fire({
             type: "success",
             title: "Success",
@@ -1046,9 +1043,6 @@ export default {
         this.addProductDialog = false;
         this.resetVariantTable();
 
-        //update the product displayed on this page
-        this.updateProductList(updatedProductData)
-
         this.$swal.fire({
           type: "success",
           title: "Success",
@@ -1056,12 +1050,6 @@ export default {
         });
 
       }
-    },
-
-    updateProductList(product) {
-      const index = this.productList.findIndex(item => item.id === product.id);
-      if(index !== 1) this.productList[index] = Object.assign({}, product);
-      this.productList = [...this.productList];
     },
 
     async changeStatus(item) {
@@ -1323,9 +1311,7 @@ export default {
       },
       deep: true
     },
-    items(arr) {
-      this.productList = arr;
-    }
+    
   },
   mixins: [mixins],
   computed: {
