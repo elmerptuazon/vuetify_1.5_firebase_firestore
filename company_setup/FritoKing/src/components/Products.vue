@@ -93,6 +93,14 @@
               <span v-if="props.item.active != 1"> (Archived)</span>
             </td>
             <td class="text-xs-center">
+              <div v-if="!props.item.attributes.length"> -- </div>
+              <div v-else class="text-xs-center"
+                v-for="(variant, index) in props.item.attributes[0].items" :key="index"
+              >
+                {{ variant.name | capitalize }}
+              </div>
+            </td>
+            <td class="text-xs-center">
               {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-center">
@@ -145,9 +153,9 @@
       {{ modal.text }}
     </sweet-modal>
 
-    <v-dialog max-width="700px" v-model="addProductDialog" persistent>
+    <v-dialog width="750px" v-model="addProductDialog" persistent>
       <v-card>
-        <v-card-title>
+        <v-card-title class="primary white--text">
           <div class="title">{{ dialogText }}</div>
         </v-card-title>
         <v-card-text>
@@ -214,7 +222,14 @@
                 <v-text-field
                   label="Weight (g)*"
                   :rules="decimalOnlyRules"
+                  type="number"
                   v-model="product.weight"
+                ></v-text-field>
+                <v-text-field
+                  label="Minimum Stock Order QTY*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.minimumOrder"
+                  v-if="!product.attributes.length && tempAttribItems.length <= 1"
                 ></v-text-field>
               </div>
             </v-card>
@@ -226,7 +241,7 @@
               <v-divider></v-divider>
               <v-layout row wrap v-if="!product.attributes.length" px-3 mt-2>
                 <p class="font-italic text-xs-center red--text">
-                  There is no variants yet in this product
+                  There are no variants yet in this product...
                 </p>
                 <v-flex xs12>
                   <v-divider class="my-2 primary" />
@@ -244,16 +259,20 @@
                 px-3
                 py-2
               >
-                <v-flex xs4 pl-2>
+                <v-flex xs2 class="text-xs-left">
                   <div class="font-weight-bold">{{ attrib.name }}</div>
                 </v-flex>
-                <v-flex xs4>
-                  <div class="my-2 caption font-italic">Variant SKU - <b>Item Name</b></div>
-                  <div class="" v-for="(item, index) in attrib.items" :key="index">
-                    {{ item.sku }} - <b>{{ item.name }}</b>
+
+                <v-flex xs5>
+                  <div class="my-2 caption font-italic">Variant SKU | <b>Item Name</b> | Minimum Stock Order</div>
+                  <div v-for="(item, index) in attrib.items" :key="index">
+                    <span v-if="item.sku">
+                      {{ item.sku }} | <b>{{ item.name }}</b> | {{ item.minimumOrder || "N/A" }} pcs.
+                    </span>
                   </div>
                 </v-flex>
-                <v-flex xs4>
+
+                <v-flex xs3 pl-3>
                   <v-tooltip left>
                     <v-btn
                       slot="activator"
@@ -282,23 +301,24 @@
                 </v-flex>
               </v-layout>
 
-              <v-layout row wrap align-center justify-start mt-3 pa-3
+              <v-layout row wrap align-center justify-start mt-2 pa-3
                 v-if="!product.attributes.length || (tempAttribName && tempAttribItems.length)"
               >
                 <v-flex xs12 mb-1>
-                  <div class="font-weight-bold">Add Product Variant</div>
+                  <div class="font-weight-bold">Product Variant Name</div>
                 </v-flex>
                 <v-flex xs12 mt-2>
                   <v-text-field
                     label="Variant Name"
                     placeholder="Ex: Color, Size, Weight, etc..."
                     v-model="tempAttribName"
+                    solo
                   ></v-text-field>
                 </v-flex>
 
-                <v-flex xs12 my-2>
+                <v-flex xs12 mt-2>
                   <v-layout wrap align-center justify-center>
-                    <v-flex my-2 class="text-xs-left caption">Variant Items</v-flex>
+                    <v-flex my-2 class="text-xs-left body-1 font-weight-bold">Variant Items</v-flex>
                     <v-flex xs12>
                       <v-data-table
                         :headers="attributesHeader"
@@ -313,27 +333,49 @@
                             <td class="text-xs-center">
                               <v-text-field v-model="props.item.sku"></v-text-field>
                             </td>
+
                             <td class="text-xs-center">
-                              <v-text-field v-model="props.item.name" @keydown.enter="addVariant(props.item)"></v-text-field>
+                              <v-text-field v-model="props.item.name"></v-text-field>
                             </td>
+
                             <td class="text-xs-center">
-                              <!-- if the sku and name are filed, then make this delete button remove the entry -->
+                              <v-text-field 
+                                v-model="props.item.minimumOrder"
+                                type="number"
+                                @keydown.enter="addVariant(props.item)"
+                              ></v-text-field>
+                            </td>
+
+                            <td class="text-xs-center" width="150px">
+                              <!-- if the sku, name, and minimumOrder are filed, then make this delete button remove the entry -->
                               <v-btn icon small color="red" dark 
                                 @click="deleteVariant(props.item)" 
-                                v-if="(props.item.sku && props.item.name) && !props.item.hasOwnProperty('showAddButton')"
+                                v-if="
+                                  (props.item.sku && props.item.name && props.item.minimumOrder) 
+                                  && !props.item.hasOwnProperty('showAddButton')
+                                "
                               >
                                 <v-icon small>close</v-icon>
                               </v-btn>
-                              <!-- if the sku and name are not yet added to the entry, then make this delete button clear the text-fields -->
+
+                              <!-- if the sku, name, and minimumOrder are not yet added to the entry, then make this delete button clear both the text-fields -->
                               <v-btn icon small color="red" dark 
-                                @click="props.item.sku = null; props.item.name = null" 
-                                v-else-if="(props.item.sku && props.item.name) && props.item.hasOwnProperty('showAddButton')"
+                                @click="props.item.sku = null; props.item.name = null; props.item.minimumOrder" 
+                                v-else-if="
+                                  (props.item.sku && props.item.name && props.item.minimumOrder) && 
+                                  props.item.hasOwnProperty('showAddButton')
+                                "
                               >
                                 <v-icon small>close</v-icon>
                               </v-btn>
-                              <v-btn icon small color="green darken-1" dark 
+
+                              <!-- Only show the add button if the entry has'nt been push to the variants items -->
+                              <v-btn icon small color="green darken-1" dark
                                 @click="addVariant(props.item)" 
-                                v-show="props.item.hasOwnProperty('showAddButton') && (props.item.sku && props.item.name)"
+                                v-show="
+                                  (props.item.sku && props.item.name && props.item.minimumOrder) && 
+                                  props.item.hasOwnProperty('showAddButton')
+                                "
                               >
                                 <v-icon small>add</v-icon>
                               </v-btn>
@@ -347,7 +389,7 @@
                   
                 </v-flex>
 
-                <v-flex xs12 mt-3>
+                <v-flex xs12 mt-4>
                   <v-btn
                     v-if="!product.attributes.length"
                     block
@@ -401,7 +443,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog max-width="800" v-model="uploadImagesDialog" persistent>
+    <v-dialog max-width="700px" v-model="uploadImagesDialog" persistent>
       <v-card>
         <v-card-title class="primary white--text headline">
           <div>Upload Photos</div>
@@ -522,14 +564,23 @@ export default {
       },
       {
         text: "Name",
-        value: "name"
+        value: "name",
+        align: 'center'
+      },
+      {
+        text: 'Variants',
+        value: 'attributes',
+        align: 'center',
+        sortable: false
       },
       {
         text: "Date added",
-        value: "createdAt"
+        value: "createdAt",
+        align: 'center'
       },
       {
         text: "Actions",
+        align: 'center',
         sortable: false
       }
     ],
@@ -562,14 +613,14 @@ export default {
       downloadURL: null,
       isOutofStock: null,
       id: null,
+      minimumOrder: null,
       attributes: [
         {
           items: [
             {
               sku: null,
               name: null,
-              price: 0,
-              weight: 0,
+              minimumOrder: 0
             },
           ],
           name: null
@@ -582,12 +633,14 @@ export default {
       {
         sku: null,
         name: null,
+        minimumOrder: 0,
       },
     ],
     attributesHeader: [
       { text: 'Variant SKU', value: 'sku', align: 'center', sortable: false },
       { text: 'Item Name', value: 'name', align: 'center', sortable: false },
-      { text: 'Actions', value: false, align: 'center', sortable: false }
+      { text: 'Minimum Order QTY', value: 'minimumOrder', align: 'center', sortable: false },
+      { text: 'Actions', value: false, align: 'center', sortable: false, fixed: true }
     ],
 
     showEditConfirmButton: false,
@@ -606,6 +659,14 @@ export default {
     images: []
   }),
   methods: {
+    variantEntryModel() {
+      return {
+        sku: null,
+        name: null,
+        minimumOrder: this.product.minimumOrder || null,
+        showAddButton: true
+      }
+    },
     toggleAll() {
       if (this.selected.length) this.selected = [];
       else this.selected = this.items.slice();
@@ -625,7 +686,8 @@ export default {
     },
     resetVariantTable() {
       this.tempAttribName = null;
-      this.tempAttribItems = [{sku: null, name: null, showAddButton: true}];
+      this.tempAttribItems = [];
+      this.tempAttribItems.push(this.variantEntryModel());
     },
     OpenDialog() {
       this.dialogText = "Add New Product";
@@ -639,7 +701,7 @@ export default {
       this.product.weight = null;
       this.$refs.productFile.files.value = null;
       this.tempAttribName = null;
-      this.tempAttribItems = [{sku: null, name: null}];
+      this.tempAttribItems = [];
       this.product.attributes = [];
 
       this.resetVariantTable();
@@ -680,7 +742,7 @@ export default {
       this.tempAttribItems = this.product.attributes[index].items;
 
       //push a blank object on variant table so that user could add a new variant if needed
-      this.tempAttribItems.push({sku: null, name: null, showAddButton: true});
+      this.tempAttribItems.push(this.variantEntryModel());
 
       this.showEditConfirmButton = true;
       this.productIndex = index;
@@ -722,11 +784,12 @@ export default {
 
 
     addVariant(item) {
-      if(!item.sku || !item.name) return;
+      if(!item.sku || !item.name || !item.minimumOrder) return;
       
       const index = this.tempAttribItems.findIndex(attrib => attrib.sku === item.sku);
       delete this.tempAttribItems[index].showAddButton;
-      this.tempAttribItems.push({sku: null, name: null, showAddButton: true});
+
+      this.tempAttribItems.push(this.variantEntryModel());
       console.log('new tempAttribItems: ', this.tempAttribItems); 
     },
 
@@ -741,6 +804,7 @@ export default {
     },
 
     deleteVariant(item) {
+      if(this.tempAttribItems.length <= 1) return;
       const index = this.tempAttribItems.indexOf(item);
       if(index !== -1) {
         this.tempAttribItems.splice(index, 1);
@@ -790,6 +854,8 @@ export default {
         } else {
           this.addProductButtonDisabled = true;
 
+          
+
           const newProduct = {
             active: 1,
             categoryId: this.categoryId,
@@ -804,6 +870,11 @@ export default {
             searchTerms: this.product.name.split(" "),
 
           };
+
+          if(!this.product.attributes.length) {
+            newProduct.minimumOrder = this.product.minimumOrder;
+          }
+
           console.log(newProduct);
 
           //try-catch block for saving productData to database
@@ -906,18 +977,8 @@ export default {
           searchTerms: searchTerms
         };
 
-        //remove unnecessary attributes relating to product QTY
-        if(updatedProductData.hasOwnProperty('allocatedQTY')) {
-          delete updatedProductData.allocatedQTY;
-        }
-        if(updatedProductData.hasOwnProperty('onHandQTY')) {
-          delete updatedProductData.onHandQTY;
-        }
-        if(updatedProductData.hasOwnProperty('reOrderLevel')) {
-          delete updatedProductData.reOrderLevel;
-        }
-        if(updatedProductData.hasOwnProperty('isOutofStock')) {
-          delete updatedProductData.isOutofStock;
+        if(!this.product.attributes.length) {
+          updatedProductData.minimumOrder = this.product.minimumOrder;
         }
 
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
@@ -1237,6 +1298,12 @@ export default {
     },
     selected(val) {
       this.$emit("selected", val);
+    },
+    "product.minimumOrder": {
+      handler(value) {
+        this.tempAttribItems[0].minimumOrder = value;
+      },
+      deep: true
     }
   },
   mixins: [mixins],
