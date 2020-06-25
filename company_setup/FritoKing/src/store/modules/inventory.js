@@ -149,6 +149,7 @@ const inventory = {
                         onHandQTY: 0,
                         reOrderLevel:  0,
                         isOutofStock: true,
+                        minimumOrder: Number(productData.minimumOrder)
                     });
 
                     isSuccessful = true;
@@ -190,7 +191,8 @@ const inventory = {
                         allocatedQTY: 0,
                         onHandQTY: 0,
                         reOrderLevel:  0,
-                        isOutofStock: true
+                        isOutofStock: true,
+                        minimumOrder: Number(variant.minimumOrder)
                     });
                 
                 } catch(error) {
@@ -243,7 +245,8 @@ const inventory = {
                             allocatedQTY: 0,
                             onHandQTY: 0,
                             reOrderLevel:  0,
-                            isOutofStock: true
+                            isOutofStock: true,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
                     
                     } else if(existingVariants.length === 1) {
@@ -258,7 +261,8 @@ const inventory = {
 
                             productName: productData.name,
                             productId: productData.id,
-                            category: categoryName
+                            category: categoryName,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
 
                     } else {
@@ -286,7 +290,8 @@ const inventory = {
                             allocatedQTY: 0,
                             onHandQTY: 0,
                             reOrderLevel:  0,
-                            isOutofStock: true
+                            isOutofStock: true,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
 
                         await batch.commit();
@@ -360,7 +365,8 @@ const inventory = {
                         category: categoryName,
                         productName: productData.name,
                         price: Number(productData.price),
-                        weight: Number(productData.weight)
+                        weight: Number(productData.weight),
+                        minimumOrder: Number(newVariant.minimumOrder)
                     });
 
                     //remove from the existing variant list the variant that has been edited
@@ -391,7 +397,8 @@ const inventory = {
                     allocatedQTY: 0,
                     onHandQTY: 0,
                     reOrderLevel:  0,
-                    isOutofStock: true
+                    isOutofStock: true,
+                    minimumOrder: Number(newVariant.minimumOrder)
                 });
             }
 
