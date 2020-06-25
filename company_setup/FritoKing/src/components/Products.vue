@@ -33,14 +33,15 @@
       <v-data-table
         v-model="selected"
         :headers="headers"
-        :items="items"
+        :items="productList"
         item-key="name"
         select-all
         :pagination.sync="pagination"
         class="elevation-1"
-        :loading="items.length === 0"
+        :loading="productList.length === 0"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
+        no-data-text="No products yet..."
       >
         <template slot="headers" slot-scope="props">
           <tr>
@@ -93,11 +94,11 @@
               <span v-if="props.item.active != 1"> (Archived)</span>
             </td>
             <td class="text-xs-center">
-              <div v-if="!props.item.attributes.length"> -- </div>
+              <div v-if="!props.item.attributes.length">{{ props.item.minimumOrder }}</div>
               <div v-else class="text-xs-center"
                 v-for="(variant, index) in props.item.attributes[0].items" :key="index"
               >
-                {{ variant.name | capitalize }}
+                {{ variant.name | capitalize }} - {{ variant.minimumOrder }}
               </div>
             </td>
             <td class="text-xs-center">
@@ -545,11 +546,12 @@ const uuidv4 = require("uuid/v4");
 export default {
   props: ["items", "categoryId", "category"],
   async created() {
-    //this.loading = true;
-    //await this.$store.dispatch("products/FETCH_PRODUCTS", this.categoryId);
-    //this.items = this.$store.getters["products/GetProductsList"];
+    this.loading = true;
+    this.productList = this.items;
+    this.loading = false;
   },
   data: () => ({
+    productList: [],
     pagination: {
       sortBy: "name"
     },
@@ -568,8 +570,8 @@ export default {
         align: 'center'
       },
       {
-        text: 'Variants',
-        value: 'attributes',
+        text: 'Minimum Order QTY',
+        value: 'minimumOrder',
         align: 'center',
         sortable: false
       },
@@ -699,6 +701,7 @@ export default {
       this.product.downloadURL = null;
       this.product.name = null;
       this.product.weight = null;
+      this.product.minimumOrder = null;
       this.$refs.productFile.files.value = null;
       this.tempAttribName = null;
       this.tempAttribItems = [];
@@ -717,6 +720,7 @@ export default {
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.weight = item.weight;
+      this.product.minimumOrder = item.minimumOrder;
       this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
       
@@ -947,11 +951,15 @@ export default {
 
           this.resetVariantTable();
 
+          //update the product displayed on this page
+          this.updateProductList(newProduct)
+
           this.$swal.fire({
             type: "success",
             title: "Success",
             text: "Product has been successfully added!"
           });
+
         }
 
         //Edit Product Details
@@ -1038,12 +1046,22 @@ export default {
         this.addProductDialog = false;
         this.resetVariantTable();
 
+        //update the product displayed on this page
+        this.updateProductList(updatedProductData)
+
         this.$swal.fire({
           type: "success",
           title: "Success",
           text: "Product has been successfully updated."
         });
+
       }
+    },
+
+    updateProductList(product) {
+      const index = this.productList.findIndex(item => item.id === product.id);
+      if(index !== 1) this.productList[index] = Object.assign({}, product);
+      this.productList = [...this.productList];
     },
 
     async changeStatus(item) {
@@ -1304,6 +1322,9 @@ export default {
         this.tempAttribItems[0].minimumOrder = value;
       },
       deep: true
+    },
+    items(arr) {
+      this.productList = arr;
     }
   },
   mixins: [mixins],
