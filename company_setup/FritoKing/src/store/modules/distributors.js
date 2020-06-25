@@ -21,14 +21,21 @@ const distributors = {
             state.resellersList = payload;
         },
         ADD_RESELLER(state, payload) {
-            state.resellersList.push(payload);
+            state.resellersList.unshift(payload);
+            state.resellersList = [...state.resellersList];
         },
         UPDATE_RESELLER(state, payload) {
             const index = state.resellersList.findIndex(reseller => reseller.id === payload.id);
             if(index !== -1) {
-                Object.keys(payload).forEach(key => {
-                    state.resellersList[index][key] = payload[key];
-                });
+                state.resellersList[index] = payload;
+                state.resellersList = [...state.resellersList];
+            }
+        },
+        REMOVE_RESELLER(state, payload) {
+            const index = state.resellersList.findIndex(reseller => reseller.id === payload.id);
+            if(index !== -1) {
+                state.resellersList.splice(index, 1);
+                state.resellersList = [...state.resellersList];
             }
         }
     },
@@ -224,22 +231,15 @@ const distributors = {
 
                         if(change.type === 'added') {
                             console.log('added reseller: ', change);
-                            state.resellersList.unshift(data);
+                            commit('ADD_RESELLER', data);
                         
                         } else if(change.type === 'modified') {
-                            const index = state.resellersList.findIndex(reseller => reseller.id === data.id);
-                            if(index !== -1) {
-                                state.resellersList[index] = Object.assign({}, data);
-                                console.log('modified reseller: ', data);
-                                // dispatch('conversations/listenToConversations', null, {root:true});
-                            }
+                            console.log('modified reseller: ', data);
+                            commit('UPDATE_RESELLER', data);
                         
                         } else if(change.type === 'removed') {
-                            const index = state.resellersList.findIndex(reseller => reseller.id === data.id);
-                            if(index !== -1) {
-                                state.resellersList.splice(index, 1);
-                                console.log('removed reseller: ', data);
-                            }
+                            console.log('removed reseller: ', data);
+                            commit('REMOVE_RESELLER', data);
                         }
 
                         return data;
