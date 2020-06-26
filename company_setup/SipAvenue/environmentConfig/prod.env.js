@@ -1,8 +1,5 @@
-var merge = require('webpack-merge')
-var devEnv = require('./dev.env')
-
-module.exports = merge(devEnv, {
-  NODE_ENV: '"testing"',
+module.exports = {
+  NODE_ENV: '"production"',
   projectId: '"sipavenue-dev"',
   appId: '"1:509789194682:web:150e0de65622e8d347f583"',
   databaseURL: '"https://sipavenue-dev.firebaseio.com"',
@@ -11,7 +8,8 @@ module.exports = merge(devEnv, {
   authDomain: '"sipavenue-dev.firebaseapp.com"',
   messagingSenderId: '"509789194682"',
   storageCode: '"SipAvenue"',
-  primaryColor: '"#f7a978"',
+  // primaryColor: '"#f7a978"',
+  primaryColor: '"#ff6001"',
   companyName: '"Sip Avenue"',
-  accountManagementURL: '"https://us-central1-sipavenue-dev.cloudfunctions.net/accounts"'
-})
+  accountManagementURL: '"https://us-central1-sipavenue-dev.cloudfunctions.net/accounts"',
+}
