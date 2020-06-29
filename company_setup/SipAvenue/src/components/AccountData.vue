@@ -479,17 +479,27 @@ export default {
       this.deleteBranchBtn = true;
 
       const answer = await this.$swal.fire({
-        title: "Are you sure?",
-        type: "warning",
+        title: "Confirm Branch Deletion",
+        input: 'text',
         showCancelButton: true,
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
+        confirmButtonText: "Delete Branch",
+        cancelButtonText: "Cancel",
         showCloseButton: true,
-        text: 'Are you sure you want to delete this branch?'
+        html: `enter <b>${this.accountData.branchName.toLowerCase()}</b> to confirm the deletion of this branch.`,
+        inputValidator: (value) => {
+          if(!value) {
+            return 'Please enter the branch name!';
+          }
+          if(value.toLowerCase() !== this.accountData.branchName.toLowerCase()) {
+            return 'Branch name is not the same!';
+          }
+        },
+        
       });
-
-      if (!answer.value) {
+      
+      if (!answer.value || !answer.hasOwnProperty('value')) {
         this.deleteBranchBtn = false;
+        console.log('cancelled branch deletion');
         return;
       }
 
@@ -635,11 +645,23 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 
-.overlayImage {
-  position: absolute;
-  z-index: 1;
-}
+  .overlayImage {
+    position: absolute;
+    z-index: 1;
+  }
+
+  .swal2-container .swal2-popup {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-modal {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-show {
+    font-family: 'Roboto', sans-serif;
+  }
 
 </style>
