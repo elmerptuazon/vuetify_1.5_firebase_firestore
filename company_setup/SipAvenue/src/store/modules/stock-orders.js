@@ -27,12 +27,25 @@ const stock_orders = {
         SET_STOCK_ORDER_LIST(state, payload) {
             state.stockOrderList = payload;
         },
+        ADD_STOCK_ORDER(state, payload) {
+            state.stockOrderList.unshift(payload);
+            console.log('stock order has been added: ', payload);
+        },
         UPDATE_STOCK_ORDER(state, payload) {
-            Object.keys(payload).forEach((key) => {
-                state.stockOrder[key] = payload[key];
-            });
-            // key: the name of the object key
-            // index: the ordinal position of the key within the object 
+            const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === payload.id);
+            if(index !== -1) {
+                state.stockOrderList[index] = Object.assign({}, payload);
+                state.stockOrderList = [...state.stockOrderList];
+                console.log('stock order has been modified: ', payload);
+            }
+        },
+        REMOVE_STOCK_ORDER(state, payload) {
+            const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === payload.id);
+            if(index !== -1) {
+                state.stockOrderList.splice(index, 1);
+                state.stockOrderList = [...state.stockOrderList];
+                console.log('stock order has been removed: ', payload);
+            }
         }
     },
     actions: {
@@ -74,25 +87,16 @@ const stock_orders = {
                         data.resellerPrice = 0;
                         data.items.forEach((item) => {
                             data.price += (item.qty * item.price);
-                            //data.resellerPrice += (item.qty * item.resellerPrice);
                         });
 
                         if(change.type === 'added') {
-                            state.stockOrderList.unshift(data);
+                            commit('ADD_STOCK_ORDER', data);
                         
                         } else if(change.type === 'modified') {
-                            const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === data.id);
-                            if(index !== -1) {
-                                state.stockOrderList[index] = Object.assign({}, data);
-                                console.log('stock order has been modified');
-                            }
+                            commit('UPDATE_STOCK_ORDER', data);
                         
                         } else if(change.type === 'removed') {
-                            const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === data.id);
-                            if(index !== -1) {
-                                state.stockOrderList.splice(index, 1);
-                                console.log('stock order has been removed.');
-                            }
+                            commit('REMOVE_STOCK_ORDER', data);
                         }
    
                     }
@@ -160,6 +164,20 @@ const stock_orders = {
                 commit('SET_STOCK_ORDER_LIST', data);
                 return data;
             } catch (error) {
+                throw error;
+            }
+        },
+
+        async GET_STOCK_ORDER({}, payload) {
+            try {
+                
+                const stockOrderData = await DB.collection('stock_orders').doc(payload).get();
+                const data = stockOrderData.data();
+                data.id = stockOrderData.id;
+                return data;
+
+            } catch(error) {
+                console.log(error);
                 throw error;
             }
         },

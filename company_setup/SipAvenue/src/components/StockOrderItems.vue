@@ -106,7 +106,10 @@ export default {
           total: item.qty * item.price,
           name: item.name,
           attributes: attributes,
-          image: item.downloadURL
+          image: item.downloadURL,
+          variantId: item.variantId,
+          sku: item.sku,
+          variantName: item.variantName
         };
       });
 
