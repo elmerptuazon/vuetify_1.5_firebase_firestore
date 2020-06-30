@@ -11,7 +11,7 @@ module.exports = merge(prodEnv, {
   authDomain: '"buffalowings-dev.firebaseapp.com"',
   messagingSenderId: '"536526629541"',
   storageCode: '"BuffaloWingsNThings"',
-  primaryColor: '"#003784"',
+  primaryColor: '"#0099ff"',
   companyName: '"Buffalo\'s Wings N Things"',
   accountManagementURL: '"https://us-central1-buffalowings-dev.cloudfunctions.net/accounts"'
 })
