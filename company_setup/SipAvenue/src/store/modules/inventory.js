@@ -61,12 +61,41 @@ const inventory = {
                         case 'added': {
                             console.log('variant has been added: ', data);
                             if(!state.products.length) {
+                                data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                                if(data.availableQTY === 0) {
+                                    data.isOutofStock = true;
+                                }
+                        
+                                if(data.isOutofStock) {
+                                    data.position = 1;
+                                
+                                } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                    data.position = 1;
+                        
+                                } else {
+                                    data.position = 2;
+                                }
+
                                 commit('AddProduct', data);
                             
                             } else {
                                 //avoid pushing the same product on the list
                                 const lastProductAdded = state.products[0];
                                 if(lastProductAdded.id !== data.id) {
+                                    data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                                    if(data.availableQTY === 0) {
+                                        data.isOutofStock = true;
+                                    }
+                            
+                                    if(data.isOutofStock) {
+                                        data.position = 1;
+                                    
+                                    } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                        data.position = 1;
+                            
+                                    } else {
+                                        data.position = 2;
+                                    }
                                     commit('AddProduct', data);
                                 }
                             }
@@ -75,6 +104,21 @@ const inventory = {
                         }
 
                         case 'modified': {
+                            
+                            data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                            if(data.availableQTY === 0) {
+                                data.isOutofStock = true;
+                            }
+                    
+                            if(data.isOutofStock) {
+                                data.position = 1;
+                            
+                            } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                data.position = 1;
+                    
+                            } else {
+                                data.position = 2;
+                            }
                             console.log('variant was modified!', data);
                             commit('UpdateProduct', data);
                             break;
@@ -82,6 +126,7 @@ const inventory = {
 
                         case 'removed': {
                             console.log('variant was removed!', data);
+                            data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
                             commit('RemoveProduct', data);
                             break;
                         }
