@@ -25,6 +25,7 @@
     "test-PickUpSticks": "cross-env NODE_ENV=test node config/companySetup.js PickUpSticks",
     "test-SipAvenue": "cross-env NODE_ENV=test node config/companySetup.js SipAvenue",
     "test-AppSellFranchise": "cross-env NODE_ENV=test node config/companySetup.js AppSellFranchise",
+    "test-BuffaloWingsNThings": "cross-env NODE_ENV=test node config/companySetup.js BuffaloWingsNThings",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
