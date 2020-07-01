@@ -22,16 +22,21 @@ const stock_orders = {
             state.companies = payload;
         },
         SET_STOCK_ORDER(state, payload) {
-            state.stockOrder = payload
+            state.stockOrder = Object.assign({}, payload);
         },
         SET_STOCK_ORDER_LIST(state, payload) {
             state.stockOrderList = payload;
         },
-        ADD_STOCK_ORDER(state, payload) {
+        UPDATE_STOCK_ORDER(state, payload) {
+            for(const key of Object.keys(payload)) {
+                state.stockOrder[key] = payload[key];
+            }
+        },
+        ADD_TO_STOCK_ORDER_LIST(state, payload) {
             state.stockOrderList.unshift(payload);
             console.log('stock order has been added: ', payload);
         },
-        UPDATE_STOCK_ORDER(state, payload) {
+        UPDATE_STOCK_ORDER_LIST(state, payload) {
             const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === payload.id);
             if(index !== -1) {
                 state.stockOrderList[index] = Object.assign({}, payload);
@@ -39,7 +44,7 @@ const stock_orders = {
                 console.log('stock order has been modified: ', payload);
             }
         },
-        REMOVE_STOCK_ORDER(state, payload) {
+        REMOVE_TO_STOCK_ORDER_LIST(state, payload) {
             const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === payload.id);
             if(index !== -1) {
                 state.stockOrderList.splice(index, 1);
@@ -90,13 +95,13 @@ const stock_orders = {
                         });
 
                         if(change.type === 'added') {
-                            commit('ADD_STOCK_ORDER', data);
+                            commit('ADD_TO_STOCK_ORDER_LIST', data);
                         
                         } else if(change.type === 'modified') {
-                            commit('UPDATE_STOCK_ORDER', data);
+                            commit('UPDATE_STOCK_ORDER_LIST', data);
                         
                         } else if(change.type === 'removed') {
-                            commit('REMOVE_STOCK_ORDER', data);
+                            commit('REMOVE_TO_STOCK_ORDER_LIST', data);
                         }
    
                     }

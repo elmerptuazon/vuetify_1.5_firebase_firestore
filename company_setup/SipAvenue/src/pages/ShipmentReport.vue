@@ -151,6 +151,10 @@
             >
               <template slot="items" slot-scope="props">
                 <td class="text-xs-left">{{ props.item.productName }}</td>
+                <td class="text-xs-left">
+                  <span v-if="props.item.variantName">{{ props.item.variantName }}</span>
+                  <span v-else> - </span>
+                </td>
                 <td class="text-xs-left">{{ props.item.price }}</td>
                 <td class="text-xs-left">{{ props.item.qtyToShip }}</td>
               </template>
@@ -222,6 +226,12 @@ export default {
         align: "center",
         sortable: true,
         value: "productName"
+      },
+      {
+        text: "Variant Name",
+        align: "center",
+        sortable: true,
+        value: "variantName"
       },
       {
         text: "Price",
