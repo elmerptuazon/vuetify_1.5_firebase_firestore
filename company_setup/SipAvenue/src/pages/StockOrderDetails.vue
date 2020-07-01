@@ -84,7 +84,7 @@
                           <span 
                             class="primary--text" 
                             v-if="
-                              (stockOrder.status === 'shipped' || stockOrder.status === 'partially shipped') && 
+                              (stockOrder.status.toLowerCase() === 'shipped' || stockOrder.status.toLowerCase() === 'partially shipped') && 
                               stockOrder.shipmentsToReceive > 0
                             "
                           >
