@@ -11,7 +11,8 @@ module.exports = merge(devEnv, {
   authDomain: '"sipavenue-dev.firebaseapp.com"',
   messagingSenderId: '"509789194682"',
   storageCode: '"SipAvenue"',
-  primaryColor: '"#f7a978"',
+  // primaryColor: '"#f7a978"',
+  primaryColor: '"#ff6001"',
   companyName: '"Sip Avenue"',
   accountManagementURL: '"https://us-central1-sipavenue-dev.cloudfunctions.net/accounts"'
 })

@@ -1,6 +1,6 @@
 <template>
-  <v-avatar size="55px">
-    <v-img :src="require('@/assets/logo.jpg')"></v-img>
+  <v-avatar size="50px">
+    <v-img :src="require('@/assets/logo.jpg')" contain></v-img>
   </v-avatar>
 </template>
 

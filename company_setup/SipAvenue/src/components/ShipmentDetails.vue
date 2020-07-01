@@ -21,6 +21,7 @@
             <v-btn
               color="success"
               v-show="shipment.status.toLowerCase() === 'pending'"
+              :loading="btnloading2"
               @click="UpdateShipmentStatus(shipment)"
               >Tag as Received</v-btn
             >
@@ -33,6 +34,7 @@
             <v-btn
               color="error"
               v-show="shipment.status.toLowerCase() === 'pending'"
+              :loading="btnloading2"
               @click="cancelShipment(shipment)"
               >Cancel Shipment</v-btn
             >
@@ -276,6 +278,7 @@ export default {
       }
     ],
     btnloading: false,
+    btnloading2: false,
     //showShipmentFields: false,
     shipmentDialog: false,
     dateMenu: false,
@@ -290,8 +293,24 @@ export default {
   },
   methods: {
     async UpdateShipmentStatus(shipment) {
+      this.btnloading2 = true;
       //updates hipmentstatus here
       console.log(shipment);
+      let stockOrder;
+      try {
+        stockOrder = await this.$store.dispatch('stock_orders/GET_STOCK_ORDER', shipment.stockOrder.stockOrderId);
+        console.log(stockOrder);
+
+      } catch(error) {
+        console.log(error);
+        this.$swal.fire({
+          type: "error",
+          title: "Failed",
+          text: `Shipment update has failed due to: ${e}`
+        });
+        return;
+      }
+
       const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
       let updateObj = {
         id: shipment.id,
@@ -299,10 +318,22 @@ export default {
           status: "Received"
         }
       };
+
+      //if inventory counts for the items in the shipment are not yet deducted, then deduct it
+      if(!stockOrder.hasOwnProperty('isQTYDeducted')) {
+        for(const item of stockOrder.items) {
+          await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+            id: item.variantId,
+            key: 'allocatedQTY',
+            value: FB.firestore.FieldValue.increment(item.shippedQty * -1)
+          })
+        }
+      }
+
       let stockOrderUpdateObj = {
         referenceID: shipment.stockOrder.stockOrderId,
         updateObject: {
-          shipmentsToReceive: shipmentDecrement
+          shipmentsToReceive: shipmentDecrement,
         }
       };
       try {
@@ -312,12 +343,14 @@ export default {
           "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
           stockOrderUpdateObj
         );
+        this.btnloading2 = false;
         this.$swal.fire({
           type: "success",
           title: "Success",
           text: "Shipment status has been updated!"
         });
       } catch (e) {
+        this.btnloading2 = false;
         this.$swal.fire({
           type: "error",
           title: "Failed",
@@ -326,6 +359,7 @@ export default {
       }
     },
     async cancelShipment(shipment) {
+      this.btnloading2 = true;
       //updates hipmentstatus here
       //console.log(shipment);
 
@@ -338,80 +372,87 @@ export default {
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, Cancel it!"
       });
-      if (response.value) {
-        let updateObj = {
-          id: shipment.id,
-          updatedDetails: {
-            status: "Cancelled"
-          }
-        };
 
-        //move this to Vuex or do this kind of updates in a cloud functions
-        const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
-        let stockOrderDataDocument = await FB.firestore()
-          .collection("stock_orders")
-          .doc(shipment.stockOrder.stockOrderId)
-          .get();
-
-        let updatedStockOrderItems = stockOrderDataDocument
-          .data()
-          .items.map(item => {
-            const cancelledItem = shipment.itemsToShip.find(
-              shippedItem => shippedItem.productId === item.productId
-            );
-            if (cancelledItem) {
-              item.shippedQty = item.shippedQty - cancelledItem.qtyToShip;
-            }
-            return item;
-          });
-        let stockOrderStatus;
-        if (
-          typeof stockOrderDataDocument.data().statusTimeline[
-            stockOrderDataDocument.data().statusTimeline.length - 2
-          ] == "undefined"
-        ) {
-          stockOrderStatus = "pending";
-        } else {
-          stockOrderStatus = stockOrderDataDocument.data().statusTimeline[
-            stockOrderDataDocument.data().statusTimeline.length - 2
-          ].status;
-        }
-        let updatedeStatusTimeline = stockOrderDataDocument.data()
-          .statusTimeline;
-
-        updatedeStatusTimeline.push({
-          status: stockOrderStatus,
-          date: Date.now()
-        });
-        let stockOrderUpdateObj = {
-          referenceID: shipment.stockOrder.stockOrderId,
-          updateObject: {
-            shipmentsToReceive: shipmentDecrement,
-            items: updatedStockOrderItems,
-            status: stockOrderStatus,
-            statusTimeline: updatedeStatusTimeline
-          }
-        };
-
-        try {
-          await this.$store.dispatch("shipment/UpdateShipment", updateObj);
-          await this.$store.dispatch(
-            "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
-            stockOrderUpdateObj
-          );
-          this.$swal.fire({
-            type: "success",
-            title: "Success",
-            text: "Shipment status has been updated!"
-          });
-        } catch (e) {
-          this.$swal.fire({
-            type: "error",
-            title: "Failed",
-            text: `Shipment update has failed due to: ${e}`
-          });
-        }
+      if(!response.value) {
+        this.btnloading2 = false;
+        return;
       }
+
+      let updateObj = {
+        id: shipment.id,
+        updatedDetails: {
+          status: "Cancelled"
+        }
+      };
+
+      //move this to Vuex or do this kind of updates in a cloud functions
+      const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
+      let stockOrderDataDocument = await FB.firestore()
+        .collection("stock_orders")
+        .doc(shipment.stockOrder.stockOrderId)
+        .get();
+
+      let updatedStockOrderItems = stockOrderDataDocument
+        .data()
+        .items.map(item => {
+          const cancelledItem = shipment.itemsToShip.find(
+            shippedItem => shippedItem.productId === item.productId
+          );
+          if (cancelledItem) {
+            item.shippedQty = item.shippedQty - cancelledItem.qtyToShip;
+          }
+          return item;
+        });
+      let stockOrderStatus;
+      if (
+        typeof stockOrderDataDocument.data().statusTimeline[
+          stockOrderDataDocument.data().statusTimeline.length - 2
+        ] == "undefined"
+      ) {
+        stockOrderStatus = "pending";
+      } else {
+        stockOrderStatus = stockOrderDataDocument.data().statusTimeline[
+          stockOrderDataDocument.data().statusTimeline.length - 2
+        ].status;
+      }
+      let updatedeStatusTimeline = stockOrderDataDocument.data()
+        .statusTimeline;
+
+      updatedeStatusTimeline.push({
+        status: stockOrderStatus,
+        date: Date.now()
+      });
+      let stockOrderUpdateObj = {
+        referenceID: shipment.stockOrder.stockOrderId,
+        updateObject: {
+          shipmentsToReceive: shipmentDecrement,
+          items: updatedStockOrderItems,
+          status: stockOrderStatus,
+          statusTimeline: updatedeStatusTimeline
+        }
+      };
+
+      try {
+        await this.$store.dispatch("shipment/UpdateShipment", updateObj);
+        await this.$store.dispatch(
+          "stock_orders/UPDATE_STOCK_ORDER_DETAILS",
+          stockOrderUpdateObj
+        );
+        this.$swal.fire({
+          type: "success",
+          title: "Success",
+          text: "Shipment status has been updated!"
+        });
+        this.btnloading2 = false;
+      } catch (e) {
+        this.$swal.fire({
+          type: "error",
+          title: "Failed",
+          text: `Shipment update has failed due to: ${e}`
+        });
+        this.btnloading2 = false;
+      }
+
     },
     async UpdateShipmentDetails() {
       this.btnloading = true;

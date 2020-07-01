@@ -13,8 +13,8 @@
             <v-img :src="props.item.image" contain width="50"></v-img>
           </v-avatar>
         </td>
-        <td class="text-xs-left">{{ props.item.name }}</td>
-        <td class="text-xs-left">{{ props.item.attributes | capitalize }}</td>
+        <td class="text-xs-center">{{ props.item.name }}</td>
+        <td class="text-xs-center">{{ (props.item.attributes || "-") | capitalize }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
         <td class="text-xs-center">{{ props.item.remainingQty }}</td>
@@ -61,7 +61,7 @@ export default {
         align: "center"
       },
       {
-        text: "Attributes",
+        text: "Variant",
         value: "attributes",
         align: "center"
       },
@@ -102,11 +102,14 @@ export default {
           qty: item.qty,
           shippedQty: item.shippedQty,
           remainingQty: item.qty - item.shippedQty,
-          price: item.resellerPrice,
+          price: item.price,
           total: item.qty * item.price,
           name: item.name,
           attributes: attributes,
-          image: item.downloadURL
+          image: item.downloadURL,
+          variantId: item.variantId,
+          sku: item.sku,
+          variantName: item.variantName
         };
       });
 

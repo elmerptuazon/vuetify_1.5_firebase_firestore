@@ -14,6 +14,8 @@ import users from './modules/users';
 import shipment from './modules/shipment';
 import delivery_settings from './modules/delivery-settings';
 import articles from './modules/articles';
+import inventory from './modules/inventory';
+import support from './modules/support';
 
 Vue.use(Vuex);
 
@@ -30,6 +32,11 @@ export default new Vuex.Store({
 				icon: 'cloud_upload',
 				text: 'Multiple Product Upload',
 				url: 'MultiProductUpload'
+			},
+			{
+				icon: 'fa-warehouse',
+				text: 'Inventory Management',
+				url: 'Inventory'
 			},
 			{ 
 				icon: 'store_mall_directory', 
@@ -107,6 +114,8 @@ export default new Vuex.Store({
 		users,
 		shipment,
 		delivery_settings,
-		articles
+		articles,
+		inventory,
+		support
 	}
 })
