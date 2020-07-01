@@ -24,6 +24,7 @@
     "test-FritoKing": "cross-env NODE_ENV=test node config/companySetup.js FritoKing",
     "test-PickUpSticks": "cross-env NODE_ENV=test node config/companySetup.js PickUpSticks",
     "test-SipAvenue": "cross-env NODE_ENV=test node config/companySetup.js SipAvenue",
+    "test-BuffaloWingsNThings": "cross-env NODE_ENV=test node config/companySetup.js BuffaloWingsNThings",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
