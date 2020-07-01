@@ -65,7 +65,7 @@ const inventory = {
                                 if(data.availableQTY === 0) {
                                     data.isOutofStock = true;
                                 }
-                        
+
                                 if(data.isOutofStock) {
                                     data.position = 1;
                                 
@@ -75,7 +75,7 @@ const inventory = {
                                 } else {
                                     data.position = 2;
                                 }
-
+                        
                                 commit('AddProduct', data);
                             
                             } else {
@@ -86,7 +86,7 @@ const inventory = {
                                     if(data.availableQTY === 0) {
                                         data.isOutofStock = true;
                                     }
-                            
+
                                     if(data.isOutofStock) {
                                         data.position = 1;
                                     
@@ -96,6 +96,7 @@ const inventory = {
                                     } else {
                                         data.position = 2;
                                     }
+                            
                                     commit('AddProduct', data);
                                 }
                             }
@@ -104,12 +105,11 @@ const inventory = {
                         }
 
                         case 'modified': {
-                            
                             data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
                             if(data.availableQTY === 0) {
                                 data.isOutofStock = true;
                             }
-                    
+
                             if(data.isOutofStock) {
                                 data.position = 1;
                             
@@ -119,6 +119,7 @@ const inventory = {
                             } else {
                                 data.position = 2;
                             }
+                    
                             console.log('variant was modified!', data);
                             commit('UpdateProduct', data);
                             break;
@@ -127,6 +128,17 @@ const inventory = {
                         case 'removed': {
                             console.log('variant was removed!', data);
                             data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+
+                            if(data.isOutofStock) {
+                                data.position = 1;
+                            
+                            } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                data.position = 1;
+                    
+                            } else {
+                                data.position = 2;
+                            }
+                            
                             commit('RemoveProduct', data);
                             break;
                         }

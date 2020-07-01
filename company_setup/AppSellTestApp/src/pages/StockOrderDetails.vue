@@ -408,9 +408,31 @@ export default {
         });
       }
 
+      const QTYIsDeducted = (!this.stockOrder.isQTYDeducted || !this.stockOrder.hasOwnProperty('isQTYDeducted'));
+      const shipmentsToRecieve = this.stockOrder.shipmentsToReceive === 0;
+      const isStockOrderShipped = (this.stockOrder.status === 'shipped' || this.stockOrder.status === 'partially shipped');
+      
+      console.log(QTYIsDeducted, shipmentsToRecieve, isStockOrderShipped);
+      
+      if((QTYIsDeducted && shipmentsToRecieve) && isStockOrderShipped) {
+        for(const item of this.stockOrder.items) {
+          await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+            id: item.variantId,
+            key: 'allocatedQTY',
+            value: FB.firestore.FieldValue.increment(item.shippedQty * -1)
+          });
+        }
+
+        await this.$store.dispatch('stock_orders/UPDATE_STOCK_ORDER_DETAILS', {
+          referenceID: id,
+          updateObject: { isQTYDeducted: true }
+        });
+      }
+
       if (!id) {
         this.$router.push({ name: "StockOrders" });
       }
+
     } catch (error) {
       this.$refs.toast.show("error", "An error occurred");
       console.log(error);
@@ -430,6 +452,9 @@ export default {
           qtyToShip: item.qtyToShip,
           productName: item.name,
           productId: item.productId,
+          variantId: item.variantId,
+          sku: item.sku,
+          variantName: item.variantName,
           price: item.price,
           qtyToShipPriceTotal: item.price * item.qtyToShip
         };
@@ -466,6 +491,17 @@ export default {
           statusTimeline: statusTimeline,
           id: this.$route.params.id
         });
+
+        //adjust the allocatedQTY field of the variants associated to this stockOrder
+        if(status === 'cancelled') {
+          for(const item of this.stockOrder.items) {
+            await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+              id: item.variantId,
+              key: 'allocatedQTY',
+              value: FB.firestore.FieldValue.increment(item.qty * -1), //decrement the allocatedQTY field of the variant
+            });
+          }
+        }
 
         //this.stockOrder.status = status;
         this.$refs.toast.show(
@@ -514,6 +550,9 @@ export default {
                 productName: item.name,
                 productId: item.productId,
                 price: item.resellerPrice,
+                variantId: item.variantId,
+                sku: item.sku,
+                variantName: item.variantName,
                 qtyToShipPriceTotal:
                   item.resellerPrice * (item.qty - item.shippedQty)
               };
@@ -555,6 +594,9 @@ export default {
                 productId: item.productId,
                 qty: item.qty,
                 unique: item.unique,
+                variantId: item.variantId,
+                sku: item.sku,
+                variantName: item.variantName,
                 resellerPrice: item.resellerPrice,
                 shippedQty: item.qty - item.shippedQty + item.shippedQty
               };
@@ -648,6 +690,9 @@ export default {
                   qty: item.qty,
                   unique: item.unique,
                   resellerPrice: item.resellerPrice,
+                  variantId: item.variantId,
+                  sku: item.sku,
+                  variantName: item.variantName,
                   shippedQty: item.shippedQty
                 };
                 return updatedStockOrder;
@@ -660,6 +705,9 @@ export default {
                   qty: item.qty,
                   unique: item.unique,
                   resellerPrice: item.resellerPrice,
+                  variantId: item.variantId,
+                  sku: item.sku,
+                  variantName: item.variantName,
                   shippedQty: item.shippedQty + shippedQty
                 };
                 return updatedStockOrder;

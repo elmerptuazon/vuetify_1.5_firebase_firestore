@@ -23,18 +23,6 @@
       </tr>
     </template>
     <template slot="footer">
-      <!-- <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong>Subtotal: {{ subTotal | currency("P") }}</strong>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong
-            >Discount: <span v-if="discount">{{ discount }}%</span></strong
-          >
-        </td>
-      </tr> -->
       <tr>
         <td colspan="8" class="text-xs-right">
           <strong>Total: {{ total | currency("P") }}</strong>
@@ -100,7 +88,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr.toUpperCase()}: ${item.attributes[attr]}`;
+            attributes += `${item.attributes[attr]}`;
           }
         });
 
@@ -114,7 +102,8 @@ export default {
           attributes: attributes,
           image: item.downloadURL,
           sku: item.sku,
-          variantId: item.variantId
+          variantId: item.variantId,
+          variantName: item.variantName
         };
       });
 

@@ -194,6 +194,10 @@
                 >
                   <template slot="items" slot-scope="props">
                     <td class="text-xs-left">{{ props.item.productName }}</td>
+                    <td class="text-xs-center">
+                      <span v-if="props.item.variantName">{{ props.item.variantName }}</span>
+                      <span v-else> - </span>
+                    </td>
                     <td class="text-xs-center">{{ props.item.qtyToShip }}</td>
                   </template>
                 </v-data-table>
@@ -273,6 +277,12 @@ export default {
         value: "productName"
       },
       {
+        text: "Variant Name",
+        align: "center",
+        sortable: true,
+        value: "variantName"
+      },
+      {
         text: "Qty to Ship",
         value: "qtyToShip",
         align: "center"
@@ -295,6 +305,21 @@ export default {
     async UpdateShipmentStatus(shipment) {
       //updates hipmentstatus here
       console.log(shipment);
+      let stockOrder;
+      try {
+        stockOrder = await this.$store.dispatch('stock_orders/GET_STOCK_ORDER', shipment.stockOrder.stockOrderId);
+        console.log(stockOrder);
+
+      } catch(error) {
+        console.log(error);
+        this.$swal.fire({
+          type: "error",
+          title: "Failed",
+          text: `Shipment update has failed due to: ${e}`
+        });
+        return;
+      }
+
       const shipmentDecrement = FB.firestore.FieldValue.increment(-1);
       let updateObj = {
         id: shipment.id,
@@ -302,6 +327,23 @@ export default {
           status: "Received"
         }
       };
+
+      //if inventory counts for the items in the shipment are not yet deducted, then deduct it
+      if(!stockOrder.hasOwnProperty('isQTYDeducted')) {
+        for(const item of stockOrder.items) {
+          let variant = await this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+          variant = variant.find(variant => variant.id === item.variantId);
+          
+          if(variant.allocatedQTY > 0) {
+            await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+              id: item.variantId,
+              key: 'allocatedQTY',
+              value: FB.firestore.FieldValue.increment(item.shippedQty * -1)
+            });
+          }
+        }
+      }
+      
       let stockOrderUpdateObj = {
         referenceID: shipment.stockOrder.stockOrderId,
         updateObject: {
