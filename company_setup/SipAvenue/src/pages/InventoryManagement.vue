@@ -400,6 +400,12 @@ export default {
     },
 
     closeEditQuantityDialog() {
+      if(!this.selectedVariant.isOutofStock) {
+        const index = this.products.findIndex(product => product.id === this.selectedVariant.id);
+        if(index !== -1) {
+          this.products[index].isOutofStock = true;
+        }
+      }
       this.showEditQuantityDialog = false;
       this.selectedVariant = {};
     },
