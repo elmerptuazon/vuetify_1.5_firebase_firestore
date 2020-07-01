@@ -13,9 +13,9 @@
             <v-img :src="props.item.image" contain width="50"></v-img>
           </v-avatar>
         </td>
-        <td class="text-xs-center">{{ props.item.name }}</td>
-        <td class="text-xs-center">{{ (props.item.attributes || '-') | capitalize }}</td>
-        <td class="text-xs-center">{{ props.item.sku }}</td>
+        <td class="text-xs-left">{{ props.item.name }}</td>
+        <td class="text-xs-left">{{ (props.item.attributes || '-') | capitalize }}</td>
+        <td class="text-xs-left">{{ props.item.sku }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
         <td class="text-xs-center">{{ props.item.remainingQty }}</td>
@@ -47,12 +47,12 @@ export default {
       {
         text: "Name",
         value: "name",
-        align: "center"
+        align: "left"
       },
       {
         text: "Variant",
         value: "attributes",
-        align: "center"
+        align: "left"
       },
       {
         text: "Variant SKU",
