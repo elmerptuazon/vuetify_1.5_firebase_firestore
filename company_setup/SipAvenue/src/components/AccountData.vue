@@ -380,7 +380,7 @@
 import userPlaceholder from "@/assets/DefaultBranchPic.png";
 import moment from 'moment';
 import mixins from "@/mixins";
-import { STORAGE } from "@/config/firebase";
+import { AUTH, STORAGE } from "@/config/firebase";
 
 export default {
   props: ["account"],
@@ -411,6 +411,9 @@ export default {
   computed: {
     userPlaceholder() {
       return userPlaceholder || "";
+    },
+    user() {
+      return this.$store.getters['auth/GET_USER'];
     }
   },
   mixins: [mixins],
@@ -474,24 +477,35 @@ export default {
 
     },
 
+    async checkAccountPassword(password) {
+      try {
+        const userData = await AUTH.signInWithEmailAndPassword(this.user.email, password);
+        console.log('account received: ', userData);
+        return userData ? null : 'Password is incorrect!';
+      } catch(error) {
+        console.log(error);
+        return 'Password is incorrect!';
+      }
+    },
+
     async deleteBranch() {
       console.log('deleting branch...');
       this.deleteBranchBtn = true;
 
       const answer = await this.$swal.fire({
         title: "Confirm Branch Deletion",
-        input: 'text',
+        input: 'password',
         showCancelButton: true,
         confirmButtonText: "Delete Branch",
         cancelButtonText: "Cancel",
         showCloseButton: true,
-        html: `enter <b>${this.accountData.branchName.toLowerCase()}</b> to confirm the deletion of this branch.`,
-        inputValidator: (value) => {
+        html: `enter your account password to confirm the deletion.`,
+        inputValidator: async (value) => {
           if(!value) {
-            return 'Please enter the branch name!';
-          }
-          if(value.toLowerCase() !== this.accountData.branchName.toLowerCase()) {
-            return 'Branch name is not the same!';
+            return 'Please enter your account password!';
+          
+          } else {
+            return await this.checkAccountPassword(value);
           }
         },
         
@@ -640,7 +654,6 @@ export default {
 
       this.closeUploadDialog();
     }
-
   }
 };
 </script>
