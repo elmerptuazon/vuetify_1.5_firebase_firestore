@@ -14,6 +14,8 @@ import store from './store'
 import { AUTH } from './config/firebase';
 import JsonExcel from 'vue-json-excel';
 import '@fortawesome/fontawesome-free/css/all.css';
+import 'sweetalert2/dist/sweetalert2.css';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 Vue.component('downloadExcel', JsonExcel)
 Vue.config.productionTip = false;

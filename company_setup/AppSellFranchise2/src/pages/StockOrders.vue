@@ -83,15 +83,6 @@
             <td>
               {{ props.item.user.branchName }}
             </td>
-            <!-- <td>
-              {{ props.item.user.firstName }}
-            </td>
-            <td>
-              {{ props.item.user.middleInitial || "" }}
-            </td>
-            <td>
-              {{ props.item.user.lastName }}
-            </td> -->
             <td>
               {{ props.item.user.address.citymun }}
             </td>
@@ -99,8 +90,16 @@
               {{ props.item.user.address.province }}
             </td>
             <td>{{ props.item.submittedAt | momentize("D-MMM-YYYY") }}</td>
-            <td>{{ props.item.sku }}</td>
-            <td>{{ props.item.status | uppercase }}</td>
+            <td class="text-xs-center">{{ props.item.sku }}</td>
+            <td>
+              <span 
+                v-if="
+                  (props.item.status.toLowerCase() === 'shipped' || props.item.status.toLowerCase() === 'partially shipped') &&
+                  props.item.shipmentsToReceive > 0
+                "
+              >{{ 'scheduled for shipping' | uppercase }}</span>
+              <span v-else>{{ props.item.status | uppercase }}</span>
+            </td>
             <!-- <td>{{ props.item.discountedTotal | currency("P") }}</td> -->
             <td>{{ props.item.price | currency("P") }}</td>
           </tr>
