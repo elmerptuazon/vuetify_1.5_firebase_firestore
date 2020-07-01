@@ -97,8 +97,15 @@
             </td>
             <td>{{ props.item.submittedAt | momentize("D-MMM-YYYY") }}</td>
             <td>{{ props.item.sku }}</td>
-            <td>{{ props.item.status | uppercase }}</td>
-            <!-- <td>{{ props.item.discountedTotal | currency("P") }}</td> -->
+            <td>
+              <span 
+                v-if="
+                  (props.item.status.toLowerCase() === 'shipped' || props.item.status.toLowerCase() === 'partially shipped') &&
+                  props.item.shipmentsToReceive > 0
+                "
+              >{{ 'scheduled for shipping' | uppercase }}</span>
+              <span v-else>{{ props.item.status | uppercase }}</span>
+            </td>
             <td>{{ props.item.resellerPrice | currency("P") }}</td>
           </tr>
         </template>

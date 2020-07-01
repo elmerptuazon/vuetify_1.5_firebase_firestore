@@ -293,13 +293,17 @@ export default {
 
   computed: {
     items() {
-      return this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+      let variants = this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+      console.log('computed items triggered')
+      this.products = [...variants];
+      return [...variants]; 
     },
   },
 
   watch: {
     items(variantList) {
-      this.products = [...variantList];
+      console.log('items were triggered');
+      this.products = variantList;
     }
   },
 
