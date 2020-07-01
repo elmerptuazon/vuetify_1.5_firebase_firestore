@@ -234,3 +234,16 @@ export default {
   }
 };
 </script>
+<style>
+  .swal2-container .swal2-popup {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-modal {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-show {
+    font-family: 'Roboto', sans-serif;
+  }
+</style>
