@@ -27,7 +27,6 @@ const inventory = {
         },
         AddProduct(state, payload) {
             state.products.unshift(payload);
-
         },
         UpdateProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);

@@ -90,11 +90,11 @@
               {{ props.item.user.address.province }}
             </td>
             <td>{{ props.item.submittedAt | momentize("D-MMM-YYYY") }}</td>
-            <td>{{ props.item.sku }}</td>
+            <td class="text-xs-center">{{ props.item.sku }}</td>
             <td>
               <span 
                 v-if="
-                  (props.item.status === 'shipped' || props.item.status === 'partially shipped') &&
+                  (props.item.status.toLowerCase() === 'shipped' || props.item.status.toLowerCase() === 'partially shipped') &&
                   props.item.shipmentsToReceive > 0
                 "
               >{{ 'scheduled for shipping' | uppercase }}</span>
