@@ -416,10 +416,14 @@ export default {
       
       if((QTYIsDeducted && shipmentsToRecieve) && isStockOrderShipped) {
         for(const item of this.stockOrder.items) {
-          await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+          let updatedVariant = {
+            allocatedQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1),
+            onHandQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1) 
+          };
+
+          await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
             id: item.variantId,
-            key: 'allocatedQTY',
-            value: FB.firestore.FieldValue.increment(item.shippedQty * -1)
+            updatedDetails: updatedVariant
           });
         }
 

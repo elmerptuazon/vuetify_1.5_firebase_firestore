@@ -335,13 +335,22 @@ export default {
           let variant = await this.$store.getters['inventory/GET_ALL_PRODUCTS'];
           variant = variant.find(variant => variant.id === item.variantId);
           
+          let updatedVariant = {};
           if(variant.allocatedQTY > 0) {
-            await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
-              id: item.variantId,
-              key: 'allocatedQTY',
-              value: FB.firestore.FieldValue.increment(item.shippedQty * -1)
+            updatedVariant.allocatedQTY = FB.firestore.FieldValue.increment(item.shippedQty * -1); 
+          }
+
+          if(variant.onHandQTY > 0) {
+            updatedVariant.onHandQTY = FB.firestore.FieldValue.increment(item.shippedQty * -1); 
+          }
+
+          if(updatedVariant.hasOwnProperty('allocatedQTY') || updatedVariant.hasOwnProperty('onHandQTY')) {
+            await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
+              id: variant.id,
+              updatedDetails: updatedVariant
             });
           }
+          
         }
       }
 
