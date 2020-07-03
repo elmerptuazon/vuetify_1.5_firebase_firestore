@@ -94,7 +94,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr}: ${item.attributes[attr]}`;
+            attributes += `${item.attributes[attr]}`;
           }
         });
 
@@ -106,7 +106,10 @@ export default {
           total: item.qty * item.price,
           name: item.name,
           attributes: attributes,
-          image: item.downloadURL
+          image: item.downloadURL,
+          variantId: item.variantId,
+          sku: item.sku,
+          variantName: item.variantName
         };
       });
 
