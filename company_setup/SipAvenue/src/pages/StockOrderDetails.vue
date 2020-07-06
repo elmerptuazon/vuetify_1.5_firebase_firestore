@@ -29,12 +29,6 @@
                         <v-list-tile-title>
                           {{ stockOrder.user.branchName }} - {{ stockOrder.user.agentId }}
                         </v-list-tile-title>
-                        <!-- <v-list-tile-title>
-                          {{ stockOrder.user.firstName }}
-                          {{ stockOrder.user.middleInitial || "" }}
-                          {{ stockOrder.user.lastName }} -
-                          {{ stockOrder.user.agentId }}</v-list-tile-title
-                        > -->
                       </v-list-tile-content>
                     </v-list-tile>
                   </v-list>
@@ -362,7 +356,7 @@
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" dark @click="SubmitShipment">
+            <v-btn color="primary" dark :loading="submitShipmentButton" @click="SubmitShipment">
               Submit Shipment
             </v-btn>
             <v-btn @click="closeShipmentDialog">
@@ -402,6 +396,7 @@ export default {
 
     updateBtnLoading: false,
     cancelBtnLoading: false,
+    submitShipmentButton: false,
 
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
@@ -419,6 +414,7 @@ export default {
         });
       }
 
+      //check whether the shippedQTY in each stock order items are deducted to the inventory
       const QTYIsDeducted = (!this.stockOrder.isQTYDeducted || !this.stockOrder.hasOwnProperty('isQTYDeducted'));
       const shipmentsToRecieve = this.stockOrder.shipmentsToReceive === 0;
       const isStockOrderShipped = (this.stockOrder.status === 'shipped' || this.stockOrder.status === 'partially shipped');
@@ -427,10 +423,14 @@ export default {
       
       if((QTYIsDeducted && shipmentsToRecieve) && isStockOrderShipped) {
         for(const item of this.stockOrder.items) {
-          await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+          let updatedVariant = {
+            allocatedQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1),
+            onHandQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1) 
+          };
+
+          await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
             id: item.variantId,
-            key: 'allocatedQTY',
-            value: FB.firestore.FieldValue.increment(item.shippedQty * -1)
+            updatedDetails: updatedVariant
           });
         }
 
@@ -549,6 +549,7 @@ export default {
       const pickupDate = Date.parse(moment(this.pickupDate).startOf("day"));
 
       if (response.value) {
+        this.submitShipmentButton = true;
         if (this.shipmentType === "Full") {
           //pass shipment details to vuex that inserts to database
           try {
@@ -637,12 +638,14 @@ export default {
 
             //console.log(stockOrderUpdateResponse);
             this.shipmentDialog = false;
+            this.submitShipmentButton = false;
             this.$swal.fire({
               type: "success",
               title: "Success",
               text: "Shipment has been recorded!"
             });
           } catch (error) {
+            this.submitShipmentButton = false;
             this.$swal.fire({
               type: "error",
               title: "Failed",
@@ -788,6 +791,7 @@ export default {
               );
 
               this.shipmentDialog = false;
+              this.submitShipmentButton = false;
               this.$swal.fire({
                 type: "success",
                 title: "Success",
@@ -800,6 +804,7 @@ export default {
               //this will ensure that the partialShipment component wont display the previously created partial shipment list
             }
           } catch (error) {
+            this.submitShipmentButton = false;
             this.$swal.fire({
               type: "error",
               title: "Failed",

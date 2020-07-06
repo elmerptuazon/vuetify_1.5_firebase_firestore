@@ -380,7 +380,7 @@
 import userPlaceholder from "@/assets/DefaultBranchPic.png";
 import moment from 'moment';
 import mixins from "@/mixins";
-import { STORAGE } from "@/config/firebase";
+import { AUTH, STORAGE } from "@/config/firebase";
 
 export default {
   props: ["account"],
@@ -411,6 +411,9 @@ export default {
   computed: {
     userPlaceholder() {
       return userPlaceholder || "";
+    },
+    user() {
+      return this.$store.getters['auth/GET_USER'];
     }
   },
   mixins: [mixins],
@@ -474,22 +477,43 @@ export default {
 
     },
 
+    async checkAccountPassword(password) {
+      try {
+        const userData = await AUTH.signInWithEmailAndPassword(this.user.email, password);
+        console.log('account received: ', userData);
+        return userData ? null : 'Password is incorrect!';
+      } catch(error) {
+        console.log(error);
+        return 'Password is incorrect!';
+      }
+    },
+
     async deleteBranch() {
       console.log('deleting branch...');
       this.deleteBranchBtn = true;
 
       const answer = await this.$swal.fire({
-        title: "Are you sure?",
-        type: "warning",
+        title: "Confirm Branch Deletion",
+        input: 'password',
         showCancelButton: true,
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
+        confirmButtonText: "Delete Branch",
+        cancelButtonText: "Cancel",
         showCloseButton: true,
-        text: 'Are you sure you want to delete this branch?'
+        html: `enter your account password to confirm the deletion.`,
+        inputValidator: async (value) => {
+          if(!value) {
+            return 'Please enter your account password!';
+          
+          } else {
+            return await this.checkAccountPassword(value);
+          }
+        },
+        
       });
-
-      if (!answer.value) {
+      
+      if (!answer.value || !answer.hasOwnProperty('value')) {
         this.deleteBranchBtn = false;
+        console.log('cancelled branch deletion');
         return;
       }
 
@@ -630,16 +654,27 @@ export default {
 
       this.closeUploadDialog();
     }
-
   }
 };
 </script>
 
-<style scoped>
+<style>
 
-.overlayImage {
-  position: absolute;
-  z-index: 1;
-}
+  .overlayImage {
+    position: absolute;
+    z-index: 1;
+  }
+
+  .swal2-container .swal2-popup {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-modal {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-show {
+    font-family: 'Roboto', sans-serif;
+  }
 
 </style>

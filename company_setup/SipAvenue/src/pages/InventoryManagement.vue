@@ -75,7 +75,7 @@
 
               <template v-slot:items="props">
                 <tr 
-                  :class="[ 
+                  :class="[
                     props.item.position === 1 ? 'red lighten-3' : '',
                   ]"
                 >
@@ -182,27 +182,6 @@
                 </span>
               </v-tooltip>
             </v-flex>
-
-            <!-- <v-flex xs10>
-              <v-checkbox
-                :label="`OUT OF STOCK?:  ${selectedVariant.isOutofStock}`"
-                v-model="selectedVariant.isOutofStock"
-              ></v-checkbox>
-            </v-flex>
-            <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="200">
-                <template v-slot:activator="{ on }">
-                  <span v-on="on">
-                    <v-icon medium color="grey darken-3">help</v-icon>
-                  </span>
-                </template>
-                <span>
-                  <div class="font-weight-bold">{{ fieldDescription('isOutofStock').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('isOutofStock').description }}</div>
-                </span>
-              </v-tooltip>
-            </v-flex> -->
-
           </v-layout>
         </v-container>
 
@@ -308,40 +287,24 @@ export default {
     showEditQuantityDialog: false,
     btnLoading: false,
 
+    products: []
+
   }),
 
   computed: {
     items() {
-      return this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+      let variants = this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+      console.log('computed items triggered')
+      this.products = [...variants];
+      return [...variants]; 
     },
-    products() {
-      this.loading = true;
-      const products = this.items;
-
-      let modifiedProducts = products.map((product) => {
-        product.availableQTY = parseInt(product.onHandQTY) - parseInt(product.allocatedQTY);
-        
-        if(product.availableQTY === 0) {
-          product.isOutofStock = true;
-        }
-
-        if(product.isOutofStock || product.availableQTY <= product.reOrderLevel) {
-          product.position = 1;
-        
-        } else {
-          product.position = 2;
-        }
-        
-        return product;
-      });
-
-      this.loading = false;
-      return modifiedProducts;
-    }
   },
 
   watch: {
-    
+    items(variantList) {
+      console.log('items were triggered');
+      this.products = variantList;
+    }
   },
 
   methods: {
@@ -400,11 +363,11 @@ export default {
     },
 
     closeEditQuantityDialog() {
-      if(!this.selectedVariant.isOutofStock) {
+      const isQTYZero = (this.selectedVariant.onHandQTY === 0 || this.selectedVariant.reOrderLevel === 0);
+
+      if(!this.selectedVariant.isOutofStock && isQTYZero) {
         const index = this.products.findIndex(product => product.id === this.selectedVariant.id);
-        if(index !== -1) {
-          this.products[index].isOutofStock = true;
-        }
+        if(index !== -1) this.products[index].isOutofStock = true;
       }
       this.showEditQuantityDialog = false;
       this.selectedVariant = {};
@@ -446,9 +409,10 @@ export default {
     async editVariant() {
       this.btnLoading = true;
 
-      const { sku, onHandQTY, reOrderLevel, weight, price, isOutofStock } = this.selectedVariant;
+      let { onHandQTY, reOrderLevel, weight, price, isOutofStock } = this.selectedVariant;
+      if(Number(onHandQTY) > 0) isOutofStock = false;
+
       const updatedVariant = {
-        sku, 
         onHandQTY: Number(onHandQTY), 
         reOrderLevel: Number(reOrderLevel), 
         isOutofStock

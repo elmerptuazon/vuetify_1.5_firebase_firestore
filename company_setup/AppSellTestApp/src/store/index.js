@@ -15,6 +15,7 @@ import shipment from './modules/shipment';
 import delivery_settings from './modules/delivery-settings';
 import articles from './modules/articles';
 import inventory from './modules/inventory';
+import support from './modules/support';
 
 Vue.use(Vuex);
 
@@ -104,6 +105,7 @@ export default new Vuex.Store({
 		shipment,
 		delivery_settings,
 		articles,
-		inventory
+		inventory,
+		support
 	}
 })

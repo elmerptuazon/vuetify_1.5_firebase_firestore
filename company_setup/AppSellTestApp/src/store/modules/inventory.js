@@ -27,14 +27,10 @@ const inventory = {
         },
         AddProduct(state, payload) {
             state.products.unshift(payload);
-
         },
         UpdateProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);
             if(index !== -1) {
-                // Object.keys(payload).forEach((key) => {
-                //     state.products[index][key] = payload[key];
-                // });
                 state.products[index] = Object.assign({}, payload);
                 state.products = [...state.products];
             }
@@ -65,12 +61,42 @@ const inventory = {
                         case 'added': {
                             console.log('variant has been added: ', data);
                             if(!state.products.length) {
+                                data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                                if(data.availableQTY === 0) {
+                                    data.isOutofStock = true;
+                                }
+
+                                if(data.isOutofStock) {
+                                    data.position = 1;
+                                
+                                } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                    data.position = 1;
+                        
+                                } else {
+                                    data.position = 2;
+                                }
+                        
                                 commit('AddProduct', data);
                             
                             } else {
                                 //avoid pushing the same product on the list
                                 const lastProductAdded = state.products[0];
                                 if(lastProductAdded.id !== data.id) {
+                                    data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                                    if(data.availableQTY === 0) {
+                                        data.isOutofStock = true;
+                                    }
+
+                                    if(data.isOutofStock) {
+                                        data.position = 1;
+                                    
+                                    } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                        data.position = 1;
+                            
+                                    } else {
+                                        data.position = 2;
+                                    }
+                            
                                     commit('AddProduct', data);
                                 }
                             }
@@ -79,6 +105,21 @@ const inventory = {
                         }
 
                         case 'modified': {
+                            data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                            if(data.availableQTY === 0) {
+                                data.isOutofStock = true;
+                            }
+
+                            if(data.isOutofStock) {
+                                data.position = 1;
+                            
+                            } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                data.position = 1;
+                    
+                            } else {
+                                data.position = 2;
+                            }
+                    
                             console.log('variant was modified!', data);
                             commit('UpdateProduct', data);
                             break;
@@ -86,6 +127,18 @@ const inventory = {
 
                         case 'removed': {
                             console.log('variant was removed!', data);
+                            data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+
+                            if(data.isOutofStock) {
+                                data.position = 1;
+                            
+                            } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                data.position = 1;
+                    
+                            } else {
+                                data.position = 2;
+                            }
+                            
                             commit('RemoveProduct', data);
                             break;
                         }
@@ -140,10 +193,9 @@ const inventory = {
                     await DB.collection('products').doc('details').collection('variants').add({
                         sku: productData.code,
                         name: `${productData.name.toLowerCase()}`,
-                        variantName: `${productData.name.toLowerCase()}`,
                         weight: productData.weight,
                         price: productData.price,
-                        resellerPrice: productData.resellerPrice,
+                        variantName: null,
 
                         productName: productData.name,
                         productId: productData.id,
@@ -153,6 +205,7 @@ const inventory = {
                         onHandQTY: 0,
                         reOrderLevel:  0,
                         isOutofStock: true,
+                        minimumOrder: Number(productData.minimumOrder)
                     });
 
                     isSuccessful = true;
@@ -186,8 +239,7 @@ const inventory = {
                         variantName,
                         weight: productData.weight,
                         price: productData.price,
-                        resellerPrice: productData.resellerPrice,
-                        
+
                         productName: productData.name,
                         productId: productData.id,
                         category: categoryName,
@@ -195,7 +247,8 @@ const inventory = {
                         allocatedQTY: 0,
                         onHandQTY: 0,
                         reOrderLevel:  0,
-                        isOutofStock: true
+                        isOutofStock: true,
+                        minimumOrder: Number(variant.minimumOrder)
                     });
                 
                 } catch(error) {
@@ -237,9 +290,9 @@ const inventory = {
                         await DB.collection('products').doc('details').collection('variants').doc().set({
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
+                            variantName: null,
                             weight: Number(productData.weight),
                             price: Number(productData.price),
-                            resellerPrice: Number(productData.resellerPrice),
 
                             productName: productData.name,
                             productId: productData.id,
@@ -248,11 +301,28 @@ const inventory = {
                             allocatedQTY: 0,
                             onHandQTY: 0,
                             reOrderLevel:  0,
-                            isOutofStock: true
+                            isOutofStock: true,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
                     
-                    //if there are existing variants, remove them and create a single variant for the product. Based from its details.
+                    } else if(existingVariants.length === 1) {
+                        //if a single variant exist for the product, then just update it
+                        DB.collection('products').doc('details').collection('variants').doc(existingVariants[0].id)
+                        .update({
+                            sku: productData.code,
+                            name: `${productData.name.toLowerCase()}`,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
+
+                            productName: productData.name,
+                            productId: productData.id,
+                            category: categoryName,
+                            minimumOrder: Number(productData.minimumOrder)
+                        });
+
                     } else {
+                        //if there are existing variants, remove them and create a single variant for the product. Based from its details.
                         const batch = DB.batch();
                         const variantsCollection = DB.collection('products').doc('details').collection('variants');
                         
@@ -265,9 +335,9 @@ const inventory = {
                         batch.set(variantsCollection.doc(), {
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
-                            weight: productData.weight,
-                            price: productData.price,
-                            resellerPrice: productData.resellerPrice,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
 
                             productName: productData.name,
                             productId: productData.id,
@@ -276,7 +346,8 @@ const inventory = {
                             allocatedQTY: 0,
                             onHandQTY: 0,
                             reOrderLevel:  0,
-                            isOutofStock: true
+                            isOutofStock: true,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
 
                         await batch.commit();
@@ -349,9 +420,9 @@ const inventory = {
                         variantName,
                         category: categoryName,
                         productName: productData.name,
-                        price: productData.price,
-                        resellerPrice: productData.resellerPrice,
-                        weight: productData.weight
+                        price: Number(productData.price),
+                        weight: Number(productData.weight),
+                        minimumOrder: Number(newVariant.minimumOrder)
                     });
 
                     //remove from the existing variant list the variant that has been edited
@@ -372,9 +443,8 @@ const inventory = {
                     sku: newVariant.sku,
                     name: newVariant.name,
                     variantName, 
-                    weight: productData.weight,
-                    price: productData.price,
-                    resellerPrice: productData.resellerPrice,
+                    weight: Number(productData.weight),
+                    price: Number(productData.price),
 
                     productName: productData.name,
                     productId: productData.id,
@@ -383,7 +453,8 @@ const inventory = {
                     allocatedQTY: 0,
                     onHandQTY: 0,
                     reOrderLevel:  0,
-                    isOutofStock: true
+                    isOutofStock: true,
+                    minimumOrder: Number(newVariant.minimumOrder)
                 });
             }
 

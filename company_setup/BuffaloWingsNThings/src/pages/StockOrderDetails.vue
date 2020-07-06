@@ -81,10 +81,19 @@
                       ><v-list-tile-content>
                         <v-list-tile-sub-title>Status</v-list-tile-sub-title>
                         <v-list-tile-title>
-                          <span class="primary--text">{{
+                          <span 
+                            class="primary--text" 
+                            v-if="
+                              (stockOrder.status.toLowerCase() === 'shipped' || stockOrder.status.toLowerCase() === 'partially shipped') && 
+                              stockOrder.shipmentsToReceive > 0
+                            "
+                          >
+                            {{ "scheduled for shipping" | uppercase }}
+                          </span>
+                          <span class="primary--text" v-else >{{
                             stockOrder.status | uppercase
-                          }}</span></v-list-tile-title
-                        >
+                          }}</span>
+                        </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
                   </v-list>
@@ -245,10 +254,9 @@
               color="success"
               @click="updateStatus('processing')"
               :loading="updateBtnLoading"
-              :disabled="updateBtnLoading"
               :class="[
-                stockOrder.status.toLowerCase() != 'pending'
-                  ? 'v-btn--disabled '
+                stockOrder.status.toLowerCase() !== 'pending'
+                  ? 'v-btn--disabled'
                   : ''
               ]"
               >Tag for Processing</v-btn
@@ -411,6 +419,31 @@ export default {
         });
       }
 
+      const QTYIsDeducted = (!this.stockOrder.isQTYDeducted || !this.stockOrder.hasOwnProperty('isQTYDeducted'));
+      const shipmentsToRecieve = this.stockOrder.shipmentsToReceive === 0;
+      const isStockOrderShipped = (this.stockOrder.status === 'shipped' || this.stockOrder.status === 'partially shipped');
+      
+      console.log(QTYIsDeducted, shipmentsToRecieve, isStockOrderShipped);
+      
+      if((QTYIsDeducted && shipmentsToRecieve) && isStockOrderShipped) {
+        for(const item of this.stockOrder.items) {
+          let updatedVariant = {
+            allocatedQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1),
+            onHandQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1) 
+          };
+
+          await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
+            id: item.variantId,
+            updatedDetails: updatedVariant
+          });
+        }
+
+        await this.$store.dispatch('stock_orders/UPDATE_STOCK_ORDER_DETAILS', {
+          referenceID: id,
+          updateObject: { isQTYDeducted: true }
+        });
+      }
+
       if (!id) {
         this.$router.push({ name: "StockOrders" });
       }
@@ -434,6 +467,9 @@ export default {
           productName: item.name,
           productId: item.productId,
           price: item.price,
+          variantId: item.variantId,
+          sku: item.sku,
+          variantName: item.variantName,
           qtyToShipPriceTotal: item.price * item.qtyToShip
         };
         return itemToShip;
@@ -528,6 +564,9 @@ export default {
                 productName: item.name,
                 productId: item.productId,
                 price: item.price,
+                variantId: item.variantId,
+                sku: item.sku,
+                variantName: item.variantName,
                 qtyToShipPriceTotal:
                   item.price * (item.qty - item.shippedQty)
               };
@@ -570,7 +609,9 @@ export default {
                 productId: item.productId,
                 qty: item.qty,
                 unique: item.unique,
-                // resellerPrice: item.price,
+                variantId: item.variantId,
+                sku: item.sku,
+                variantName: item.variantName,
                 shippedQty: item.qty - item.shippedQty + item.shippedQty
               };
               return updatedStockOrder;
@@ -663,7 +704,9 @@ export default {
                   productId: item.productId,
                   qty: item.qty,
                   unique: item.unique,
-                  // resellerPrice: item.resellerPrice,
+                  variantId: item.variantId,
+                  sku: item.sku,
+                  variantName: item.variantName,
                   shippedQty: item.shippedQty
                 };
                 return updatedStockOrder;
@@ -675,7 +718,9 @@ export default {
                   productId: item.productId,
                   qty: item.qty,
                   unique: item.unique,
-                  // resellerPrice: item.resellerPrice,
+                  variantId: item.variantId,
+                  sku: item.sku,
+                  variantName: item.variantName,
                   shippedQty: item.shippedQty + shippedQty
                 };
                 return updatedStockOrder;
