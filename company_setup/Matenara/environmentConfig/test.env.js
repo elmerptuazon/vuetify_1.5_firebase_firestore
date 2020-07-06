@@ -3,13 +3,13 @@ var devEnv = require('./dev.env')
 
 module.exports = merge(devEnv, {
   NODE_ENV: '"testing"',
-  apiKey: '"AIzaSyDAxQ8dvBH2CQNkvoFuklqVRV76KaRyKJ0"',
-  authDomain: '"appselltestapp.firebaseapp.com"',
-  databaseURL: '"https://appselltestapp.firebaseio.com"',
-  projectId: '"appselltestapp"',
-  storageBucket: '"appselltestapp.appspot.com"',
-  messagingSenderId: '"671506060709"',
-  appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
+  projectId: '"matenara-dev"',
+  appId: '"1:127991740211:web:6a871c4a18b71e4515b046"',
+  databaseURL: '"https://matenara-dev.firebaseio.com"',
+  storageBucket: '"matenara-dev.appspot.com"',
+  apiKey: '"AIzaSyDBakbW6inOUZAORsH6HQZBvbPKcmdmH3k"',
+  authDomain: '"matenara-dev.firebaseapp.com"',
+  messagingSenderId: '"127991740211"',
   measurementId: '"G-XV2JER7LNT"',
-  primaryColor: '"#0E1E38"',
+  primaryColor: '"#215e3f"',
 })
