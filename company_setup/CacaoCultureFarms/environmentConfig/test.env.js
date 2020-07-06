@@ -3,13 +3,13 @@ var devEnv = require('./dev.env')
 
 module.exports = merge(devEnv, {
   NODE_ENV: '"testing"',
-  apiKey: '"AIzaSyDAxQ8dvBH2CQNkvoFuklqVRV76KaRyKJ0"',
-  authDomain: '"appselltestapp.firebaseapp.com"',
-  databaseURL: '"https://appselltestapp.firebaseio.com"',
-  projectId: '"appselltestapp"',
-  storageBucket: '"appselltestapp.appspot.com"',
-  messagingSenderId: '"671506060709"',
-  appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
+  apiKey: '"AIzaSyD81CLcl4T50SweMxMyCy_r-vvq-3h5cCg"',
+  authDomain: '"cacaoculturefarms-dev.firebaseapp.com"',
+  databaseURL: '"https://cacaoculturefarms-dev.firebaseio.com"',
+  projectId: '"cacaoculturefarms-dev"',
+  storageBucket: '"cacaoculturefarms-dev.appspot.com"',
+  messagingSenderId: '"26371903278"',
+  appId: '"1:26371903278:web:850ae7581232b3484bb4bf"',
   measurementId: '"G-XV2JER7LNT"',
-  primaryColor: '"#0E1E38"',
+  primaryColor: '"#b81212"',
 })
