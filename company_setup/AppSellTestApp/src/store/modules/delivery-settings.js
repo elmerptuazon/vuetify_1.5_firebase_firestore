@@ -89,10 +89,32 @@ const delivery_settings = {
             }
         },
 
+        async CHECK_IF_DISCOUNT_EXISTS({ state, commit }, payload) {
+            const { region, province, city } = payload;
+            let existingDiscount = false;
+
+            try {
+                for(const discount of state.discountList) {
+                    if(
+                        (discount.region === region && discount.province === province) &&
+                        discount.city === city
+                    ) {
+                        existingDiscount = true;
+                    }
+                }
+
+                return existingDiscount;
+
+            } catch(error) {
+                throw error;
+            }
+        },
+
         async ADD_DISCOUNT({ commit }, payload) {
             try {
                 const discount = await DB.collection('providers').doc('settings').collection('delivery_discount').add(payload);
                 payload.id = discount.id;
+                console.log(payload);
                 commit('AddToDiscountList', payload);
             
             } catch(error) {
