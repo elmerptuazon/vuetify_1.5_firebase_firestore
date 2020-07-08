@@ -24,11 +24,13 @@ const delivery_settings = {
         },
         AddToDiscountList(state, payload) {
             state.discountList.push(payload);
+            state.discountList = [...state.discountList];
         },
         UpdateToDiscountList(state, payload) {
             const index = state.discountList.findIndex(discount => discount.id === payload.id);
             if(index !== -1) {
                 state.discountList[index] = Object.assign({}, payload);
+                state.discountList = [...state.discountList];
             }
         },
         RemoveToDiscountList(state, id) {
