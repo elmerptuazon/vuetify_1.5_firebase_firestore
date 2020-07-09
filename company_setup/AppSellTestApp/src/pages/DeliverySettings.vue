@@ -194,7 +194,7 @@
                                     v-if="!showProvince"
                                 >Add Specific Province</v-btn>
                                 <v-autocomplete
-                                    v-else
+                                    v-show="showProvince"
                                     v-model="selectedDiscount.province"
                                     :items="provinces"
                                     label="Province"
@@ -202,7 +202,7 @@
                                     return-object
                                     clearable
                                     @click:clear="clearProvince"
-                                    required
+                                    :required="showProvince"
                                     :disabled="locationDisabled"
                                 ></v-autocomplete>
                             </v-flex>
@@ -213,15 +213,15 @@
                                     v-if="!showCity"
                                 >Add Specific City / Municipality</v-btn>
                                 <v-autocomplete
-                                    v-else
+                                    v-show="showCity"
                                     v-model="selectedDiscount.city"
                                     :items="cities"
                                     label="City / Municipality"
                                     item-text="name"
                                     return-object
                                     clearable
-                                    @click:clear="showCity = false"
-                                    required
+                                    @click:clear="clearCity"
+                                    :required="showCity"
                                     :disabled="locationDisabled"
                                 ></v-autocomplete>
                             </v-flex>
@@ -233,7 +233,12 @@
                                 <v-btn outline color="black" @click="closeDiscountDialog">CANCEL</v-btn>
                             </v-flex>
                             <v-flex xs2 mt-2 ml-3>
-                                <v-btn color="primary" type="submit" :disabled="areFieldsBlank" :loading="saveBtnLoading">SAVE</v-btn>
+                                <v-btn 
+                                    color="primary" 
+                                    type="submit" 
+                                    :disabled="areFieldsBlank" 
+                                    :loading="saveBtnLoading"
+                                >SAVE</v-btn>
                             </v-flex>
                         </v-layout>
                     </v-form>
@@ -278,6 +283,7 @@ export default {
         discountDialogState: 'Add',
 
         selectedDiscount: {
+            id: null,
             type: null,
             amount: null,
             region: null,
@@ -350,12 +356,20 @@ export default {
                 if(discount.province) {
                     this.showProvince = true;
                     this.selectedDiscount.province = Provinces.find(province => province.name === discount.province);
+                
+                } else {
+                    this.showProvince = false; 
                 }
 
                 if(discount.city) {
                     this.showCity = true;
                     this.selectedDiscount.city = Cities.find(city => city.name === discount.city);
+                
+                } else {
+                    this.showCity = false;
                 }
+
+                console.log(this.selectedDiscount)
             }
         },
 
@@ -370,12 +384,20 @@ export default {
             this.selectedDiscount.province = null;
             this.selectedDiscount.city = null;
             this.showProvince = false;
+            console.log(this.selectedDiscount);
         },
 
         clearProvince() {
             this.selectedDiscount.province = null;
             this.selectedDiscount.city = null;
             this.showCity = false;
+            console.log(this.selectedDiscount);
+        },
+
+        clearCity() {
+            this.selectedDiscount.city = null;
+            this.showCity = false;
+            console.log(this.selectedDiscount);
         },
 
         async saveDiscount() {
@@ -388,21 +410,13 @@ export default {
                 return;
             }
 
-            let { id, type, amount, region, province, city } = this.selectedDiscount;
+            console.log(this.selectedDiscount);
 
-            if(region) {
-                region = this.selectedDiscount.region.name;
-            }
+            let region = this.selectedDiscount.region ? this.selectedDiscount.region.name : null;
+            let province = this.selectedDiscount.province ? this.selectedDiscount.province.name : null;
+            let city = this.selectedDiscount.city ? this.selectedDiscount.city.name : null;
 
-            if(province) {
-                province = this.selectedDiscount.province.name;
-            }
-
-            if(city) {
-                city = this.selectedDiscount.city.name;
-            }
-
-            amount = Number(this.selectedDiscount.amount);
+            let amount = Number(this.selectedDiscount.amount);
 
             if(this.discountDialogState.toLowerCase() === 'add') {
                 
@@ -410,7 +424,10 @@ export default {
                     this.saveBtnLoading = true;
 
                     const existingDiscount = await this.$store.dispatch('delivery_settings/CHECK_IF_DISCOUNT_EXISTS', {
-                        id: null, region, province, city
+                        id: null, 
+                        region, 
+                        province, 
+                        city
                     });
 
                     if(existingDiscount) {
@@ -424,7 +441,11 @@ export default {
                     }
 
                     await this.$store.dispatch('delivery_settings/ADD_DISCOUNT', {
-                        type, amount, region, province, city
+                        type: this.selectedDiscount.type, 
+                        amount, 
+                        region, 
+                        province, 
+                        city
                     });
 
                     this.saveBtnLoading = false;
@@ -453,7 +474,10 @@ export default {
                     this.saveBtnLoading = true;
                     
                     const existingDiscount = await this.$store.dispatch('delivery_settings/CHECK_IF_DISCOUNT_EXISTS', {
-                        id: null, region, province, city
+                        id: this.selectedDiscount.id, 
+                        region, 
+                        province, 
+                        city
                     });
 
                     if(existingDiscount) {
@@ -467,7 +491,12 @@ export default {
                     }
 
                     await this.$store.dispatch('delivery_settings/UPADTE_DISCOUNT', {
-                        id, type, amount, region, province, city
+                        id: this.selectedDiscount.id, 
+                        type: this.selectedDiscount.type, 
+                        amount, 
+                        region, 
+                        province,
+                        city
                     });
 
                     this.saveBtnLoading = false;
