@@ -226,6 +226,38 @@
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
+
+                    <v-list-tile 
+                      v-if="
+                        stockOrder.logisticsDetails.isDiscountedDelivery
+                        && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
+                      ">
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Is this a Discounted Delivery?</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span v-if="stockOrder.logisticsDetails.isDiscountedDelivery">YES</span>
+                          <span v-else>NO</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                    
+                    <v-list-tile
+                     v-if="
+                        stockOrder.logisticsDetails.isDiscountedDelivery
+                        && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
+                      ">
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Reseller's Shipping Fee</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span>{{ stockOrder.logisticsDetails.resellersShippingFee | currency("P ") }}</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                  
                   </v-list>
                 </v-card-text>
               </v-card>
