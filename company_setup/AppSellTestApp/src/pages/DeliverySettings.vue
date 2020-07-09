@@ -578,6 +578,11 @@ export default {
                 this.provinces = [];
             else 
                 this.provinces = Provinces.filter(province => province.region === selectedRegion.key);
+
+            if(selectedRegion.name === 'NCR') {
+                this.showProvince = true;
+                this.selectedDiscount.province = Provinces.find(province => province.region === 'NCR');
+            }
         },
 
         'selectedDiscount.province'(selectedProvince) {
