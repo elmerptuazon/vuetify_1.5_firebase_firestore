@@ -99,7 +99,6 @@
                                     class="elevation-1"
                                     :loading="loading"
                                     :search="discountSearch"
-                                    :pagination.sync="pagination"
                                     :rows-per-page-items="rowsPerPageItems"
                                     no-data-text="No Discounts yet..."
                                 >
@@ -185,6 +184,7 @@
                                     clearable
                                     @click:clear="clearRegion"
                                     required
+                                    :disabled="locationDisabled"
                                 ></v-autocomplete>
                             </v-flex>
                             <v-flex xs12 v-if="selectedDiscount.region">
@@ -203,6 +203,7 @@
                                     clearable
                                     @click:clear="clearProvince"
                                     required
+                                    :disabled="locationDisabled"
                                 ></v-autocomplete>
                             </v-flex>
                             <v-flex xs12 v-if="selectedDiscount.province">
@@ -221,6 +222,7 @@
                                     clearable
                                     @click:clear="showCity = false"
                                     required
+                                    :disabled="locationDisabled"
                                 ></v-autocomplete>
                             </v-flex>
                         </v-layout>
@@ -243,6 +245,7 @@
 
 <script>
 import mixins from "@/mixins";
+import axios from 'axios';
 import { FB, DB } from "@/config/firebase";
 import { mapState } from "vuex";
 import moment from "moment";
@@ -289,9 +292,6 @@ export default {
             { text: 'City', value: 'city', align: 'left', sortable: true },
             { text: 'Actions', value: '', align: 'center', sortable: false }
         ],
-        pagination: {
-            sortBy: "Discount Amount"
-        },
         rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
         discountSearch: null,
 
@@ -301,7 +301,9 @@ export default {
         showProvince: false,
         showCity: false,
 
-        discountForm: false
+        discountForm: false,
+        saveBtnLoading: false,
+        locationDisabled: false
 
     }),
 
@@ -355,7 +357,6 @@ export default {
                     this.selectedDiscount.city = Cities.find(city => city.name === discount.city);
                 }
             }
-            
         },
 
         closeDiscountDialog() {
@@ -387,36 +388,52 @@ export default {
                 return;
             }
 
-            if(this.selectedDiscount.region) {
-                const region = this.selectedDiscount.region.name;
-                this.selectedDiscount.region = region;
+            let { id, type, amount, region, province, city } = this.selectedDiscount;
+
+            if(region) {
+                region = this.selectedDiscount.region.name;
             }
 
-            if(this.selectedDiscount.province) {
-                const province = this.selectedDiscount.province.name;
-                this.selectedDiscount.province = province;
+            if(province) {
+                province = this.selectedDiscount.province.name;
             }
 
-            if(this.selectedDiscount.city) {
-                const city = this.selectedDiscount.city.name;
-                this.selectedDiscount.city = city;
+            if(city) {
+                city = this.selectedDiscount.city.name;
             }
 
-            this.selectedDiscount.amount = Number(this.selectedDiscount.amount);
+            amount = Number(this.selectedDiscount.amount);
 
             if(this.discountDialogState.toLowerCase() === 'add') {
                 
                 try {
                     this.saveBtnLoading = true;
-                    if(this.selectedDiscount.hasOwnProperty('id')) delete this.selectedDiscount.id;
 
-                    await this.$store.dispatch('delivery_settings/ADD_DISCOUNT', this.selectedDiscount);
+                    const existingDiscount = await this.$store.dispatch('delivery_settings/CHECK_IF_DISCOUNT_EXISTS', {
+                        id: null, region, province, city
+                    });
+
+                    if(existingDiscount) {
+                        this.$swal.fire({
+                            type: 'error',
+                            title: 'Existing Discount!',
+                            text: `There is an existing discount similar to what you are about to add.\nThis will not be saved.`
+                        });
+                        this.saveBtnLoading = false;
+                        return;
+                    }
+
+                    await this.$store.dispatch('delivery_settings/ADD_DISCOUNT', {
+                        type, amount, region, province, city
+                    });
+
                     this.saveBtnLoading = false;
                     this.$swal.fire({
                         type: 'success',
                         title: 'Discount Added!'
                     });
-                    await this.closeDiscountDialog();
+
+                    this.closeDiscountDialog();
 
                 } catch(error) {
                     console.log(error);
@@ -434,8 +451,24 @@ export default {
                 
                 try {
                     this.saveBtnLoading = true;
+                    
+                    const existingDiscount = await this.$store.dispatch('delivery_settings/CHECK_IF_DISCOUNT_EXISTS', {
+                        id: null, region, province, city
+                    });
 
-                    await this.$store.dispatch('delivery_settings/UPADTE_DISCOUNT', this.selectedDiscount);
+                    if(existingDiscount) {
+                        this.$swal.fire({
+                            type: 'error',
+                            title: 'Existing Discount!',
+                            text: `A discount with similar location already exists.\nThis will not be saved.`
+                        });
+                        this.saveBtnLoading = false;
+                        return;
+                    }
+
+                    await this.$store.dispatch('delivery_settings/UPADTE_DISCOUNT', {
+                        id, type, amount, region, province, city
+                    });
 
                     this.saveBtnLoading = false;
                     this.$swal.fire({
