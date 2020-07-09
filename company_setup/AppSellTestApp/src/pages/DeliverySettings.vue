@@ -377,6 +377,8 @@ export default {
             this.discountDialog = false;
             this.$refs.form.reset();
             this.$refs.form.resetValidation();
+            this.showProvince = false;
+            this.showCity = false;
         },
         
         clearRegion() {
