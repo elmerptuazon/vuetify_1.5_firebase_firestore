@@ -97,12 +97,11 @@ const delivery_settings = {
                 for(const discount of state.discountList) {
                     if(
                         (discount.region === region && discount.province === province) &&
-                        discount.city === city
+                        (discount.city === city && id !== discount.id)
                     ) {
                         existingDiscount = true;
+                        console.log('match found-location: ', discount);
                     
-                    } else if(id && id !== discount.id) {
-                        existingDiscount = true;
                     }
                 }
 
