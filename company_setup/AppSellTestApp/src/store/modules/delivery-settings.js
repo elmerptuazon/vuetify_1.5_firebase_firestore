@@ -90,7 +90,7 @@ const delivery_settings = {
         },
 
         async CHECK_IF_DISCOUNT_EXISTS({ state, commit }, payload) {
-            const { region, province, city } = payload;
+            const { id, region, province, city } = payload;
             let existingDiscount = false;
 
             try {
@@ -99,6 +99,9 @@ const delivery_settings = {
                         (discount.region === region && discount.province === province) &&
                         discount.city === city
                     ) {
+                        existingDiscount = true;
+                    
+                    } else if(id && id !== discount.id) {
                         existingDiscount = true;
                     }
                 }
