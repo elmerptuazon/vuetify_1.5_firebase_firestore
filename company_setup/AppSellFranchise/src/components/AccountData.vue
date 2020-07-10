@@ -83,18 +83,6 @@
         </v-flex>
       </v-layout>
 
-      <!-- <v-layout row align-center>
-        <v-flex xs4>
-          <v-subheader>Branch Manager Name</v-subheader>
-        </v-flex>
-        <v-flex xs8>
-          <v-text-field 
-            v-model="accountData.managersName" 
-            :disabled="disableEdit"
-          ></v-text-field>
-        </v-flex>
-      </v-layout> -->
-
       <v-layout row>
         <v-flex xs4>
           <v-subheader>Branch Manager's First Name</v-subheader>
@@ -403,7 +391,6 @@ export default {
     //format dates into a readable format that v-date-picker could understand
     this.accountData.approvedDate = this.accountData.approvedDate ? moment(new Date(this.accountData.approvedDate)).format("YYYY-MM-DD") : null;
     this.accountData.establishDate = this.accountData.establishDate ? moment(new Date(this.accountData.establishDate)).format("YYYY-MM-DD") : null;
-     
   },
 
   data: () => ({
