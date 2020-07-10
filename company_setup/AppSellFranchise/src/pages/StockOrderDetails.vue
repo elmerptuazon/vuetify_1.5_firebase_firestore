@@ -106,8 +106,10 @@
                     @click="UpdatePayment()"
                     color="primary"
                     :class="[
-                      stockOrder.paymentDetails.paymentStatus.toLowerCase() ===
-                      'paid'
+                      stockOrder.paymentDetails.paymentStatus.toLowerCase() === 'paid'
+                        ? 'v-btn--disabled '
+                        : '',
+                      stockOrder.paymentDetails.paymentStatus.toLowerCase() === '-'
                         ? 'v-btn--disabled '
                         : ''
                     ]"
