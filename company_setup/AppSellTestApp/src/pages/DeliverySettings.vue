@@ -92,7 +92,7 @@
                     >
                         <v-layout row align-center justify-start wrap>
                             <v-flex xs12 lg12>
-                                <v-radio-group v-model="selectedDiscount.type" required>
+                                <v-radio-group v-model="selectedDiscount.type" required :rules="basicRules">
                                     <template v-slot:label>
                                         <div>Type of Discount</div>
                                     </template>
@@ -110,6 +110,7 @@
                                             :suffix="selectedDiscount.type === 'percentage' ? '%' : ' '"
                                             :prefix="selectedDiscount.type === 'amount' ? 'PHP' : ' '"
                                             required
+                                            :rules="basicRules"
                                         ></v-text-field>
                                     </v-flex>
                                 </v-layout>
@@ -124,6 +125,7 @@
                                             hint="The total amount of the stock order in order to qualify for this delivery discount."
                                             prefix="PHP"
                                             required
+                                            :rules="basicRules"
                                         ></v-text-field>
                                     </v-flex>
                                 </v-layout>
@@ -146,6 +148,7 @@
                                     clearable
                                     @click:clear="clearRegion"
                                     required
+                                    :rules="basicRules"
                                     :disabled="locationDisabled"
                                 ></v-autocomplete>
                             </v-flex>
@@ -262,7 +265,7 @@ export default {
         showProvince: false,
         showCity: false,
 
-        discountForm: false,
+        discountForm: true,
         saveBtnLoading: false,
         locationDisabled: false
 
