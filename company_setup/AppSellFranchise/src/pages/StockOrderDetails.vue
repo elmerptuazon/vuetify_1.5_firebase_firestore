@@ -132,7 +132,10 @@
                       ><v-list-tile-content>
                         <v-list-tile-sub-title>Status</v-list-tile-sub-title>
                         <v-list-tile-title>
-                          <span class="primary--text">{{
+                          <span class="primary--text" v-if="stockOrder.paymentDetails.paymentStatus === 'pending'">{{
+                             'PROOF OF ID' | uppercase
+                          }}</span>
+                          <span class="primary--text" v-else>{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
                           }}</span>
                         </v-list-tile-title>
