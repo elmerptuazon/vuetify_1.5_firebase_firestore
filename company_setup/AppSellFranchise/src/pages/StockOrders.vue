@@ -253,7 +253,7 @@ export default {
     items() {
       const stockOrderList = this.$store.getters['stock_orders/GET_STOCK_ORDER_LIST'];
       const stockOrders = stockOrderList.map(stockorder => {
-        if(!stockorder.isRead && stockorder.paymentDetails.paymentStatus === 'pending') {
+        if(stockorder.paymentDetails.paymentStatus === 'pending') {
           stockorder.position = 1;
         
         } else if(!stockorder.isRead && stockorder.status.toLowerCase() === 'pending') {
