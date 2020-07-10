@@ -1,75 +1,11 @@
 <template>
     <v-container fluid>
-        <v-layout align-center justify-start row>
-            <v-flex xs10>
-                <v-card>
-                    <v-card-title class="font-weight-bold title primary white--text">
-                        Free Delivery Threshold Price
-                    </v-card-title>
-                    <v-divider/>
-                    <v-card-text>
-                        <v-layout align-center justify-start wrap>
-                            <v-flex xs3>
-                                <div class="headline primary--text">
-                                    {{
-                                        (settings.cutOffPrice || 0) | currency("P ")
-                                    }}
-                                </div>
-                                <v-divider vertical inlet></v-divider>
-                            </v-flex>
-
-                            <v-flex xs9>
-                                <v-layout align-center justify-start>
-                                    <v-flex xs5 px-2>
-                                        <v-text-field
-                                            v-model="settings.cutOffPrice"
-                                            label="Free Delivery Cut-Off Price"
-                                            hint="Note: Enter minimum required amount of a Stock Order to mark it as 'Free Delivery'"
-                                            :rules="numberRules"
-                                            :disabled="cutOffPriceField"
-                                            prefix="PHP"
-                                        ></v-text-field>
-                                    </v-flex>
-                                    <v-flex xs7>
-                                        <v-btn
-                                            outline
-                                            :class="[cutOffPriceField ? 'success--text ml-3' : 'red--text lighten-1 ml-3']"
-                                            @click="cutOffPriceField = !cutOffPriceField"
-                                        >
-                                            <span v-if="cutOffPriceField">EDIT</span>
-                                            <span v-else>CANCEL</span>
-                                        </v-btn>
-                                        <v-btn
-                                            depressed
-                                            color="primary"
-                                            class="ml-6"
-                                            v-if="!cutOffPriceField"
-                                            @click="submitCutOffPrice"
-                                            :disabled="
-                                                cutOffPriceBtn ||
-                                                !settings.cutOffPrice ||
-                                                isNaN(settings.cutOffPrice)
-                                            "
-                                            :loading="cutOffPriceBtn"
-                                        >APPLY</v-btn>
-                                    </v-flex>
-                                </v-layout>
-                            </v-flex>
-                        </v-layout>
-                    </v-card-text>
-                    <v-divider/>
-                    <v-card-actions>
-                    </v-card-actions>
-                </v-card>
-            </v-flex>
-        </v-layout>
-
-        <v-layout row align-center justify-start mt-6>
-            <v-flex xs10>
+        <v-layout row align-center justify-start>
+            <v-flex xs12>
                 <v-card>
                     <v-card-title class="primary white--text">
                         <v-layout row align-center justify-start>
-                            <v-flex xs12 md7 lg7>
+                            <v-flex xs12 md7 lg8>
                                 <v-layout row align-center justify-center>
                                     <v-flex xs12 md4 lg4 class="font-weight-bold title">
                                         Discount List
@@ -107,7 +43,10 @@
                                         <tr>
                                             <td class="text-xs-center">
                                                 <span v-if="props.item.type === 'percentage'">{{ props.item.amount }}%</span>
-                                                <span v-else-if="props.item.type === 'amount'">&#8369; {{ props.item.amount }}</span>
+                                                <span v-else-if="props.item.type === 'amount'">{{ props.item.amount | currency("&#8369; ") }}</span>
+                                            </td>
+                                            <td class="text-xs-center">
+                                                {{ props.item.stockOrderPrice | currency('&#8369; ') }}
                                             </td>
                                             <td class="text-xs-left">{{ props.item.region }}</td>
                                             <td class="text-xs-left">{{ props.item.province || '-' }}</td>
@@ -145,26 +84,49 @@
                     </v-btn>
                 </v-card-title>
                 <v-container>
-                    <v-form lazy-validation ref="form" @submit.prevent="saveDiscount">
+                    <v-form 
+                        lazy-validation 
+                        ref="form" 
+                        v-model="discountForm" 
+                        @submit.prevent="saveDiscount"
+                    >
                         <v-layout row align-center justify-start wrap>
                             <v-flex xs12 lg12>
                                 <v-radio-group v-model="selectedDiscount.type" required>
                                     <template v-slot:label>
                                         <div>Type of Discount</div>
                                     </template>
-                                    <v-radio label="Percentage (%)" value="percentage"></v-radio>
-                                    <v-radio label="Amount (Pesos)" value="amount"></v-radio>
+                                    <v-radio class="ml-3" label="Percentage (%)" value="percentage"></v-radio>
+                                    <v-radio class="ml-3" label="Amount (Pesos)" value="amount"></v-radio>
                                 </v-radio-group>
                             </v-flex>
-                            <v-flex xs12 lg4 v-if="selectedDiscount.type !== null">
-                                <v-text-field
-                                    v-model="selectedDiscount.amount"
-                                    type="number"
-                                    label="Amount of Discount"
-                                    :suffix="selectedDiscount.type === 'percentage' ? '%' : ' '"
-                                    :prefix="selectedDiscount.type === 'amount' ? 'PHP' : ' '"
-                                    required
-                                ></v-text-field>
+                            <v-flex xs12 lg12>
+                                <v-layout row align-center justify-start>
+                                    <v-flex xs4>
+                                        <v-text-field
+                                            v-model="selectedDiscount.amount"
+                                            type="number"
+                                            label="Amount of Discount"
+                                            :suffix="selectedDiscount.type === 'percentage' ? '%' : ' '"
+                                            :prefix="selectedDiscount.type === 'amount' ? 'PHP' : ' '"
+                                            required
+                                        ></v-text-field>
+                                    </v-flex>
+                                </v-layout>
+                            </v-flex>
+                            <v-flex xs12 lg12>
+                                <v-layout row align-center justify-start> 
+                                    <v-flex xs4>
+                                        <v-text-field
+                                            v-model="selectedDiscount.stockOrderPrice"
+                                            type="number"
+                                            label="Stock Order Amount"
+                                            hint="The total amount of the stock order in order to qualify for this delivery discount."
+                                            prefix="PHP"
+                                            required
+                                        ></v-text-field>
+                                    </v-flex>
+                                </v-layout>
                             </v-flex>
                         </v-layout>
                         <v-layout row align-center justify-center wrap mt-4>
@@ -174,7 +136,7 @@
                             <v-flex xs12 mt-2>
                                 <div class="grey--text subheading">Location</div>
                             </v-flex>
-                            <v-flex xs12 mt-4>
+                            <v-flex xs12 mt-3>
                                 <v-autocomplete
                                     v-model="selectedDiscount.region"
                                     :items="regions"
@@ -263,21 +225,12 @@ export default {
     mixins: [mixins],
     async mounted() {
         this.loading = true;
-        await this.$store.dispatch('delivery_settings/GET_DELIVERY_SETTINGS');
         await this.$store.dispatch('delivery_settings/GET_DISCOUNT_LIST');
-        this.loading = false;
-
-        console.log('settings: ', this.settings);
         this.regions = Regions;
+        this.loading = false;
     },
     data: () => ({
-        cutOffPriceField: true,
-        cutOffPriceBtn: false,
-
-        settings: {
-            cutOffPrice: 0.00
-        },
-
+        
         loading: false,
         discountDialog: false,
         discountDialogState: 'Add',
@@ -286,6 +239,7 @@ export default {
             id: null,
             type: null,
             amount: null,
+            stockOrderPrice: null,
             region: null,
             province: null,
             city: null,
@@ -293,6 +247,7 @@ export default {
 
         discountHeaders: [
             { text: 'Discount Amount', value: 'amount', align: 'center', sortable: true },
+            { text: 'Stock Order Amount', value: 'stockOrderPrice', align: 'center', sortable: true },
             { text: 'Region', value: 'region', align: 'left', sortable: true },
             { text: 'Province', value: 'province', align: 'left', sortable: true },
             { text: 'City', value: 'city', align: 'left', sortable: true },
@@ -314,35 +269,6 @@ export default {
     }),
 
     methods: {
-        async submitCutOffPrice() {
-            this.cutOffPriceBtn = true;
-
-            try {
-                await this.$store.dispatch('delivery_settings/UPDATE_DELIVERY_SETTINGS', {
-                    updatedDetails: {
-                        cutOffPrice: this.settings.cutOffPrice
-                    }
-                });
-
-                this.cutOffPriceBtn = false;
-                this.$swal.fire({
-                    type: 'success',
-                    title: 'Success',
-                    text: 'Free Delivery cut-off price has been updated'
-                });
-
-                this.cutOffPriceField = true;
-            }
-            catch(error) {
-                console.log(error);
-                this.$swal.fire({
-                    type: 'error',
-                    title: 'Error',
-                    text: 'Free Delivery cut-off price was not updated ' + error
-                });
-                this.cutOffPriceBtn = false;
-            }
-        },
 
         openDiscountDialog(state, discount) {
             this.discountDialogState = state;
@@ -369,7 +295,6 @@ export default {
                     this.showCity = false;
                 }
 
-                console.log(this.selectedDiscount)
             }
         },
 
@@ -386,20 +311,17 @@ export default {
             this.selectedDiscount.province = null;
             this.selectedDiscount.city = null;
             this.showProvince = false;
-            console.log(this.selectedDiscount);
         },
 
         clearProvince() {
             this.selectedDiscount.province = null;
             this.selectedDiscount.city = null;
             this.showCity = false;
-            console.log(this.selectedDiscount);
         },
 
         clearCity() {
             this.selectedDiscount.city = null;
             this.showCity = false;
-            console.log(this.selectedDiscount);
         },
 
         async saveDiscount() {
@@ -418,8 +340,6 @@ export default {
             let province = this.selectedDiscount.province ? this.selectedDiscount.province.name : null;
             let city = this.selectedDiscount.city ? this.selectedDiscount.city.name : null;
 
-            let amount = Number(this.selectedDiscount.amount);
-
             if(this.discountDialogState.toLowerCase() === 'add') {
                 
                 try {
@@ -436,7 +356,7 @@ export default {
                         this.$swal.fire({
                             type: 'error',
                             title: 'Existing Discount!',
-                            text: `There is an existing discount similar to what you are about to add.\nThis will not be saved.`
+                            text: `There is an existing discount with the same location to what you are about to add. This will not be saved.`
                         });
                         this.saveBtnLoading = false;
                         return;
@@ -444,7 +364,8 @@ export default {
 
                     await this.$store.dispatch('delivery_settings/ADD_DISCOUNT', {
                         type: this.selectedDiscount.type, 
-                        amount, 
+                        amount: Number(this.selectedDiscount.amount),
+                        stockOrderPrice: Number(this.selectedDiscount.stockOrderPrice),
                         region, 
                         province, 
                         city
@@ -466,7 +387,8 @@ export default {
                         title: 'Discount was not added!',
                         text: 'Please try again.'
                     });
-                    await this.closeDiscountDialog();
+                    
+                    this.closeDiscountDialog();
                 }
 
 
@@ -486,7 +408,7 @@ export default {
                         this.$swal.fire({
                             type: 'error',
                             title: 'Existing Discount!',
-                            text: `A discount with similar location already exists.\nThis will not be saved.`
+                            text: `There is an existing discount with the same location to what you are about to edit. This will not be saved.`
                         });
                         this.saveBtnLoading = false;
                         return;
@@ -495,7 +417,8 @@ export default {
                     await this.$store.dispatch('delivery_settings/UPADTE_DISCOUNT', {
                         id: this.selectedDiscount.id, 
                         type: this.selectedDiscount.type, 
-                        amount, 
+                        amount: Number(this.selectedDiscount.amount),
+                        stockOrderPrice: Number(this.selectedDiscount.stockOrderPrice), 
                         region, 
                         province,
                         city
@@ -599,12 +522,10 @@ export default {
             discountList: state => state.discountList
         }),
 
-        setting() {
-            return this.$store.getters['delivery_settings/GET_DELIVERY_SETTINGS'];
-        },
         areFieldsBlank() {
             if(!this.selectedDiscount.type) return true;
             else if(!this.selectedDiscount.amount) return true;
+            else if(!this.selectedDiscount.stockOrderPrice) return true;
             else if(!this.selectedDiscount.region) return true;
             else return false;
         }
