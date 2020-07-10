@@ -199,6 +199,16 @@
                         v-model="registerData.address.zipCode"
                       ></v-text-field>
                     </v-flex>
+                    <v-flex xs12>
+                      <v-text-field
+                        :rules="basicRules"
+                        required
+                        type="number"
+                        label="Branch's Delivery Fee*"
+                        prefix="₱"
+                        v-model="registerData.address.deliveryFee"
+                      ></v-text-field>
+                    </v-flex>
                   </v-layout>
 				          <v-btn
                     type="submit"
@@ -309,15 +319,16 @@ export default {
       email: null,
       contact: null,
       social: {
-          facebook: null
+        facebook: null
       },
       address: {
-          house: null,
-          streetName: null,
-          barangay: null,
-          citymun: null,
-          province: null,
-          zipCode: null,
+        house: null,
+        streetName: null,
+        barangay: null,
+        citymun: null,
+        province: null,
+        zipCode: null,
+          deliveryFee: null
       },
       status: 'approved',
       type: 'Reseller',
@@ -353,6 +364,7 @@ export default {
           citymun: null,
           province: null,
           zipCode: null,
+          deliveryFee: null
         },
         status: 'approved',
         type: 'Reseller',
@@ -381,6 +393,8 @@ export default {
       this.submitBtnDisabled = true;
       
       try {
+        this.registerData.address.deliveryFee = Number(this.registerData.address.deliveryFee);
+
         await this.$store.dispatch('distributors/ADD_BRANCH', this.registerData);
         this.submitBtnDisabled = false;
 
