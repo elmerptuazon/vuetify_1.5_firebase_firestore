@@ -3,13 +3,13 @@ var prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  apiKey: '"AIzaSyDAxQ8dvBH2CQNkvoFuklqVRV76KaRyKJ0"',
-  authDomain: '"appselltestapp.firebaseapp.com"',
-  databaseURL: '"https://appselltestapp.firebaseio.com"',
-  projectId: '"appselltestapp"',
-  storageBucket: '"appselltestapp.appspot.com"',
-  messagingSenderId: '"671506060709"',
-  appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
-  measurementId: '"G-XV2JER7LNT"',
-  primaryColor: '"#0E1E38"',
+  apiKey: '"AIzaSyDYoaR6mB5exEIkO2_1BJKoMuhUiSo2mnY"',
+  authDomain: '"farmfetchdev-7031c.firebaseapp.com"',
+  databaseURL: '"https://farmfetchdev-7031c.firebaseio.com"',
+  projectId: '"farmfetchdev-7031c"',
+  storageBucket: '"farmfetchdev-7031c.appspot.com"',
+  messagingSenderId: '"455899115382"',
+  appId: '"1:455899115382:web:512d68156916c929491457"',
+  primaryColor: '"#bfa893"',
+  // primaryColor: '"#d9bea7"',
 })
