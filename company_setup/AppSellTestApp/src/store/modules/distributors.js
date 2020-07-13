@@ -1,4 +1,5 @@
-import { DB } from '@/config/firebase';
+import { DB, STORAGE } from '@/config/firebase';
+import axios from 'axios';
 
 const distributors = {
     namespaced: true,
@@ -20,7 +21,7 @@ const distributors = {
             state.resellersList = payload;
         },
         ADD_RESELLER(state, payload) {
-            state.resellersList.push(payload);
+            state.resellersList.unshift(payload);
         },
         UPDATE_RESELLER(state, payload) {
             const index = state.resellersList.findIndex(reseller => reseller.id === payload.id);
@@ -44,7 +45,7 @@ const distributors = {
             
             state.subscriber = DB.collection('accounts')
             .where('type', '==', 'Reseller')
-            .orderBy('createdAt', 'desc')
+            .orderBy('createdAt', 'asc')
             .onSnapshot((snapshot) => {
                 console.log('listening to new registrations');
 
@@ -151,7 +152,7 @@ const distributors = {
             try {
                 const response = await axios({
                     method: 'post',
-                    url: `${process.env.accountManagementURL}/sendAccountVerification`,
+                    url: `${process.env.accountManagementURL}/resendEmailVerification`,
                     data: {
                         firstName: firstName,
                         email: email,
