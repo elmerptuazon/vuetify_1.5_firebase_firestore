@@ -900,7 +900,7 @@ export default {
 
           if(action === 'denied') {
             updateObj.read = false;  
-            delete updatedObj.id;
+            delete updateObj.id;
 
             await this.$store.dispatch(
               "stock_orders/UPDATE_STOCK_ORDER_DETAILS", {
@@ -915,8 +915,6 @@ export default {
               updateObj
             );
           }
-
-          
 
           this.$swal.fire({
             type: "success",
