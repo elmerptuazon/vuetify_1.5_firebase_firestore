@@ -158,33 +158,31 @@
                         max-width="250px"
                         style="border: solid 2px;"
                       >
-                        <v-layout align-center justify-center>
-                          <v-btn 
-                            v-if="stockOrder.paymentDetails.proofOfPayment"
-                            color="primary" @click="enlargeDialog = true"
-                            class="overlayImage" depressed
-                          >Enlarge</v-btn>
-                        </v-layout>
+                        <v-btn 
+                          v-if="stockOrder.paymentDetails.proofOfPayment"
+                          color="primary" @click="enlargeDialog = true"
+                          depressed class="overlayImage"
+                        >Enlarge</v-btn>
                       </v-img>
 
                       <v-img 
                         v-else
                         :src="placeholder" 
                         :lazy-src="placeholder"
-                        height="250px"
-                        width="250px" 
+                        max-height="250px"
+                        max-width="250px" 
+                        style="border: solid 2px;"
                       >
-                        <v-layout align-center justify-center>
-                          <div
-                            class="
-                              body-2 
-                              pa-1
-                              font-weight-bold
-                              primary
-                              white--text 
-                              overlayImage"
-                          >NO PROOF OF PAYMENT YET</div>
-                        </v-layout>
+                        <div
+                          class="
+                            body-2 
+                            pa-1
+                            text-xs-center
+                            font-weight-bold
+                            primary white--text 
+                            overlayImageNoImg"
+                          style="width: 100px;"
+                        >NO PROOF OF PAYMENT YET</div>
                       </v-img>
                     </v-flex>
                     
@@ -953,7 +951,15 @@ export default {
 
   .overlayImage {
     position: absolute;
-    top: 50%;
+    top: 38%;
+    left: 25%;
+    z-index: 1;
+  }
+
+  .overlayImageNoImg {
+    position: absolute;
+    top: 32%;
+    left: 28%;
     z-index: 1;
   }
 
