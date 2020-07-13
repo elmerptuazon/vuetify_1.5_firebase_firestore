@@ -103,7 +103,7 @@
                   <v-spacer></v-spacer>
                   <v-btn
                     v-if="stockOrder.paymentDetails.paymentType != 'CC'"
-                    @click="UpdatePayment()"
+                    @click="UpdatePayment('paid')"
                     color="primary"
                     :class="[
                       stockOrder.paymentDetails.paymentStatus.toLowerCase() === 'paid'
@@ -135,7 +135,7 @@
                         <v-list-tile-sub-title>Status</v-list-tile-sub-title>
                         <v-list-tile-title>
                           <span class="primary--text" v-if="stockOrder.paymentDetails.paymentStatus === 'pending'">{{
-                             'PROOF OF ID' | uppercase
+                             'PROOF OF PAYMENT' | uppercase
                           }}</span>
                           <span class="primary--text" v-else>{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
@@ -149,19 +149,20 @@
                     <v-flex xs12>
                       <div class="body-1 grey--text">Proof of Payment</div>
                     </v-flex>
-                    <v-flex xs10 mt-2>
+                    <v-flex xs12 mt-2>
                       <v-img
                         v-if="stockOrder.paymentDetails.proofOfPayment"
                         :src="stockOrder.paymentDetails.proofOfPayment"
                         :lazy-src="placeholder"
-                        max-height="240px"
-                        max-width="240px"
+                        max-height="250px"
+                        max-width="250px"
+                        style="border: solid 2px;"
                       >
                         <v-layout align-center justify-center>
                           <v-btn 
                             v-if="stockOrder.paymentDetails.proofOfPayment"
                             color="primary" @click="enlargeDialog = true"
-                            class="overlayImage"
+                            class="overlayImage" depressed
                           >Enlarge</v-btn>
                         </v-layout>
                       </v-img>
@@ -170,8 +171,8 @@
                         v-else
                         :src="placeholder" 
                         :lazy-src="placeholder"
-                        height="240px"
-                        width="240px" 
+                        height="250px"
+                        width="250px" 
                       >
                         <v-layout align-center justify-center>
                           <div
@@ -185,6 +186,15 @@
                           >NO PROOF OF PAYMENT YET</div>
                         </v-layout>
                       </v-img>
+                    </v-flex>
+                    
+                    <v-flex 
+                      xs12 mt-3
+                      v-if="stockOrder.paymentDetails.paymentStatus === 'pending'"
+                    >
+                      <v-btn block color="red" outline @click="UpdatePayment('denied')">
+                        TAG AS DENIED
+                      </v-btn>
                     </v-flex>
                   </v-layout>
                 </v-card-text>
@@ -867,10 +877,10 @@ export default {
         this.updateStatus("cancelled");
       }
     },
-    async UpdatePayment() {
+    async UpdatePayment(action) {
       const response = await this.$swal.fire({
         title: "Are you sure?",
-        text: "Are you sure you want to tag the payment of this order as PAID?",
+        text: `Are you sure you want to tag the payment of this order as ${action.toUpperCase()}?`,
         type: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -882,16 +892,31 @@ export default {
         try {
           let updateObj = {
             id: this.$route.params.id,
-            paymentDetails: this.stockOrder.paymentDetails
+            paymentDetails: this.stockOrder.paymentDetails,
           };
 
-          updateObj.paymentDetails.paymentStatus = "Paid";
+          updateObj.paymentDetails.paymentStatus = action;
           updateObj.paymentDetails.paymentDate = Date.now();
 
-          await this.$store.dispatch(
-            "stock_orders/UPDATE_STOCK_ORDER_PAYMENT_DETAILS",
-            updateObj
-          );
+          if(action === 'denied') {
+            updateObj.read = false;  
+            delete updatedObj.id;
+
+            await this.$store.dispatch(
+              "stock_orders/UPDATE_STOCK_ORDER_DETAILS", {
+                referenceID: this.$route.params.id,
+                updateObject: updateObj
+              }
+            );
+
+          } else {
+            await this.$store.dispatch(
+              "stock_orders/UPDATE_STOCK_ORDER_PAYMENT_DETAILS",
+              updateObj
+            );
+          }
+
+          
 
           this.$swal.fire({
             type: "success",
