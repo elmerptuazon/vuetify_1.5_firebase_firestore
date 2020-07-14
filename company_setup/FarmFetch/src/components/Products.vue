@@ -44,16 +44,6 @@
       >
         <template slot="headers" slot-scope="props">
           <tr>
-            <!-- <th>
-              <v-checkbox
-                primary
-                hide-details
-                @click.native="toggleAll"
-                :input-value="props.all"
-                :indeterminate="props.indeterminate"
-                color="pink"
-              ></v-checkbox>
-            </th> -->
             <th
               v-for="header in props.headers"
               :key="header.text"
@@ -75,14 +65,6 @@
             @click="props.selected = !props.selected"
             v-bind:class="[props.item.active != 1 ? 'grey--text' : '']"
           >
-            <!-- <td>
-              <v-checkbox
-                primary
-                hide-details
-                :input-value="props.selected"
-                color="pink"
-              ></v-checkbox>
-            </td> -->
             <td class="text-xs-center pa-2">
               <v-avatar size="100px" tile>
                 <v-img
@@ -163,7 +145,7 @@
       {{ modal.text }}
     </sweet-modal>
 
-    <v-dialog max-width="700px" v-model="addProductDialog" persistent>
+    <v-dialog max-width="750px" v-model="addProductDialog" persistent>
       <v-card>
         <v-card-title>
           <div class="title">{{ dialogText }}</div>
@@ -239,17 +221,23 @@
                   :rules="decimalOnlyRules"
                   v-model="product.weight"
                 ></v-text-field>
+                <v-text-field
+                  label="Minimum Stock Order QTY*"
+                  :rules="decimalOnlyRules"
+                  v-model="product.minimumOrder"
+                  v-if="!product.attributes.length && tempAttribItems.length <= 1"
+                ></v-text-field>
               </div>
             </v-card>
 
-            <v-card raised class="mt-2">
+            <v-card raised class="mt-4">
               <v-card-title class="font-weight-bold">
-                Attributes
+                Variants
               </v-card-title>
               <v-divider></v-divider>
               <v-layout row wrap v-if="!product.attributes.length" px-3 mt-2>
                 <p class="font-italic text-xs-center red--text">
-                  There is no attributes in this products
+                  There are no variants yet in this product...
                 </p>
                 <v-flex xs12>
                   <v-divider class="my-2 primary" />
@@ -267,15 +255,20 @@
                 px-3
                 py-2
               >
-                <v-flex xs4 pl-2>
-                  <div class="font-weight-bold caption">{{ attrib.name }}</div>
+                <v-flex xs2 class="text-xs-left">
+                  <div class="font-weight-bold">{{ attrib.name }}</div>
                 </v-flex>
-                <v-flex xs4>
-                  <div class="caption" v-for="(item, index) in attrib.items" :key="index">
-                    {{ item }}
+
+                <v-flex xs5>
+                  <div class="my-2 caption font-italic">Variant SKU | <b>Item Name</b> | Minimum Stock Order</div>
+                  <div v-for="(item, index) in attrib.items" :key="index">
+                    <span v-if="item.sku">
+                      {{ item.sku }} | <b>{{ item.name }}</b> | {{ item.minimumOrder || "N/A" }} pcs.
+                    </span>
                   </div>
                 </v-flex>
-                <v-flex xs4>
+
+                <v-flex xs3 pl-3>
                   <v-tooltip left>
                     <v-btn
                       slot="activator"
@@ -285,7 +278,7 @@
                     >
                       <v-icon>delete</v-icon>
                     </v-btn>
-                    <span>Delete Attribute</span>
+                    <span>Delete Variants</span>
                   </v-tooltip>
                   <v-tooltip right>
                     <v-btn
@@ -296,7 +289,7 @@
                     >
                       <v-icon>edit</v-icon>
                     </v-btn>
-                    <span>Edit Attribute</span>
+                    <span>Edit Variants</span>
                   </v-tooltip>
                 </v-flex>
                 <v-flex xs12>
@@ -304,67 +297,123 @@
                 </v-flex>
               </v-layout>
 
-              <v-layout row wrap align-center justify-start mt-3 pa-3>
+              <v-layout row wrap align-center justify-start mt-2 pa-3
+                v-if="!product.attributes.length || (tempAttribName && tempAttribItems.length)"
+              >
                 <v-flex xs12 mb-1>
-                  <div class="font-weight-bold">Add Product Attribute</div>
+                  <div class="font-weight-bold">Product Variant Name</div>
                 </v-flex>
                 <v-flex xs12 mt-2>
                   <v-text-field
-                    label="Attribute Name"
+                    label="Variant Name"
                     placeholder="Ex: Color, Size, Weight, etc..."
                     v-model="tempAttribName"
+                    solo
                   ></v-text-field>
                 </v-flex>
 
-                <v-flex xs12>
-                  <v-combobox
-                    v-model="tempAttribItems"
-                    label="Variant Items"
-                    placeholder="enter name of the variant then press 'Enter/Return'..."
-                    chips multiple
-                    clearable
-                  >
-                    <template v-slot:selection="data">
-                      <v-chip
-                        :selection="data.selection"
-                        close color="primary" dark
-                        @input="deleteVariant(data.item)"
+                <v-flex xs12 mt-2>
+                  <v-layout wrap align-center justify-center>
+                    <v-flex my-2 class="text-xs-left body-1 font-weight-bold">Variant Items</v-flex>
+                    <v-flex xs12>
+                      <v-data-table
+                        :headers="attributesHeader"
+                        :items="tempAttribItems"
+                        item-key="sku"
+                        hide-actions
+                        class="elevation-3"
                       >
-                        <strong>{{ data.item }}</strong>
-                      </v-chip>
-                    </template>
-                  </v-combobox>
+
+                        <template v-slot:items="props">
+                          <tr>
+                            <td class="text-xs-center">
+                              <v-text-field v-model="props.item.sku"></v-text-field>
+                            </td>
+
+                            <td class="text-xs-center">
+                              <v-text-field v-model="props.item.name"></v-text-field>
+                            </td>
+
+                            <td class="text-xs-center">
+                              <v-text-field 
+                                v-model="props.item.minimumOrder"
+                                type="number"
+                                @keydown.enter="addVariant(props.item)"
+                              ></v-text-field>
+                            </td>
+
+                            <td class="text-xs-center" width="150px">
+                              <!-- if the sku, name, and minimumOrder are filed, then make this delete button remove the entry -->
+                              <v-btn icon small color="red" dark 
+                                @click="deleteVariant(props.item)" 
+                                v-if="
+                                  (props.item.sku && props.item.name && props.item.minimumOrder) 
+                                  && !props.item.hasOwnProperty('showAddButton')
+                                "
+                              >
+                                <v-icon small>close</v-icon>
+                              </v-btn>
+
+                              <!-- if the sku, name, and minimumOrder are not yet added to the entry, then make this delete button clear both the text-fields -->
+                              <v-btn icon small color="red" dark 
+                                @click="props.item.sku = null; props.item.name = null; props.item.minimumOrder" 
+                                v-else-if="
+                                  (props.item.sku && props.item.name && props.item.minimumOrder) && 
+                                  props.item.hasOwnProperty('showAddButton')
+                                "
+                              >
+                                <v-icon small>close</v-icon>
+                              </v-btn>
+
+                              <!-- Only show the add button if the entry has'nt been push to the variants items -->
+                              <v-btn icon small color="green darken-1" dark
+                                @click="addVariant(props.item)" 
+                                v-show="
+                                  (props.item.sku && props.item.name && props.item.minimumOrder) && 
+                                  props.item.hasOwnProperty('showAddButton')
+                                "
+                              >
+                                <v-icon small>add</v-icon>
+                              </v-btn>
+                            </td>
+                          </tr>
+                        </template>
+
+                      </v-data-table>
+                    </v-flex>
+                  </v-layout>
+                  
                 </v-flex>
 
-                <v-flex xs12>
+                <v-flex xs12 mt-4>
                   <v-btn
-                    v-if="showEditConfirmButton"
-                    block
-                    small
-                    color="secondary"
-                    depressed
-                    :disabled="!tempAttribName || !tempAttribItems.length"
-                    @click="confirmEditProductAttribute"
-                  >
-                    Confirm Edit on Product Attribute
-                  </v-btn>
-
-                  <v-btn
-                    v-else
+                    v-if="!product.attributes.length"
                     block
                     small
                     color="primary"
                     depressed
-                    :disabled="tempAttribItems.length <= 0"
+                    :disabled="(tempAttribItems.length <= 1) || !tempAttribName"
                     @click="addProductAttribute"
                   >
-                    Add Product Attribute
+                    Add Product Variants
+                  </v-btn>
+
+                  <v-btn
+                    v-else-if="showEditConfirmButton"
+                    block
+                    small
+                    color="secondary"
+                    depressed
+                    :disabled="!tempAttribName || ( tempAttribItems.length <= 1)"
+                    @click="confirmEditProductAttribute"
+                  >
+                    Confirm Edit on Product Variants
                   </v-btn>
                 </v-flex>
 
                 <v-flex xs12 mt-1> 
                   <v-btn outline block small color="red" 
-                    @click="resetVariantTable" :disabled="tempAttribItems.length <= 0">CANCEL</v-btn>
+                    @click="resetVariantTable" :disabled="tempAttribItems.length <= 1">CANCEL</v-btn>
                 </v-flex>
               </v-layout>
             </v-card>
@@ -551,14 +600,14 @@ export default {
       downloadURL: null,
       isOutofStock: null,
       id: null,
+      minimumOrder: null,
       attributes: [
         {
           items: [
             {
               sku: null,
               name: null,
-              price: 0,
-              weight: 0,
+              minimumOrder: 0
             },
           ],
           name: null
@@ -571,10 +620,16 @@ export default {
       {
         sku: null,
         name: null,
-        price: 0,
-        weight: 0,
+        minimumOrder: 0,
       },
     ],
+    attributesHeader: [
+      { text: 'Variant SKU', value: 'sku', align: 'center', sortable: false },
+      { text: 'Item Name', value: 'name', align: 'center', sortable: false },
+      { text: 'Minimum Order QTY', value: 'minimumOrder', align: 'center', sortable: false },
+      { text: 'Actions', value: false, align: 'center', sortable: false, fixed: true }
+    ],
+
     showEditConfirmButton: false,
     productIndex: null,
     panel: false,
@@ -591,6 +646,14 @@ export default {
     images: []
   }),
   methods: {
+    variantEntryModel() {
+      return {
+        sku: null,
+        name: null,
+        minimumOrder: this.product.minimumOrder || null,
+        showAddButton: true
+      }
+    },
     toggleAll() {
       if (this.selected.length) this.selected = [];
       else this.selected = this.items.slice();
@@ -611,6 +674,7 @@ export default {
     resetVariantTable() {
       this.tempAttribName = null;
       this.tempAttribItems = [];
+      this.tempAttribItems.push(this.variantEntryModel());
     },
     OpenDialog() {
       this.dialogText = "Add New Product";
@@ -626,7 +690,7 @@ export default {
       this.product.weight = null;
       this.$refs.productFile.files.value = null;
       this.tempAttribName = null;
-      this.tempAttribItems = null;
+      this.tempAttribItems = [];
       this.product.attributes = [];
 
       this.resetVariantTable();
@@ -651,6 +715,9 @@ export default {
     },
 
     addProductAttribute() {
+      //remove the last blank entry on the variants table
+      this.tempAttribItems.pop();
+
       this.product.attributes.push({
         name: this.tempAttribName,
         items: this.tempAttribItems
@@ -665,8 +732,8 @@ export default {
       this.tempAttribName = this.product.attributes[index].name;
       this.tempAttribItems = this.product.attributes[index].items;
 
-      //push a blank object on variant table so that user could add an variant if needed
-      // this.tempAttribItems.push({});
+      //push a blank object on variant table so that user could add a new variant if needed
+      this.tempAttribItems.push({sku: null, name: null, showAddButton: true});
 
       this.showEditConfirmButton = true;
       this.productIndex = index;
@@ -675,6 +742,9 @@ export default {
     },
 
     confirmEditProductAttribute() {
+      //remove the last blank entry on the variants table
+      this.tempAttribItems.pop();
+
       this.product.attributes[this.productIndex].name = this.tempAttribName;
       this.product.attributes[this.productIndex].items = this.tempAttribItems;
       this.showEditConfirmButton = false;
@@ -684,11 +754,10 @@ export default {
 
       console.log(this.product.attributes);
     },
-
     async deleteAttribute(index) {
       const r = await this.$swal.fire({
         title: "Warning!",
-        text: `Are you sure you want to delete "${this.product.attributes[index].name}" attribute?`,
+        text: `Are you sure you want to delete "${this.product.attributes[index].name}" variants?`,
         type: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes",
@@ -703,22 +772,14 @@ export default {
       }
     },
 
-    isVariantsFieldBlank(variants) {
-      let thereIsABlank = false;
-      Object.values(variants).forEach(variant => {
-        if(!variant || variant === null) thereIsABlank = true;
-      });
-      return thereIsABlank;
-    },
 
     addVariant(item) {
-      console.log('old tempAttribItems: ', this.tempAttribItems);
-      const index = this.tempAttribItems.findIndex(variant => variant.sku === item.sku);
-      if(index !== -1) this.tempAttribItems[index].toggleEdit = true;
-      //for some weird reason, when the user is inputting a variant. 
-      //it is already being edited on the current last element of the this.tempAttribItems array
-      //so we're just pushing a blank object to insert an editable variant row
-      this.tempAttribItems.push({});
+      if(!item.sku || !item.name || !item.minimumOrder) return;
+      
+      const index = this.tempAttribItems.findIndex(attrib => attrib.sku === item.sku);
+      delete this.tempAttribItems[index].showAddButton;
+
+      this.tempAttribItems.push(this.variantEntryModel());
       console.log('new tempAttribItems: ', this.tempAttribItems); 
     },
 
@@ -733,6 +794,7 @@ export default {
     },
 
     deleteVariant(item) {
+      if(this.tempAttribItems.length <= 1) return;
       const index = this.tempAttribItems.indexOf(item);
       if(index !== -1) {
         this.tempAttribItems.splice(index, 1);
@@ -790,11 +852,9 @@ export default {
             createdAt: Date.now(),
             description: this.product.description,
             name: this.product.name,
-            price: this.product.price,
-            resellerPrice: this.product.resellerPrice,
-            //promotion: this.product.promotion,
+            price: Number(this.product.price),
+            resellerPrice: Number(this.product.resellerPrice),
             weight: Number(this.product.weight),
-            //uid: null
             attributes: this.product.attributes,
             searchTerms: this.product.name.split(" "),
 
@@ -892,31 +952,15 @@ export default {
           code: this.product.code,
           description: this.product.description,
           name: this.product.name,
-          price: this.product.price,
-          resellerPrice: this.product.resellerPrice,
-          //promotion: this.product.promotion,
+          price: Number(this.product.price),
+          resellerPrice: Number(this.product.resellerPrice),
           weight: Number(this.product.weight),
-          //uid: null
           downloadURL: this.product.downloadURL || null,
           pictureName: this.product.pictureName || null,
           id: this.product.id,
           attributes: this.product.attributes,
           searchTerms: searchTerms
         };
-
-        //remove unnecessary attributes relating to product QTY
-        if(updatedProductData.hasOwnProperty('allocatedQTY')) {
-          delete updatedProductData.allocatedQTY;
-        }
-        if(updatedProductData.hasOwnProperty('onHandQTY')) {
-          delete updatedProductData.onHandQTY;
-        }
-        if(updatedProductData.hasOwnProperty('reOrderLevel')) {
-          delete updatedProductData.reOrderLevel;
-        }
-        if(updatedProductData.hasOwnProperty('isOutofStock')) {
-          delete updatedProductData.isOutofStock;
-        }
 
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
 
@@ -1235,13 +1279,17 @@ export default {
     },
     selected(val) {
       this.$emit("selected", val);
-    }
+    },
+    "product.minimumOrder": {
+      handler(value) {
+        this.tempAttribItems[0].minimumOrder = value;
+      },
+      deep: true
+    },
   },
   mixins: [mixins],
   computed: {
-    // ...mapState("products", {
-    //   items: state => state.productsList
-    // })
+
   },
   components: {
     vueDropzone: vue2Dropzone

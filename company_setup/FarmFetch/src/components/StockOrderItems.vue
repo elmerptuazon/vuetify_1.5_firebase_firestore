@@ -14,7 +14,7 @@
           </v-avatar>
         </td>
         <td class="text-xs-left">{{ props.item.name }}</td>
-        <td class="text-xs-left">{{ (props.item.attributes || 'N/A') | capitalize }}</td>
+        <td class="text-xs-left">{{ (props.item.attributes || '-') | capitalize }}</td>
         <td class="text-xs-left">{{ props.item.sku }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
@@ -23,18 +23,6 @@
       </tr>
     </template>
     <template slot="footer">
-      <!-- <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong>Subtotal: {{ subTotal | currency("P") }}</strong>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong
-            >Discount: <span v-if="discount">{{ discount }}%</span></strong
-          >
-        </td>
-      </tr> -->
       <tr>
         <td colspan="8" class="text-xs-right">
           <strong>Total: {{ total | currency("P") }}</strong>
@@ -59,12 +47,12 @@ export default {
       {
         text: "Name",
         value: "name",
-        align: "center"
+        align: "left"
       },
       {
-        text: "Attributes",
+        text: "Variant",
         value: "attributes",
-        align: "center"
+        align: "left"
       },
       {
         text: "Variant SKU",
@@ -100,7 +88,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr.toUpperCase()}: ${item.attributes[attr]} | `;
+            attributes += `${item.attributes[attr]}`;
           }
         });
 
@@ -114,7 +102,8 @@ export default {
           attributes: attributes,
           image: item.downloadURL,
           sku: item.sku,
-          variantId: item.variantId
+          variantId: item.variantId,
+          variantName: item.variantName
         };
       });
 

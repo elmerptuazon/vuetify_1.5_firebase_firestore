@@ -4,7 +4,7 @@
       fixed
       :clipped="$vuetify.breakpoint.lgAndUp"
       app
-      width="290px"
+      width="270px"
       v-model="drawer"
     >
       <v-list dense>
@@ -210,7 +210,6 @@ export default {
 
     newStockOrdersCount() {
       const count = this.$store.getters['stock_orders/GET_NEW_ORDER_COUNT'];
-      console.log('this is the new default.vue', count);
       return count;
     },
 

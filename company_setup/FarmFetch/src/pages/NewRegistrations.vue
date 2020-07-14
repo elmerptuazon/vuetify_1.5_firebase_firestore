@@ -90,12 +90,12 @@
             <td class="text-xs-left">{{ props.item.middleInitial || "" }}</td>
             <td class="text-xs-left">{{ props.item.lastName }}</td>
             <td class="text-xs-left">
-              {{ new Date(props.item.birthday) | momentize("MMMM D, YYYY") }}
+              {{ props.item.birthday | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-left">{{ props.item.address.citymun }}</td>
             <td class="text-xs-left">{{ props.item.address.province }}</td>
             <td class="text-xs-left">
-              {{ new Date(props.item.createdAt) | momentize("MMMM D, YYYY") }}
+              {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-left">
               <span

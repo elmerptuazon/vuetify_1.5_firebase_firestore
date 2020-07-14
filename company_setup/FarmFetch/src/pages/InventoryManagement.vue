@@ -49,10 +49,21 @@
               :pagination.sync="pagination"
             >
               <template v-slot:headerCell="props">
-                <v-tooltip bottom max-width="150">
+                <v-tooltip bottom nudge-bottom max-width="200">
                   <template v-slot:activator="{ on }">
                     <span v-on="on">
-                      {{ props.header.text }}
+                      <div v-if="props.header.value === '' || props.header.value === 'isOutofStock'" class="pt-3 pb-2">
+                        <div v-for="(word, index) in props.header.text.split('\n')" :key="index">
+                          {{ word }}
+                        </div>
+                      </div>
+                      
+                      <div v-else class="pb-2">
+                        <div v-for="(word, index) in props.header.text.split('\n')" :key="index">
+                          {{ word }}
+                        </div>
+                      </div>
+                      
                     </span>
                   </template>
                   <span>
@@ -64,46 +75,38 @@
 
               <template v-slot:items="props">
                 <tr 
-                  :class="[ 
+                  :class="[
                     props.item.position === 1 ? 'red lighten-3' : '',
                   ]"
                 >
                   <td class="text-xs-center">
-                    <v-btn icon color="green" small dark @click="openEditDialog(props.item)">
+                    <v-btn icon color="green" small dark @click="openEditQuantityDialog(props.item)">
                       <v-icon small>edit</v-icon>
                     </v-btn>
                   </td>
 
-                  <td class="text-xs-left">{{props.item.productName}}</td>
+                  <td class="text-xs-center">{{props.item.productName}}</td>
 
-                  <td class="text-xs-left">{{props.item.name}}</td>
-
-                  <td class="text-xs-left">{{ props.item.sku }}</td>
+                  <td class="text-xs-center" v-if="!props.item.variantName"> - </td>
+                  <td class="text-xs-center" v-else>{{props.item.name}}</td>
                   
-                  <td class="text-xs-center">{{ props.item.onHandQTY }} pcs.</td>
+                  <td class="text-xs-center">{{props.item.onHandQTY}}</td>
 
-                  <td class="text-xs-center">{{props.item.allocatedQTY}} pcs.</td>
+                  <td class="text-xs-center">{{props.item.allocatedQTY}}</td>
 
-                  <td class="text-xs-center">{{props.item.availableQTY}} pcs.</td>
+                  <td class="text-xs-center">{{props.item.availableQTY}}</td>
 
-                  <td class="text-xs-center">{{props.item.reOrderLevel}} pcs.</td>
+                  <td class="text-xs-center">{{props.item.reOrderLevel}}</td>
 
-                  <td class="text-xs-center">{{props.item.weight}} g.</td>
-
-                  <td class="text-xs-center">{{props.item.price | currency("&#8369; ")}}</td>
-
-                  <td class="pt-4">
-                    <v-checkbox
-                      class="ml-4"
-                      @change="markAsOutOfStock(props.item)"
-                      v-model="props.item.isOutofStock"
-                    ></v-checkbox>
-                  </td>
-
-                  <td>
-                    <v-btn icon color="primary" dark small @click="deleteVariant(props.item)">
-                      <v-icon small>delete_forever</v-icon>
-                    </v-btn>
+                  <td class="py-2">
+                    <v-layout align-end justify-space-around pt-4>
+                      <v-flex xs3>
+                        <v-checkbox
+                          v-model="props.item.isOutofStock"
+                          @change="markAsOutOfStock(props.item)"
+                        ></v-checkbox>
+                      </v-flex>
+                    </v-layout>
                   </td>
                 </tr>
               </template>
@@ -113,57 +116,29 @@
       </v-flex>
     </v-layout>
 
-    <v-dialog v-model="showEditDialog" persistent width="550px">
+    <v-dialog v-model="showEditQuantityDialog" persistent width="550px">
       <v-card>
         <v-card-title class="primary dark white--text title font-weight-bold">
-          EDIT PRODUCT VARIANT DETAILS
+          EDIT QUANTITY IN PRODUCT VARIANT
           <v-spacer></v-spacer>
-          <v-icon medium color="white" @click="showEditDialog = false">close</v-icon>
+          <v-icon medium color="white" @click="closeEditQuantityDialog">close</v-icon>
         </v-card-title>
         <v-container align-center justify-center>
-          <v-layout align-start justify-start wrap>
+          <v-layout row align-center justify-start wrap>
             <v-flex xs12>
-              <div class="font-italic body-1 font-weight-bold">Note: Fields with "*" are editable</div>
+              <span class="subheading">Product Name: </span>
+              <span class="subheading font-weight-bold">{{ selectedVariant.productName }}</span>
+            </v-flex>
+            <v-flex xs12 mt-2>
+              <span class="subheading">Variant Name: </span>
+              <span v-if="selectedVariant.variantName" class="subheading font-weight-bold">{{ selectedVariant.name }}</span>
+              <span v-else class="subheading font-weight-bold"> - </span>
+            </v-flex>
+            <v-flex xs12 mt-3>
+              <v-divider></v-divider>
             </v-flex>
           </v-layout>
-          
-          <v-layout align-center justify-start wrap row mt-3>
-            <v-flex xs12>
-              <v-text-field
-                :value="selectedVariant.productName"
-                readonly
-                label="Product Name"
-              ></v-text-field>
-            </v-flex>
-            <v-flex xs12>
-              <v-text-field
-                :value="selectedVariant.name"
-                readonly
-                label="Variant Name"
-              ></v-text-field>
-            </v-flex>
-
-            <v-flex xs10>
-              <v-text-field
-                v-model="selectedVariant.sku"
-                outline
-                label="Variant SKU*"
-              ></v-text-field>
-            </v-flex>
-            <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
-                <template v-slot:activator="{ on }">
-                  <span v-on="on">
-                    <v-icon medium color="grey darken-3">help</v-icon>
-                  </span>
-                </template>
-                <span>
-                  <div class="font-weight-bold">{{ fieldDescription('sku').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('sku').description }}</div>
-                </span>
-              </v-tooltip>
-            </v-flex>
-
+          <v-layout align-center justify-start wrap row mt-4>
             <v-flex xs10>
               <v-text-field
                 v-model="selectedVariant.onHandQTY"
@@ -173,7 +148,7 @@
               ></v-text-field>
             </v-flex>
             <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
+              <v-tooltip right max-width="200">
                 <template v-slot:activator="{ on }">
                   <span v-on="on">
                     <v-icon medium color="grey darken-3">help</v-icon>
@@ -188,58 +163,14 @@
 
             <v-flex xs10>
               <v-text-field
-                v-model="selectedVariant.availableQTY"
-                readonly
-                label="QTY on Available"
-                type="number"
-              ></v-text-field>
-            </v-flex>
-            <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
-                <template v-slot:activator="{ on }">
-                  <span v-on="on">
-                    <v-icon medium color="grey darken-3">help</v-icon>
-                  </span>
-                </template>
-                <span>
-                  <div class="font-weight-bold">{{ fieldDescription('availableQTY').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('availableQTY').description }}</div>
-                </span>
-              </v-tooltip>
-            </v-flex>
-
-            <v-flex xs10>
-              <v-text-field
-                v-model="selectedVariant.allocatedQTY"
-                readonly
-                label="QTY Allocated"
-                type="number"
-              ></v-text-field>
-            </v-flex>
-            <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
-                <template v-slot:activator="{ on }">
-                  <span v-on="on">
-                    <v-icon medium color="grey darken-3">help</v-icon>
-                  </span>
-                </template>
-                <span>
-                  <div class="font-weight-bold">{{ fieldDescription('allocatedQTY').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('allocatedQTY').description }}</div>
-                </span>
-              </v-tooltip>
-            </v-flex>
-
-            <v-flex xs10>
-              <v-text-field
                 v-model="selectedVariant.reOrderLevel"
                 outline
-                label="Re-Order Notification Level*"
+                label="Re-Order Level*"
                 type="number"
               ></v-text-field>
             </v-flex>
             <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
+              <v-tooltip right max-width="200">
                 <template v-slot:activator="{ on }">
                   <span v-on="on">
                     <v-icon medium color="grey darken-3">help</v-icon>
@@ -251,89 +182,21 @@
                 </span>
               </v-tooltip>
             </v-flex>
-
-            <v-flex xs10>
-              <v-text-field
-                v-model="selectedVariant.weight"
-                outline suffix="grams"
-                label="Variant Weight*"
-                type="number"
-              ></v-text-field>
-            </v-flex>
-            <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
-                <template v-slot:activator="{ on }">
-                  <span v-on="on">
-                    <v-icon medium color="grey darken-3">help</v-icon>
-                  </span>
-                </template>
-                <span>
-                  <div class="font-weight-bold">{{ fieldDescription('weight').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('weight').description }}</div>
-                </span>
-              </v-tooltip>
-            </v-flex>
-
-            <v-flex xs10>
-              <v-text-field
-                v-model="selectedVariant.price"
-                outline prefix="PHP "
-                label="Variant Price*"
-                type="number"
-              ></v-text-field>
-            </v-flex>
-            <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
-                <template v-slot:activator="{ on }">
-                  <span v-on="on">
-                    <v-icon medium color="grey darken-3">help</v-icon>
-                  </span>
-                </template>
-                <span>
-                  <div class="font-weight-bold">{{ fieldDescription('price').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('price').description }}</div>
-                </span>
-              </v-tooltip>
-            </v-flex>
-
-            <v-flex xs10>
-              <v-checkbox
-                :label="`Is this variant OUT OF STOCK: ${selectedVariant.isOutofStock}`"
-                v-model="selectedVariant.isOutofStock"
-              ></v-checkbox>
-            </v-flex>
-            <v-flex xs1 offset-xs1 pb-4>
-              <v-tooltip right max-width="150">
-                <template v-slot:activator="{ on }">
-                  <span v-on="on">
-                    <v-icon medium color="grey darken-3">help</v-icon>
-                  </span>
-                </template>
-                <span>
-                  <div class="font-weight-bold">{{ fieldDescription('isOutofStock').text.toUpperCase() }}: </div>
-                  <div class="mt-2 body-1">{{ fieldDescription('isOutofStock').description }}</div>
-                </span>
-              </v-tooltip>
-            </v-flex>
-
           </v-layout>
         </v-container>
 
         <v-divider class="my-2"></v-divider>
 
         <v-card-actions>
-          <v-layout align-start justify-end wrap>
-            <v-flex xs3>
-              <v-btn color="red" dark @click="deleteVariant(selectedVariant)">DELETE VARIANT</v-btn>
+          <v-layout align-center justify-end wrap>
+            <v-flex xs2>
+              <v-btn outline @click="closeEditQuantityDialog">CANCEL</v-btn>
             </v-flex>
-            <v-flex xs2 offset-xs1>
+            <v-flex xs2 ml-3>
               <v-btn color="green" dark 
-                :loading="btnLoading" :disabled="btnLoading"
+                :loading="btnLoading"
                 @click="editVariant(selectedVariant)"
               >SAVE</v-btn>
-            </v-flex>
-            <v-flex xs2 offset-xs1>
-              <v-btn outline @click="showEditDialog = false">CANCEL</v-btn>
             </v-flex>
           </v-layout>
         </v-card-actions>
@@ -366,41 +229,37 @@ export default {
     search: null,
     headers: [
       {
-        text: 'Edit Variant', align: 'left', value: '', sortable: false,
-        description: 'Click the green icon to edit the details of a product variant.'
+        text: 'Edit\nQTYs', align: 'center', value: '', sortable: false,
+        description: 'Click the green icon to edit the associated quantities of a product variant.'
       },
       {
-        text: 'Product Name', align: 'left', value: 'productName',
+        text: 'Product\nName', align: 'center', value: 'productName', sortable: true,
         description: 'The name of the product.'
       },
       {
-        text: 'Variant Name', align: 'left', value: 'name',
+        text: 'Variant\nName', align: 'center', value: 'name', sortable: true, 
         description: 'Variant name of the product'
       },
       {
-        text: 'Variant SKU', align: 'left', value: 'sku',
-        description: 'Variant SKU of the product.'
-      },
-      {
-        text: 'QTY on Hand', align: 'center', value: 'onHandQTY',
+        text: 'QTY\non Hand', align: 'center', value: 'onHandQTY', sortable: true, 
         description: 
           'When you receive or produce inventory, add that number to this total. ' + 
           'When these items leave your stock they are automatically subtracted '
       },
       {
-        text: 'QTY Allocated', align: 'center', value: 'allocatedQTY',
+        text: 'QTY\nAllocated', align: 'center', value: 'allocatedQTY', sortable: true, 
         description: 
         'This is the total number of your "QTY on Hand" inventory that have already been committed ' + 
         'to orders you have received from your Resellers.'
       },
       {
-        text: 'QTY Available', align: 'center', value: 'availableQTY',
+        text: 'QTY\nAvailable', align: 'center', value: 'availableQTY', sortable: true, 
         description: 
           'This is the inventory you have available and ready for new orders from your Resellers. ' + 
           'This value is generated by subtracting "QTY Allocated" from "QTY on Hand."'
       },
       {
-        text: 'Re-Order Notif Level', align: 'center', value: 'reOrderLevel',
+        text: 'Re-Order\nLevel', align: 'center', value: 'reOrderLevel', sortable: true,
         description: 
           'Use this field to set the number of "QTY Available" inventory at which you would like to be notified to order / ' +
           'produce more inventory for this product. When the "QTY Available" number counts down to the number you set, ' +
@@ -408,27 +267,15 @@ export default {
           'next to the "Inventory Management" title.'
       },
       {
-        text: 'Variant Weight', align: 'left', value: 'weight',
-        description: 'Weight of the variant, this weight will be used for shipping calculations.'
-      },
-      {
-        text: 'Variant Price', align: 'left', value: 'price',
-        description: 'Price of this particular variant of a product.'
-      },
-      {
-        text: 'Out of Stock?', align: 'left', value: 'isOutOfStock',
+        text: 'Out of\nStock?', align: 'center', value: 'isOutofStock', sortable: false,
         description: 'Tick this box, to mark a product as "Out of Stock". \n' + 
           'But this box is automatically ticked, once "QTY on Hand" is zero.'
-      },
-      {
-        text: 'Delete This Variant?', align: 'left', value: 'productId',
-        description: 'Click this icon to delete this variant in your inventory.'
       },
     ],
 
     pagination: {
       sortBy: 'position',
-      rowsPerPage: -1,
+      rowsPerPage: 20,
     },
     rowsPerPageItems: [10, 20, 50, {text: 'All', value: -1}],
 
@@ -437,52 +284,34 @@ export default {
     snackColor: 'primary',
 
     selectedVariant: {},
-    showEditDialog: false,
+    showEditQuantityDialog: false,
     btnLoading: false,
+
+    products: []
 
   }),
 
   computed: {
     items() {
-      return this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+      let variants = this.$store.getters['inventory/GET_ALL_PRODUCTS'];
+      console.log('computed items triggered')
+      this.products = [...variants];
+      return [...variants]; 
     },
-    products() {
-      this.loading = true;
-      const products = this.items;
-
-      let modifiedProducts = products.map((product) => {
-        product.name = product.name.replace(/-/gi, ' / ');
-
-        product.availableQTY = parseInt(product.onHandQTY) - parseInt(product.allocatedQTY);
-        
-        if(product.availableQTY === 0) {
-          product.isOutofStock = true;
-        }
-
-        if(product.isOutofStock || product.availableQTY <= product.reOrderLevel) {
-          product.position = 1;
-        
-        } else {
-          product.position = 2;
-        }
-        
-        return product;
-      });
-
-      this.loading = false;
-      return modifiedProducts;
-    }
   },
 
   watch: {
-    
+    items(variantList) {
+      console.log('items were triggered');
+      this.products = variantList;
+    }
   },
 
   methods: {
     showSnackBar(state, message) {
       this.snack = true;
       this.snackText = message;
-      this.snackColor = state === 'success' ? 'primary' : 'red';
+      this.snackColor = state === 'success' ? 'success' : 'red';
     },
 
     fieldDescription(field) {
@@ -527,44 +356,65 @@ export default {
         this.textfieldLoading = false;
       }
     },
+
+    openEditQuantityDialog(item) {
+      this.selectedVariant = Object.assign({}, item);
+      this.showEditQuantityDialog = true;
+    },
+
+    closeEditQuantityDialog() {
+      const isQTYZero = (this.selectedVariant.onHandQTY === 0 || this.selectedVariant.reOrderLevel === 0);
+
+      if(!this.selectedVariant.isOutofStock && isQTYZero) {
+        const index = this.products.findIndex(product => product.id === this.selectedVariant.id);
+        if(index !== -1) this.products[index].isOutofStock = true;
+      }
+      this.showEditQuantityDialog = false;
+      this.selectedVariant = {};
+    },
+
     async markAsOutOfStock(product) {
       this.loading = true;
       console.log('updating product: ', product);
+      console.log(product);
+
+      if(!product.isOutofStock) {
+        this.loading = false;
+        this.openEditQuantityDialog(product);
+        return;
+      }
 
       try {
-        await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+        await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
           id: product.id,
-          key: 'isOutofStock',
-          value: product.isOutofStock
+          updatedDetails: {
+            isOutofStock: product.isOutofStock,
+            onHandQTY: 0
+          }
         });
 
-        this.showSnackBar('success', `${product.sku} was successfully updated!`);
+        this.showSnackBar('success', `${product.productName.toUpperCase()} was successfully updated!`);
         this.textfieldLoading = false;
 
       } catch(error) {
         console.log('inventory management error: ', error.response);
-        this.showSnackBar('error', `${product.sku} was not updated due to error!`);
+        this.showSnackBar('error', `${product.productName.toUpperCase()} was not updated due to error!`);
         this.textfieldLoading = false;
       }
 
       this.loading = false;
     },
-    
-    openEditDialog(item) {
-      this.showEditDialog = true;
-      this.selectedVariant = Object.assign({}, item);
-    },
 
+    
     async editVariant() {
       this.btnLoading = true;
 
-      const { sku, onHandQTY, reOrderLevel, weight, price, isOutofStock } = this.selectedVariant;
+      let { onHandQTY, reOrderLevel, weight, price, isOutofStock } = this.selectedVariant;
+      if(Number(onHandQTY) > 0) isOutofStock = false;
+
       const updatedVariant = {
-        sku, 
-        onHandQTY, 
-        reOrderLevel, 
-        weight, 
-        price,
+        onHandQTY: Number(onHandQTY), 
+        reOrderLevel: Number(reOrderLevel), 
         isOutofStock
       };
 
@@ -575,13 +425,17 @@ export default {
         });
 
         this.btnLoading = false;
-        this.showEditDialog = false;
-        this.showSnackBar('success', `Updating ${this.selectedVariant.sku} was successful!`);
+        this.showEditQuantityDialog = false;
+        this.showSnackBar('success', `Updating ${this.selectedVariant.productName.toUpperCase()} was successful!`);
+        this.selectedVariant = {};
+        
       } catch(error) {
         console.log('error in editVariant method: ', error);
         this.btnLoading = false;
-        this.showEditDialog = false;
-        this.showSnackBar('error', `Updating ${this.selectedVariant.sku} was not successful! Please try again.`);
+        this.showEditQuantityDialog = false;
+        this.showSnackBar('error', `Updating ${this.selectedVariant.productName.toUpperCase()} was not successful! Please try again.`);
+        this.selectedVariant = {};
+        
         throw error;
       }
     },
