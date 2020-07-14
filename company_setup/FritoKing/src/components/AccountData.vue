@@ -83,18 +83,6 @@
         </v-flex>
       </v-layout>
 
-      <!-- <v-layout row align-center>
-        <v-flex xs4>
-          <v-subheader>Branch Manager Name</v-subheader>
-        </v-flex>
-        <v-flex xs8>
-          <v-text-field 
-            v-model="accountData.managersName" 
-            :disabled="disableEdit"
-          ></v-text-field>
-        </v-flex>
-      </v-layout> -->
-
       <v-layout row>
         <v-flex xs4>
           <v-subheader>Branch Manager's First Name</v-subheader>
@@ -200,6 +188,20 @@
         <v-flex xs8>
           <v-text-field
             v-model="accountData.address.zipCode"
+            :disabled="disableEdit"
+          ></v-text-field>
+        </v-flex>
+      </v-layout>
+
+      <v-layout row align-center>
+        <v-flex xs4>
+          <v-subheader>Branch's Delivery Fee</v-subheader>
+        </v-flex>
+        <v-flex xs8>
+          <v-text-field
+            v-model="accountData.address.deliveryFee"
+            prefix="₱"
+            type="number"
             :disabled="disableEdit"
           ></v-text-field>
         </v-flex>
@@ -380,7 +382,7 @@
 import userPlaceholder from "@/assets/DefaultBranchPic.png";
 import moment from 'moment';
 import mixins from "@/mixins";
-import { STORAGE } from "@/config/firebase";
+import { AUTH, STORAGE } from "@/config/firebase";
 
 export default {
   props: ["account"],
@@ -389,7 +391,6 @@ export default {
     //format dates into a readable format that v-date-picker could understand
     this.accountData.approvedDate = this.accountData.approvedDate ? moment(new Date(this.accountData.approvedDate)).format("YYYY-MM-DD") : null;
     this.accountData.establishDate = this.accountData.establishDate ? moment(new Date(this.accountData.establishDate)).format("YYYY-MM-DD") : null;
-     
   },
 
   data: () => ({
@@ -411,6 +412,9 @@ export default {
   computed: {
     userPlaceholder() {
       return userPlaceholder || "";
+    },
+    user() {
+      return this.$store.getters['auth/GET_USER'];
     }
   },
   mixins: [mixins],
@@ -474,22 +478,43 @@ export default {
 
     },
 
+    async checkAccountPassword(password) {
+      try {
+        const userData = await AUTH.signInWithEmailAndPassword(this.user.email, password);
+        console.log('account received: ', userData);
+        return userData ? null : 'Password is incorrect!';
+      } catch(error) {
+        console.log(error);
+        return 'Password is incorrect!';
+      }
+    },
+
     async deleteBranch() {
       console.log('deleting branch...');
       this.deleteBranchBtn = true;
 
       const answer = await this.$swal.fire({
-        title: "Are you sure?",
-        type: "warning",
+        title: "Confirm Branch Deletion",
+        input: 'password',
         showCancelButton: true,
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
+        confirmButtonText: "Delete Branch",
+        cancelButtonText: "Cancel",
         showCloseButton: true,
-        text: 'Are you sure you want to delete this branch?'
+        html: `enter your account password to confirm the deletion.`,
+        inputValidator: async (value) => {
+          if(!value) {
+            return 'Please enter your account password!';
+          
+          } else {
+            return await this.checkAccountPassword(value);
+          }
+        },
+        
       });
-
-      if (!answer.value) {
+      
+      if (!answer.value || !answer.hasOwnProperty('value')) {
         this.deleteBranchBtn = false;
+        console.log('cancelled branch deletion');
         return;
       }
 
@@ -630,16 +655,27 @@ export default {
 
       this.closeUploadDialog();
     }
-
   }
 };
 </script>
 
-<style scoped>
+<style>
 
-.overlayImage {
-  position: absolute;
-  z-index: 1;
-}
+  .overlayImage {
+    position: absolute;
+    z-index: 1;
+  }
+
+  .swal2-container .swal2-popup {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-modal {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .swal2-container .swal2-show {
+    font-family: 'Roboto', sans-serif;
+  }
 
 </style>

@@ -46,7 +46,7 @@ const distributors = {
 
                 payload.email = payload.email.toLowerCase();
                 console.log('creating branch account...')
-                const response = await AUTH.createUserWithEmailAndPassword(payload.email, 'potatocorner');
+                const response = await AUTH.createUserWithEmailAndPassword(payload.email, process.env.companyName.toLowerCase().replace(' ', ''));
                 
                 console.log('sending account verification...');
 

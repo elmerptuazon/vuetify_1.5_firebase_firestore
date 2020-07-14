@@ -73,8 +73,9 @@
           <tr
             @click="view(props.item)"
             :class="[
-              props.item.isRead && props.item.status.toLowerCase() === 'pending' ? 'grey lighten-2' : '',
-              !props.item.isRead && props.item.status.toLowerCase() === 'pending' ? 'blue lighten-4' : '',
+              props.item.position === 1 ? 'red lighten-3' : '',
+              props.item.position === 2 ? 'blue lighten-4' : '',
+              props.item.position === 3 ? 'grey lighten-2' : '',
             ]"
           >
             <td>
@@ -83,26 +84,29 @@
             <td>
               {{ props.item.user.branchName }}
             </td>
-            <!-- <td>
-              {{ props.item.user.firstName }}
-            </td>
-            <td>
-              {{ props.item.user.middleInitial || "" }}
-            </td>
-            <td>
-              {{ props.item.user.lastName }}
-            </td> -->
-            <td>
+            <td class="text-xs-center">
               {{ props.item.user.address.citymun }}
             </td>
-            <td>
+            <td class="text-xs-center">
               {{ props.item.user.address.province }}
             </td>
-            <td>{{ props.item.submittedAt | momentize("D-MMM-YYYY") }}</td>
-            <td>{{ props.item.sku }}</td>
-            <td>{{ props.item.status | uppercase }}</td>
+            <td class="text-xs-center">{{ props.item.submittedAt | momentize("D-MMM-YYYY") }}</td>
+            <td class="text-xs-center">{{ props.item.sku }}</td>
+            <td class="text-xs-center">
+              <span 
+                v-if="
+                  (props.item.status.toLowerCase() === 'shipped' || props.item.status.toLowerCase() === 'partially shipped') &&
+                  props.item.shipmentsToReceive > 0
+                "
+              >{{ 'scheduled for shipping' | uppercase }}</span>
+              <span v-else>{{ props.item.status | uppercase }}</span>
+            </td>
             <!-- <td>{{ props.item.discountedTotal | currency("P") }}</td> -->
-            <td>{{ props.item.price | currency("P") }}</td>
+            <td class="text-xs-center">
+              <span v-if="props.item.paymentDetails.paymentStatus === 'pending'"> PROOF OF PAYMENT </span>
+              <span v-else>{{ props.item.paymentDetails.paymentStatus | uppercase }}</span>
+            </td>
+            <td class="text-xs-center">{{ props.item.price | currency("&#8369;") }}</td>
           </tr>
         </template>
       </v-data-table>
@@ -125,7 +129,7 @@ export default {
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
     pagination: {
-      sortBy: "Order Date"
+      sortBy: "position"
     },
     headers: [
       {
@@ -136,41 +140,40 @@ export default {
         text: "Branch Name",
         value: "user.branchName"
       },
-      // {
-      //   text: "First Name",
-      //   value: "user.firstName"
-      // },
-      // {
-      //   text: "Middle Name",
-      //   value: "user.middleInitial"
-      // },
-      // {
-      //   text: "Last Name",
-      //   value: "user.lastName"
-      // },
       {
         text: "City",
-        value: "user.address.citymun"
+        value: "user.address.citymun",
+        align: 'center'
       },
       {
         text: "Province",
-        value: "user.address.province"
+        value: "user.address.province",
+        align: 'center'
       },
       {
         text: "Order Date",
-        value: "submittedAt"
+        value: "submittedAt",
+        align: 'center'
       },
       {
         text: "#SKU",
-        value: "sku"
+        value: "sku",
+        align: 'center'
       },
       {
-        text: "Status",
-        value: "status"
+        text: "Shipment Status",
+        value: "status",
+        align: 'center'
+      },
+      {
+        text: "Payment Status",
+        value: "paymentDetails.paymentStatus",
+        align: 'center'
       },
       {
         text: "Price",
-        value: "price"
+        value: "price",
+        align: 'center'
       }
     ],
     statuses: [],
@@ -248,9 +251,26 @@ export default {
   mixins: [mixins],
   computed: {
     items() {
-      const orders = this.$store.getters['stock_orders/GET_STOCK_ORDER_LIST'];
-      this.computeStatusNumbers(orders);
-      return orders;
+      const stockOrderList = this.$store.getters['stock_orders/GET_STOCK_ORDER_LIST'];
+      const stockOrders = stockOrderList.map(stockorder => {
+        if(stockorder.paymentDetails.paymentStatus === 'pending') {
+          stockorder.position = 1;
+        
+        } else if(!stockorder.isRead && stockorder.status.toLowerCase() === 'pending') {
+          stockorder.position = 2;
+        
+        } else if(stockorder.isRead && stockorder.status.toLowerCase() === 'pending') {
+          stockorder.position = 3;
+        
+        } else {
+          stockorder.position = 4;
+        } 
+
+        return stockorder;
+      });
+
+      this.computeStatusNumbers(stockOrders);
+      return stockOrders;
     }
   },
 

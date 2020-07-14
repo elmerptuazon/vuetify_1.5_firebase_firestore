@@ -50,13 +50,13 @@ const shipment = {
             try {
                 commit('ClearShipmentList');
                 const shipmentSnapshot = await DB.collection('shipment').where("stockOrder.stockOrderId", "==", payload).orderBy("dateSubmitted", "desc").get();
-                console.log(shipmentSnapshot)
                 if (!shipmentSnapshot.empty) {
                     const shipmentList = shipmentSnapshot.docs.map((shipment) => {
                         let shipmentDetails = shipment.data();
                         shipmentDetails.id = shipment.id;
                         return shipmentDetails;
-                    })
+                    });
+                    console.log(shipmentList);
                     commit('SetShipments', shipmentList);
                 }
             }
