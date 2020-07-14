@@ -76,8 +76,6 @@ export default {
     async mounted() {
         await this.$store.dispatch('delivery_settings/GetDeliverySettings');
         this.settings = this.$store.getters['delivery_settings/GET_DELIVERY_SETTINGS'];
-        
-        this.settings.cutOffPrice = (this.settings.cutOffPrice | currency("P"));
         console.log('settings: ', this.settings);
     },
     data: () => ({
