@@ -684,6 +684,7 @@ export default {
       this.product.description = null;
       this.product.price = null;
       this.product.resellerPrice = null;
+      this.product.minimumOrder = null;
       this.product.downloadURL = null;
       this.product.name = null;
       this.product.isOutofStock = null;
@@ -703,6 +704,7 @@ export default {
       this.product.description = item.description;
       this.product.price = item.price;
       this.product.resellerPrice = item.resellerPrice;
+      this.product.minimumOrder = item.minimumOrder;
       this.product.downloadURL = item.downloadURL;
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
@@ -854,6 +856,7 @@ export default {
             name: this.product.name,
             price: Number(this.product.price),
             resellerPrice: Number(this.product.resellerPrice),
+            minimumOrder: Number(this.product.minimumOrder),
             weight: Number(this.product.weight),
             attributes: this.product.attributes,
             searchTerms: this.product.name.split(" "),
@@ -954,6 +957,7 @@ export default {
           name: this.product.name,
           price: Number(this.product.price),
           resellerPrice: Number(this.product.resellerPrice),
+          minimumOrder: Number(this.product.minimumOrder),
           weight: Number(this.product.weight),
           downloadURL: this.product.downloadURL || null,
           pictureName: this.product.pictureName || null,
