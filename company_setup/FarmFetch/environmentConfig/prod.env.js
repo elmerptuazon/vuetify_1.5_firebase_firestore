@@ -8,5 +8,6 @@ module.exports = {
   messagingSenderId: '"455899115382"',
   appId: '"1:455899115382:web:512d68156916c929491457"',
   primaryColor: '"#bfa893"',
-  // primaryColor: '"#d9bea7"',
+  companyName: '"Farm Fetch"',
+  accountManagementURL: '"https://us-central1-farmfetchdev-7031c.cloudfunctions.net/accounts"'
 }
