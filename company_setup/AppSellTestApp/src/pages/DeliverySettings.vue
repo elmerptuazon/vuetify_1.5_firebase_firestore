@@ -147,6 +147,7 @@
                                     return-object
                                     clearable
                                     @click:clear="clearRegion"
+                                    @click="clearRegion"
                                     required
                                     :rules="basicRules"
                                     :disabled="locationDisabled"
@@ -167,8 +168,9 @@
                                     return-object
                                     clearable
                                     @click:clear="clearProvince"
+                                    @click="clearProvince"
                                     :required="showProvince"
-                                    :disabled="locationDisabled"
+                                    :disabled="provinceDisabled"
                                 ></v-autocomplete>
                             </v-flex>
                             <v-flex xs12 v-if="selectedDiscount.province">
@@ -314,6 +316,7 @@ export default {
             this.selectedDiscount.province = null;
             this.selectedDiscount.city = null;
             this.showProvince = false;
+            this.showCity = false;
         },
 
         clearProvince() {
@@ -531,6 +534,10 @@ export default {
             else if(!this.selectedDiscount.stockOrderPrice) return true;
             else if(!this.selectedDiscount.region) return true;
             else return false;
+        },
+
+        provinceDisabled() {
+            return this.selectedDiscount.region.name === 'NCR' && this.selectedDiscount.province.name === 'Metro Manila';
         }
     },
 }
