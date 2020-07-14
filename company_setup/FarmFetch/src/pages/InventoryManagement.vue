@@ -7,7 +7,7 @@
             <v-layout align-center justify-start row wrap>
               <v-flex lg4 xs12>
                 <div class="headline">
-                  Inventory Mangement
+                  Inventory Management
                   <span>
                     <v-tooltip bottom color="primary" dark>
                       <template v-slot:activator="{ on }">
