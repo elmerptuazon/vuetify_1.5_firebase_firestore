@@ -12,6 +12,6 @@ module.exports = merge(devEnv, {
   appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
   measurementId: '"G-XV2JER7LNT"',
   primaryColor: '"#0E1E38"',
-  companyName: '"AppSell Test App"',
+  companyName: '"Rraw"',
   accountManagementURL: '"https://us-central1-appselltestapp.cloudfunctions.net/accounts"'
 })
