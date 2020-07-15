@@ -7,7 +7,7 @@ module.exports = {
   storageBucket: '"rrawdev.appspot.com"',
   messagingSenderId: '"26080521344"',
   appId: '"1:26080521344:web:ed686a294b090493368a65"',
-  primaryColor: '"#0E1E38"',
+  primaryColor: '"#CCAFAF"',
   companyName: '"Rraw"',
   accountManagementURL: '"https://us-central1-appselltestapp.cloudfunctions.net/accounts"'
 }
