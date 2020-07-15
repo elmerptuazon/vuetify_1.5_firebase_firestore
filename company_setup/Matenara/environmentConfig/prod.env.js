@@ -9,4 +9,6 @@ module.exports = {
   messagingSenderId: '"127991740211"',
   measurementId: '"G-XV2JER7LNT"',
   primaryColor: '"#215e3f"',
+  companyName: '"Matenara"',
+  accountManagementURL: '"https://us-central1-matenara-dev.cloudfunctions.net/accounts"'
 }
