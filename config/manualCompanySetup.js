@@ -39,6 +39,7 @@ const prompts = require('prompts');
             { title: 'Buffalo Wing\'s N Things', value: 'BuffaloWingsNThings' },
             { title: 'AppSell Franchise', value: 'AppSellFranchise' },
             { title: 'Matenara', value: 'Matenara' },
+            { title: 'Rraw', value: 'Rraw' },
         ],
         initial: 0
     }
