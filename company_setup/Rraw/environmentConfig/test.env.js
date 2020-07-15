@@ -3,14 +3,13 @@ var devEnv = require('./dev.env')
 
 module.exports = merge(devEnv, {
   NODE_ENV: '"testing"',
-  apiKey: '"AIzaSyDAxQ8dvBH2CQNkvoFuklqVRV76KaRyKJ0"',
-  authDomain: '"appselltestapp.firebaseapp.com"',
-  databaseURL: '"https://appselltestapp.firebaseio.com"',
-  projectId: '"appselltestapp"',
-  storageBucket: '"appselltestapp.appspot.com"',
-  messagingSenderId: '"671506060709"',
-  appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
-  measurementId: '"G-XV2JER7LNT"',
+  apiKey: '"AIzaSyC70H3CWjp0k6aacytzqYLmCcrqaKZncCI"',
+  authDomain: '"rrawdev.firebaseapp.com"',
+  databaseURL: '"https://rrawdev.firebaseio.com"',
+  projectId: '"rrawdev"',
+  storageBucket: '"rrawdev.appspot.com"',
+  messagingSenderId: '"26080521344"',
+  appId: '"1:26080521344:web:ed686a294b090493368a65"',
   primaryColor: '"#0E1E38"',
   companyName: '"Rraw"',
   accountManagementURL: '"https://us-central1-appselltestapp.cloudfunctions.net/accounts"'
