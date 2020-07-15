@@ -96,6 +96,14 @@
               {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-center">
+              <div v-if="!props.item.attributes.length">{{ props.item.minimumOrder }}</div>
+              <div v-else class="text-xs-center"
+                v-for="(variant, index) in props.item.attributes[0].items" :key="index"
+              >
+                {{ variant.name | capitalize }} - {{ variant.minimumOrder }}
+              </div>
+            </td>
+            <td class="text-xs-center">
               <v-tooltip left>
                 <v-btn
                   slot="activator"
@@ -567,6 +575,10 @@ export default {
         value: "createdAt"
       },
       {
+        text: "Minimum Stock Order",
+        value: "minimumOrder"
+      },
+      {
         text: "Actions",
         sortable: false
       }
@@ -688,6 +700,7 @@ export default {
       this.product.name = null;
       this.product.isOutofStock = null;
       this.product.weight = null;
+      this.product.minimumOrder = null;
       this.$refs.productFile.files.value = null;
       this.tempAttribName = null;
       this.tempAttribItems = [];
@@ -708,6 +721,7 @@ export default {
       this.product.id = item.id;
       this.product.isOutofStock = item.isOutofStock;
       this.product.weight = item.weight;
+      this.product.minimumOrder = item.minimumOrder;
       this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
       
@@ -855,6 +869,7 @@ export default {
             price: Number(this.product.price),
             resellerPrice: Number(this.product.resellerPrice),
             weight: Number(this.product.weight),
+            minimumOrder: Number(this.product.minimumOrder),
             attributes: this.product.attributes,
             searchTerms: this.product.name.split(" "),
 
@@ -955,6 +970,7 @@ export default {
           price: Number(this.product.price),
           resellerPrice: Number(this.product.resellerPrice),
           weight: Number(this.product.weight),
+          minimumOrder: Number(this.product.minimumOrder),
           downloadURL: this.product.downloadURL || null,
           pictureName: this.product.pictureName || null,
           id: this.product.id,
