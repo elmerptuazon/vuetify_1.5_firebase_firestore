@@ -205,7 +205,7 @@ const inventory = {
                         onHandQTY: 0,
                         reOrderLevel:  0,
                         isOutofStock: true,
-                        minimumOrder: Number(productData.minimumOrder) || 1,
+                        minimumOrder: Number(productData.minimumOrder)
                     });
 
                     isSuccessful = true;
@@ -248,7 +248,7 @@ const inventory = {
                         onHandQTY: 0,
                         reOrderLevel:  0,
                         isOutofStock: true,
-                        minimumOrder: Number(variant.minimumOrder) || 1,
+                        minimumOrder: Number(variant.minimumOrder)
                     });
                 
                 } catch(error) {
@@ -302,7 +302,7 @@ const inventory = {
                             onHandQTY: 0,
                             reOrderLevel:  0,
                             isOutofStock: true,
-                            minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
                     
                     } else if(existingVariants.length === 1) {
@@ -318,7 +318,7 @@ const inventory = {
                             productName: productData.name,
                             productId: productData.id,
                             category: categoryName,
-                            minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
 
                     } else {
@@ -347,7 +347,7 @@ const inventory = {
                             onHandQTY: 0,
                             reOrderLevel:  0,
                             isOutofStock: true,
-                            minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
+                            minimumOrder: Number(productData.minimumOrder)
                         });
 
                         await batch.commit();
@@ -422,7 +422,7 @@ const inventory = {
                         productName: productData.name,
                         price: Number(productData.price),
                         weight: Number(productData.weight),
-                        minimumOrder: newVariant.minimumOrder ? Number(newVariant.minimumOrder) : 1,
+                        minimumOrder: Number(newVariant.minimumOrder)
                     });
 
                     //remove from the existing variant list the variant that has been edited
@@ -454,7 +454,7 @@ const inventory = {
                     onHandQTY: 0,
                     reOrderLevel:  0,
                     isOutofStock: true,
-                    minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
+                    minimumOrder: Number(newVariant.minimumOrder)
                 });
             }
 

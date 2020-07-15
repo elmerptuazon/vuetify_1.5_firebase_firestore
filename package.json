@@ -27,6 +27,7 @@
     "test-AppSellFranchise": "cross-env NODE_ENV=test node config/companySetup.js AppSellFranchise",
     "test-BuffaloWingsNThings": "cross-env NODE_ENV=test node config/companySetup.js BuffaloWingsNThings",
     "test-Matenara": "cross-env NODE_ENV=test node config/companySetup.js Matenara",
+    "test-Rraw": "cross-env NODE_ENV=test node config/companySetup.js Rraw",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {

@@ -869,7 +869,7 @@ export default {
             price: Number(this.product.price),
             resellerPrice: Number(this.product.resellerPrice),
             weight: Number(this.product.weight),
-            minimumOrder: this.product.minimumOrder ? Number(this.product.minimumOrder) : 1,
+            minimumOrder: Number(this.product.minimumOrder),
             attributes: this.product.attributes,
             searchTerms: this.product.name.split(" "),
 
@@ -970,7 +970,7 @@ export default {
           price: Number(this.product.price),
           resellerPrice: Number(this.product.resellerPrice),
           weight: Number(this.product.weight),
-          minimumOrder: this.product.minimumOrder ? Number(this.product.minimumOrder) : 1,
+          minimumOrder: Number(this.product.minimumOrder),
           downloadURL: this.product.downloadURL || null,
           pictureName: this.product.pictureName || null,
           id: this.product.id,
