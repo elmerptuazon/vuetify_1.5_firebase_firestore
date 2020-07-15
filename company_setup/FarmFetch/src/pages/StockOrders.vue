@@ -108,10 +108,10 @@
               <span v-else>{{ props.item.status | uppercase }}</span>
             </td>
             <td class="text-xs-center">
-              <span v-if="props.item.paymentDetails.paymentStatus === 'pending'"> PROOF OF PAYMENT </span>
+              <span v-if="props.item.paymentDetails.paymentStatus === 'pending' && props.item.paymentDetails.paymentType === 'POP'"> PROOF OF PAYMENT </span>
               <span v-else>{{ props.item.paymentDetails.paymentStatus | uppercase }}</span>
             </td>
-            <td>{{ props.item.resellerPrice | currency("&#8369;") }}</td>
+            <td>{{ props.item.resellerPrice | currency("&#8369; ") }}</td>
           </tr>
         </template>
       </v-data-table>
@@ -259,7 +259,7 @@ export default {
     items() {
       const stockOrderList = this.$store.getters['stock_orders/GET_STOCK_ORDER_LIST'];
       const stockOrders = stockOrderList.map(stockorder => {
-        if(stockorder.paymentDetails.paymentStatus === 'pending') {
+        if(stockorder.paymentDetails.paymentStatus === 'pending' && stockorder.paymentDetails.paymentType === 'POP') {
           stockorder.position = 1;
         
         } else if(!stockorder.isRead && stockorder.status.toLowerCase() === 'pending') {

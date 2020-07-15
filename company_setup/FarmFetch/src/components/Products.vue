@@ -96,6 +96,14 @@
               {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-center">
+              <div v-if="!props.item.attributes.length">{{ props.item.minimumOrder }}</div>
+              <div v-else class="text-xs-center"
+                v-for="(variant, index) in props.item.attributes[0].items" :key="index"
+              >
+                {{ variant.name | capitalize }} - {{ variant.minimumOrder }}
+              </div>
+            </td>
+            <td class="text-xs-center">
               <v-tooltip left>
                 <v-btn
                   slot="activator"
@@ -567,6 +575,10 @@ export default {
         value: "createdAt"
       },
       {
+        text: "Minimum Stock Order",
+        value: "minimumOrder"
+      },
+      {
         text: "Actions",
         sortable: false
       }
@@ -684,11 +696,11 @@ export default {
       this.product.description = null;
       this.product.price = null;
       this.product.resellerPrice = null;
-      this.product.minimumOrder = null;
       this.product.downloadURL = null;
       this.product.name = null;
       this.product.isOutofStock = null;
       this.product.weight = null;
+      this.product.minimumOrder = null;
       this.$refs.productFile.files.value = null;
       this.tempAttribName = null;
       this.tempAttribItems = [];
@@ -704,12 +716,12 @@ export default {
       this.product.description = item.description;
       this.product.price = item.price;
       this.product.resellerPrice = item.resellerPrice;
-      this.product.minimumOrder = item.minimumOrder;
       this.product.downloadURL = item.downloadURL;
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.isOutofStock = item.isOutofStock;
       this.product.weight = item.weight;
+      this.product.minimumOrder = item.minimumOrder;
       this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
       
@@ -856,8 +868,8 @@ export default {
             name: this.product.name,
             price: Number(this.product.price),
             resellerPrice: Number(this.product.resellerPrice),
-            minimumOrder: Number(this.product.minimumOrder),
             weight: Number(this.product.weight),
+            minimumOrder: this.product.minimumOrder ? Number(this.product.minimumOrder) : 1,
             attributes: this.product.attributes,
             searchTerms: this.product.name.split(" "),
 
@@ -957,8 +969,8 @@ export default {
           name: this.product.name,
           price: Number(this.product.price),
           resellerPrice: Number(this.product.resellerPrice),
-          minimumOrder: Number(this.product.minimumOrder),
           weight: Number(this.product.weight),
+          minimumOrder: this.product.minimumOrder ? Number(this.product.minimumOrder) : 1,
           downloadURL: this.product.downloadURL || null,
           pictureName: this.product.pictureName || null,
           id: this.product.id,

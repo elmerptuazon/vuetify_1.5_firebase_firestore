@@ -100,10 +100,8 @@
                     @click="UpdatePayment('paid')"
                     color="primary"
                     :class="[
-                      stockOrder.paymentDetails.paymentStatus.toLowerCase() === 'paid'
-                        ? 'v-btn--disabled '
-                        : '',
-                      stockOrder.paymentDetails.paymentStatus.toLowerCase() === '-'
+                      stockOrder.paymentDetails.paymentStatus.toLowerCase() ===
+                      'paid'
                         ? 'v-btn--disabled '
                         : ''
                     ]"
@@ -113,6 +111,47 @@
                 <v-divider></v-divider>
                 <v-card-text>
                   <v-list subheader>
+                    <v-list-tile>
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Payment Type</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span
+                            v-if="
+                              stockOrder.paymentDetails.paymentType === 'CC'
+                            "
+                            >Credit Card</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'GCash'
+                            "
+                            >E-Wallet: GCash</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'GrabPay'
+                            "
+                            >E-Wallet: Grab Pay</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'COD'
+                            "
+                            >Cash On Delivery / Upon Pick-Up</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'POP'
+                            "
+                            >Proof of Payment</span
+                          >
+                          <span v-else>N/A</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+
                     <v-list-tile
                       ><v-list-tile-content>
                         <v-list-tile-sub-title
@@ -123,23 +162,28 @@
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
-                    
-                    <v-list-tile class="mt-2"
+                    <v-list-tile
                       ><v-list-tile-content>
                         <v-list-tile-sub-title>Status</v-list-tile-sub-title>
                         <v-list-tile-title>
-                          <span class="primary--text" v-if="stockOrder.paymentDetails.paymentStatus === 'pending'">{{
-                             'PROOF OF PAYMENT' | uppercase
-                          }}</span>
-                          <span class="primary--text" v-else>{{
+                          <span class="primary--text" 
+                            v-if="stockOrder.paymentDetails.paymentStatus === 'pending' &&
+                              stockOrder.paymentDetails.paymentType === 'POP'  
+                            "
+                          >{{ 'PROOF OF PAYMENT' | uppercase }}
+                          </span>
+                          <span class="primary--text">{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
                           }}</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
                   </v-list>
-                  
-                  <v-layout row align-center justify-start wrap px-2>
+
+                  <v-layout 
+                    row align-center justify-start wrap px-2 
+                    v-if="stockOrder.paymentDetails.paymentType === 'POP'"
+                  >
                     <v-flex xs12>
                       <div class="body-1 grey--text">Proof of Payment</div>
                     </v-flex>
@@ -189,6 +233,7 @@
                       </v-btn>
                     </v-flex>
                   </v-layout>
+
                 </v-card-text>
               </v-card>
               <div v-else class="body-2">No Payment Details Provided.</div>
@@ -248,6 +293,50 @@
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
+                    
+                    <div  
+                      v-if="
+                          stockOrder.logisticsDetails.isDiscountedDelivery
+                          && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
+                        ">
+                      <v-list-tile >
+                        <v-list-tile-content>
+                          <v-list-tile-sub-title
+                            >Is this a Discounted Delivery?</v-list-tile-sub-title
+                          >
+                          <v-list-tile-title>YES</v-list-tile-title>
+                        </v-list-tile-content>
+                      </v-list-tile>
+
+                      <v-list-tile>
+                        <v-list-tile-content>
+                          <v-list-tile-sub-title
+                            >Shipping Fee Discount</v-list-tile-sub-title
+                          >
+                          <v-list-tile-title>
+                            <span v-if="stockOrder.logisticsDetails.discountType === 'amount'">
+                              {{ stockOrder.logisticsDetails.discountAmount | currency("&#8369; ") }}
+                            </span>
+                            <span v-else-if="stockOrder.logisticsDetails.discountType === 'percentage'">
+                              {{ stockOrder.logisticsDetails.discountAmount }} %
+                            </span>
+                            <span v-else> </span>
+                          </v-list-tile-title>
+                        </v-list-tile-content>
+                      </v-list-tile>
+                      
+                      <v-list-tile>
+                        <v-list-tile-content>
+                          <v-list-tile-sub-title
+                            >Reseller's Shipping Fee</v-list-tile-sub-title
+                          >
+                          <v-list-tile-title>
+                            <span>{{ stockOrder.logisticsDetails.resellersShippingFee | currency("&#8369; ") }}</span>
+                          </v-list-tile-title>
+                        </v-list-tile-content>
+                      </v-list-tile>
+                    </div>
+                    
                   </v-list>
                 </v-card-text>
               </v-card>
@@ -316,7 +405,12 @@
     </v-card>
     <div class="mb-2"></div>
 
-    <v-dialog v-model="enlargeDialog" max-width="600">
+    <v-card>
+      <v-card-title class="title">Shipment Details</v-card-title>
+      <ShipmentDetails :stockOrderId="stockOrder.id" />
+    </v-card>
+
+     <v-dialog v-model="enlargeDialog" max-width="600">
       <v-card>
         <v-img
           :src="stockOrder.paymentDetails.proofOfPayment"
@@ -339,11 +433,6 @@
         </v-img>
       </v-card>
     </v-dialog>
-
-    <v-card>
-      <v-card-title class="title">Shipment Details</v-card-title>
-      <ShipmentDetails :stockOrderId="stockOrder.id" />
-    </v-card>
 
     <v-dialog v-model="shipmentDialog" max-width="900">
       <v-card>
@@ -437,11 +526,11 @@ export default {
     pickupDate: null,
     menu: false,
 
-    enlargeDialog: false,
-    placeholder: null,
-
     updateBtnLoading: false,
     cancelBtnLoading: false,
+
+    enlargeDialog: false,
+    placeholder: null,
 
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
