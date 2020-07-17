@@ -192,6 +192,29 @@
               </v-img>
             </v-avatar>
           </v-card-text>
+          <v-container>
+            <v-layout row wrap align-center justify-center>
+              <v-flex xs12>
+                <v-btn
+                  color="red darken-2"
+                  dark block
+                  @click="deleteReseller"
+                  :loading="deleteResellerBtn"
+                >DELETE RESELLER
+                </v-btn>
+              </v-flex>
+            </v-layout>
+            
+            <v-flex xs12 class="mt-2">
+              <v-btn
+                color="orange darken-2"
+                dark block
+                @click="resendEmailVerification"
+                :loading="resendEmailBtn"
+              >RESEND EMAIL VERIFICATION
+              </v-btn>
+            </v-flex>
+          </v-container>
         </v-card>
         <div style="margin-bottom: 50px;"></div>
         <v-card>
@@ -271,21 +294,129 @@
 <script>
 import userPlaceholder from "@/assets/placeholder.png";
 import mixins from "@/mixins";
+import { AUTH, STORAGE } from "@/config/firebase";
+
 export default {
   props: ["account"],
   data: () => ({
-    dialog: false
+    dialog: false,
+    deleteResellerBtn: false,
+    resendEmailBtn: false,
   }),
   computed: {
     userPlaceholder() {
       return userPlaceholder || "";
+    },
+    user() {
+      return this.$store.getters['auth/GET_USER'];
     }
   },
   mixins: [mixins],
   methods: {
     show() {
       this.dialog = true;
-    }
+    },
+
+    async resendEmailVerification() {
+      console.log('resending email verification...');
+      this.resendEmailBtn = true;
+
+      try {
+
+        await this.$store.dispatch('distributors/RESEND_ACCOUNT_VERIFICATION', {
+          firstName: this.account.firstName,
+          email: this.account.email
+        });
+
+        console.log('email verification sent!');
+        this.resendEmailBtn = false;
+        this.$swal.fire({
+          type: "success",
+          title: "Success!",
+          text: "Email Verification link was re-sent!"
+        });
+
+      } catch(error) {
+        console.log(error);
+        this.resendEmailBtn = false;
+        this.$swal.fire({
+          type: "error",
+          title: "An Error Occurred!",
+          text: "An error occured while sending the account verification link! Please try again later."
+        });
+      }
+
+    },
+
+    async checkAccountPassword(password) {
+      try {
+        const userData = await AUTH.signInWithEmailAndPassword(this.user.email, password);
+        console.log('account received: ', userData);
+        return userData ? null : 'Password is incorrect!';
+      } catch(error) {
+        console.log(error);
+        return 'Password is incorrect!';
+      }
+    },
+
+    async deleteReseller() {
+      console.log('deleting reseller...');
+      this.deleteResellerBtn = true;
+
+      const answer = await this.$swal.fire({
+        title: "Confirm Reseller Deletion",
+        input: 'password',
+        showCancelButton: true,
+        confirmButtonText: "Delete Reseller",
+        cancelButtonText: "Cancel",
+        showCloseButton: true,
+        html: `enter your account password to confirm the deletion.`,
+        inputValidator: async (value) => {
+          if(!value) {
+            return 'Please enter your account password!';
+          
+          } else {
+            return await this.checkAccountPassword(value);
+          }
+        },
+        
+      });
+      
+      if (!answer.value || !answer.hasOwnProperty('value')) {
+        this.deleteResellerBtn = false;
+        console.log('cancelled reseller deletion');
+        return;
+      }
+
+      try {
+
+        await this.$store.dispatch('distributors/DELETE_RESELLER', {
+          id: this.account.id,
+          email: this.account.email,
+          userObj: this.account,
+        });
+
+        console.log('reseller deleted!');
+        this.deleteBranchBtn = false;
+        this.$swal.fire({
+          type: "success",
+          title: "Success!",
+          text: "Reseller was deleted!"
+        });
+
+        this.$router.push({ name: "Resellers" });
+
+      } catch(error) {
+        console.log(error);
+        this.deleteBranchBtn = false;
+        this.$swal.fire({
+          type: "error",
+          title: "An Error Occurred!",
+          text: "Reseller cant be delete due to an error. Please try again later."
+        });
+      }
+
+    },
   }
 };
 </script>
