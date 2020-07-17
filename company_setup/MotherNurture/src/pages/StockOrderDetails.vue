@@ -172,7 +172,7 @@
                             "
                           >{{ 'PROOF OF PAYMENT' | uppercase }}
                           </span>
-                          <span class="primary--text">{{
+                          <span v-else class="primary--text">{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
                           }}</span>
                         </v-list-tile-title>
