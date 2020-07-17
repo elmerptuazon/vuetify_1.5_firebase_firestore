@@ -3,15 +3,15 @@ var prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  apiKey: '"AIzaSyDAxQ8dvBH2CQNkvoFuklqVRV76KaRyKJ0"',
-  authDomain: '"appselltestapp.firebaseapp.com"',
-  databaseURL: '"https://appselltestapp.firebaseio.com"',
-  projectId: '"appselltestapp"',
-  storageBucket: '"appselltestapp.appspot.com"',
-  messagingSenderId: '"671506060709"',
-  appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
-  measurementId: '"G-XV2JER7LNT"',
-  primaryColor: '"#0E1E38"',
-  companyName: '"AppSell Test App"',
-  accountManagementURL: '"https://us-central1-appselltestapp.cloudfunctions.net/accounts"'
+  apiKey: '"AIzaSyAyIGrN6sdHpZciGeZE7c1__qdMaA0N9wI"',
+  authDomain: '"mother-nature-dev.firebaseapp.com"',
+  databaseURL: '"https://mother-nature-dev.firebaseio.com"',
+  projectId: '"mother-nature-dev"',
+  storageBucket: '"mother-nature-dev.appspot.com"',
+  messagingSenderId: '"923236145582"',
+  appId: '"1:923236145582:web:073a7ed83eda71fdcf103f"',
+  measurementId: '"G-QWTXNCX24B"',
+  primaryColor: '"#9fc45c"',
+  companyName: '"Mother Nurture"',
+  accountManagementURL: '"https://us-central1-mother-nature-dev.cloudfunctions.net/accounts"'
 })
