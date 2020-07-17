@@ -8,4 +8,6 @@ module.exports = {
   messagingSenderId: '',
   appId: '',
   primaryColor: '"#9fc45c"',
+  companyName: '"Mother Nurture"',
+  accountManagementURL: '"https://us-central1-mother-nature-dev.cloudfunctions.net/accounts"'
 }

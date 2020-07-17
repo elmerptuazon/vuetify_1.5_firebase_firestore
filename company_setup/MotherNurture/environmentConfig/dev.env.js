@@ -12,4 +12,6 @@ module.exports = merge(prodEnv, {
   appId: '"1:923236145582:web:073a7ed83eda71fdcf103f"',
   measurementId: '"G-QWTXNCX24B"',
   primaryColor: '"#9fc45c"',
+  companyName: '"Mother Nurture"',
+  accountManagementURL: '"https://us-central1-mother-nature-dev.cloudfunctions.net/accounts"'
 })
