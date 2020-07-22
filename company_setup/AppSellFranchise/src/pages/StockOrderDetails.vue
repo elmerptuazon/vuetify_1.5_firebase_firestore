@@ -29,12 +29,6 @@
                         <v-list-tile-title>
                           {{ stockOrder.user.branchName }} - {{ stockOrder.user.agentId }}
                         </v-list-tile-title>
-                        <!-- <v-list-tile-title>
-                          {{ stockOrder.user.firstName }}
-                          {{ stockOrder.user.middleInitial || "" }}
-                          {{ stockOrder.user.lastName }} -
-                          {{ stockOrder.user.agentId }}</v-list-tile-title
-                        > -->
                       </v-list-tile-content>
                     </v-list-tile>
                   </v-list>
@@ -109,11 +103,13 @@
                   <v-spacer></v-spacer>
                   <v-btn
                     v-if="stockOrder.paymentDetails.paymentType != 'CC'"
-                    @click="UpdatePayment()"
+                    @click="UpdatePayment('paid')"
                     color="primary"
                     :class="[
-                      stockOrder.paymentDetails.paymentStatus.toLowerCase() ===
-                      'paid'
+                      stockOrder.paymentDetails.paymentStatus.toLowerCase() === 'paid'
+                        ? 'v-btn--disabled '
+                        : '',
+                      stockOrder.paymentDetails.paymentStatus.toLowerCase() === '-'
                         ? 'v-btn--disabled '
                         : ''
                     ]"
@@ -123,62 +119,82 @@
                 <v-divider></v-divider>
                 <v-card-text>
                   <v-list subheader>
-                    <v-list-tile>
-                      <v-list-tile-content>
-                        <v-list-tile-sub-title
-                          >Payment Type</v-list-tile-sub-title
-                        >
-                        <v-list-tile-title>
-                          <span
-                            v-if="
-                              stockOrder.paymentDetails.paymentType === 'CC'
-                            "
-                            >Credit Card</span
-                          >
-                          <span
-                            v-else-if="
-                              stockOrder.paymentDetails.paymentType === 'GCash'
-                            "
-                            >E-Wallet: GCash</span
-                          >
-                          <span
-                            v-else-if="
-                              stockOrder.paymentDetails.paymentType === 'GrabPay'
-                            "
-                            >E-Wallet: Grab Pay</span
-                          >
-                          <span
-                            v-else-if="
-                              stockOrder.paymentDetails.paymentType === 'COD'
-                            "
-                            >Cash On Delivery / Upon Pick-Up</span
-                          >
-                          <span v-else>N/A</span>
-                        </v-list-tile-title>
-                      </v-list-tile-content>
-                    </v-list-tile>
-
                     <v-list-tile
                       ><v-list-tile-content>
                         <v-list-tile-sub-title
                           >Total Amount</v-list-tile-sub-title
                         >
                         <v-list-tile-title
-                          >{{ stockOrder.paymentDetails.amount | currency("P ") }}
+                          >{{ stockOrder.paymentDetails.amount | currency("&#8369; ") }}
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
-                    <v-list-tile
+                    
+                    <v-list-tile class="mt-2"
                       ><v-list-tile-content>
                         <v-list-tile-sub-title>Status</v-list-tile-sub-title>
                         <v-list-tile-title>
-                          <span class="primary--text">{{
+                          <span class="primary--text" v-if="stockOrder.paymentDetails.paymentStatus === 'pending'">{{
+                             'PROOF OF PAYMENT' | uppercase
+                          }}</span>
+                          <span class="primary--text" v-else>{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
                           }}</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
                   </v-list>
+                  
+                  <v-layout row align-center justify-start wrap px-2>
+                    <v-flex xs12>
+                      <div class="body-1 grey--text">Proof of Payment</div>
+                    </v-flex>
+                    <v-flex xs12 mt-2>
+                      <v-img
+                        v-if="stockOrder.paymentDetails.proofOfPayment"
+                        :src="stockOrder.paymentDetails.proofOfPayment"
+                        :lazy-src="placeholder"
+                        max-height="250px"
+                        max-width="250px"
+                        style="border: solid 2px;"
+                      >
+                        <v-btn 
+                          v-if="stockOrder.paymentDetails.proofOfPayment"
+                          color="primary" @click="enlargeDialog = true"
+                          depressed class="overlayImage"
+                        >Enlarge</v-btn>
+                      </v-img>
+
+                      <v-img 
+                        v-else
+                        :src="placeholder" 
+                        :lazy-src="placeholder"
+                        max-height="250px"
+                        max-width="250px" 
+                        style="border: solid 2px;"
+                      >
+                        <div
+                          class="
+                            body-2 
+                            pa-1
+                            text-xs-center
+                            font-weight-bold
+                            primary white--text 
+                            overlayImageNoImg"
+                          style="width: 100px;"
+                        >NO PROOF OF PAYMENT YET</div>
+                      </v-img>
+                    </v-flex>
+                    
+                    <v-flex 
+                      xs12 mt-3
+                      v-if="stockOrder.paymentDetails.paymentStatus === 'pending'"
+                    >
+                      <v-btn block color="red" outline @click="UpdatePayment('denied')">
+                        TAG AS DENIED
+                      </v-btn>
+                    </v-flex>
+                  </v-layout>
                 </v-card-text>
               </v-card>
               <div v-else class="body-2">No Payment Details Provided.</div>
@@ -216,7 +232,7 @@
                         >
                         <v-list-tile-title>
                           <span v-if="stockOrder.logisticsDetails">{{
-                            stockOrder.logisticsDetails.shippingFee | currency("P ")
+                            stockOrder.logisticsDetails.shippingFee | currency("&#8369; ")
                           }}</span>
                           <span v-else>N/A</span>
                         </v-list-tile-title>
@@ -297,13 +313,34 @@
         </v-card>
       </v-card-text>
       <v-divider></v-divider>
-      <!-- <v-card-actions v-if="item.status === 'pending'">
-				<v-spacer></v-spacer>
-				<v-btn color="green" dark large @click="updateStatus('delivered')">DELIVERED</v-btn>
-				<v-btn color="green" outline dark large @click="updateStatus('collected')">COLLECTED</v-btn>
-			</v-card-actions> -->
     </v-card>
+
     <div class="mb-2"></div>
+
+    <v-dialog v-model="enlargeDialog" max-width="600">
+      <v-card>
+        <v-img
+          :src="stockOrder.paymentDetails.proofOfPayment"
+          :lazy-src="placeholder"
+          contain
+          v-if="stockOrder.paymentDetails.proofOfPayment"
+        >
+          <v-layout
+            slot="placeholder"
+            fill-height
+            align-center
+            justify-center
+            ma-0
+          >
+            <v-progress-circular
+              indeterminate
+              color="grey lighten-5"
+            ></v-progress-circular>
+          </v-layout>
+        </v-img>
+      </v-card>
+    </v-dialog>
+
     <v-card>
       <v-card-title class="title">Shipment Details</v-card-title>
       <ShipmentDetails :stockOrderId="stockOrder.id" />
@@ -380,6 +417,7 @@
 import mixins from "@/mixins";
 import { FB } from "@/config/firebase";
 import userPlaceholder from "@/assets/placeholder.png";
+import Placeholder from '@/assets/no-image.png';
 import AccountData from "@/components/AccountData";
 import Toast from "@/components/Toast";
 import StockOrderItems from "@/components/StockOrderItems";
@@ -403,11 +441,16 @@ export default {
     updateBtnLoading: false,
     cancelBtnLoading: false,
 
+    enlargeDialog: false,
+    placeholder: null,
+
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
     completed: false
   }),
   async created() {
+    this.placeholder = Placeholder;
+
     this.loading = true;
     try {
       const id = this.$route.params.id;
@@ -832,10 +875,10 @@ export default {
         this.updateStatus("cancelled");
       }
     },
-    async UpdatePayment() {
+    async UpdatePayment(action) {
       const response = await this.$swal.fire({
         title: "Are you sure?",
-        text: "Are you sure you want to tag the payment of this order as PAID?",
+        text: `Are you sure you want to tag the payment of this order as ${action.toUpperCase()}?`,
         type: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -847,16 +890,29 @@ export default {
         try {
           let updateObj = {
             id: this.$route.params.id,
-            paymentDetails: this.stockOrder.paymentDetails
+            paymentDetails: this.stockOrder.paymentDetails,
           };
 
-          updateObj.paymentDetails.paymentStatus = "Paid";
+          updateObj.paymentDetails.paymentStatus = action;
           updateObj.paymentDetails.paymentDate = Date.now();
 
-          await this.$store.dispatch(
-            "stock_orders/UPDATE_STOCK_ORDER_PAYMENT_DETAILS",
-            updateObj
-          );
+          if(action === 'denied') {
+            updateObj.read = false;  
+            delete updateObj.id;
+
+            await this.$store.dispatch(
+              "stock_orders/UPDATE_STOCK_ORDER_DETAILS", {
+                referenceID: this.$route.params.id,
+                updateObject: updateObj
+              }
+            );
+
+          } else {
+            await this.$store.dispatch(
+              "stock_orders/UPDATE_STOCK_ORDER_PAYMENT_DETAILS",
+              updateObj
+            );
+          }
 
           this.$swal.fire({
             type: "success",
@@ -891,4 +947,20 @@ export default {
   }
 };
 </script>
-</template>
+<style scoped>
+
+  .overlayImage {
+    position: absolute;
+    top: 38%;
+    left: 25%;
+    z-index: 1;
+  }
+
+  .overlayImageNoImg {
+    position: absolute;
+    top: 32%;
+    left: 28%;
+    z-index: 1;
+  }
+
+</style>

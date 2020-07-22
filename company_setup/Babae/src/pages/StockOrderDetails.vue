@@ -97,7 +97,7 @@
                   <v-spacer></v-spacer>
                   <v-btn
                     v-if="stockOrder.paymentDetails.paymentType != 'CC'"
-                    @click="UpdatePayment()"
+                    @click="UpdatePayment('paid')"
                     color="primary"
                     :class="[
                       stockOrder.paymentDetails.paymentStatus.toLowerCase() ===
@@ -125,9 +125,27 @@
                           >
                           <span
                             v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'GCash'
+                            "
+                            >E-Wallet: GCash</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'GrabPay'
+                            "
+                            >E-Wallet: Grab Pay</span
+                          >
+                          <span
+                            v-else-if="
                               stockOrder.paymentDetails.paymentType === 'COD'
                             "
                             >Cash On Delivery / Upon Pick-Up</span
+                          >
+                          <span
+                            v-else-if="
+                              stockOrder.paymentDetails.paymentType === 'POP'
+                            "
+                            >Proof of Payment</span
                           >
                           <span v-else>N/A</span>
                         </v-list-tile-title>
@@ -140,7 +158,7 @@
                           >Total Amount</v-list-tile-sub-title
                         >
                         <v-list-tile-title
-                          >{{ stockOrder.paymentDetails.amount }}
+                          >{{ stockOrder.paymentDetails.amount | currency("&#8369; ") }}
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
@@ -148,13 +166,74 @@
                       ><v-list-tile-content>
                         <v-list-tile-sub-title>Status</v-list-tile-sub-title>
                         <v-list-tile-title>
-                          <span class="primary--text">{{
+                          <span class="primary--text" 
+                            v-if="stockOrder.paymentDetails.paymentStatus === 'pending' &&
+                              stockOrder.paymentDetails.paymentType === 'POP'  
+                            "
+                          >{{ 'PROOF OF PAYMENT' | uppercase }}
+                          </span>
+                          <span v-else class="primary--text">{{
                             stockOrder.paymentDetails.paymentStatus | uppercase
                           }}</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
                   </v-list>
+
+                  <v-layout 
+                    row align-center justify-start wrap px-2 
+                    v-if="stockOrder.paymentDetails.paymentType === 'POP'"
+                  >
+                    <v-flex xs12>
+                      <div class="body-1 grey--text">Proof of Payment</div>
+                    </v-flex>
+                    <v-flex xs12 mt-2>
+                      <v-img
+                        v-if="stockOrder.paymentDetails.proofOfPayment"
+                        :src="stockOrder.paymentDetails.proofOfPayment"
+                        :lazy-src="placeholder"
+                        max-height="250px"
+                        max-width="250px"
+                        style="border: solid 2px;"
+                      >
+                        <v-btn 
+                          v-if="stockOrder.paymentDetails.proofOfPayment"
+                          color="primary" @click="enlargeDialog = true"
+                          depressed class="overlayImage"
+                        >Enlarge</v-btn>
+                      </v-img>
+
+                      <v-img 
+                        v-else
+                        :src="placeholder" 
+                        :lazy-src="placeholder"
+                        max-height="250px"
+                        max-width="250px" 
+                        style="border: solid 2px;"
+                      >
+                        <div
+                          class="
+                            body-2 
+                            pa-1
+                            text-xs-center
+                            font-weight-bold
+                            primary white--text 
+                            overlayImageNoImg"
+                          style="width: 100px;"
+                        >NO PROOF OF PAYMENT YET</div>
+                      </v-img>
+                    </v-flex>
+                    
+                    <v-flex 
+                      xs12 mt-3
+                      v-if="stockOrder.paymentDetails.paymentStatus === 'pending'"
+                    >
+                      <v-btn block color="red" outline @click="UpdatePayment('denied')">
+                        TAG AS DENIED
+                      </v-btn>
+                    </v-flex>
+                  </v-layout>
+
                 </v-card-text>
               </v-card>
               <div v-else class="body-2">No Payment Details Provided.</div>
@@ -183,19 +262,81 @@
                       </v-list-tile-content>
                     </v-list-tile>
 
+                    <!-- Display shipping fee when it is not a free delivery and is not for pick-up -->
                     <v-list-tile
+                      v-if="stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'"
                       ><v-list-tile-content>
                         <v-list-tile-sub-title
                           >Shipping Fee</v-list-tile-sub-title
                         >
                         <v-list-tile-title>
                           <span v-if="stockOrder.logisticsDetails">{{
-                            stockOrder.logisticsDetails.shippingFee
+                            stockOrder.logisticsDetails.shippingFee | currency("&#8369; ")
                           }}</span>
                           <span v-else>N/A</span>
                         </v-list-tile-title>
                       </v-list-tile-content>
                     </v-list-tile>
+
+                    <v-list-tile 
+                      v-if="
+                        stockOrder.logisticsDetails.isFreeShipping
+                        && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
+                      ">
+                      <v-list-tile-content>
+                        <v-list-tile-sub-title
+                          >Is this a Free Delivery?</v-list-tile-sub-title
+                        >
+                        <v-list-tile-title>
+                          <span v-if="stockOrder.logisticsDetails.isFreeShipping">YES</span>
+                          <span v-else>NO</span>
+                        </v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                    
+                    <div  
+                      v-if="
+                          stockOrder.logisticsDetails.isDiscountedDelivery
+                          && stockOrder.logisticsDetails.logisticProvider.toLowerCase() !== 'pick-up'
+                        ">
+                      <v-list-tile >
+                        <v-list-tile-content>
+                          <v-list-tile-sub-title
+                            >Is this a Discounted Delivery?</v-list-tile-sub-title
+                          >
+                          <v-list-tile-title>YES</v-list-tile-title>
+                        </v-list-tile-content>
+                      </v-list-tile>
+
+                      <v-list-tile>
+                        <v-list-tile-content>
+                          <v-list-tile-sub-title
+                            >Shipping Fee Discount</v-list-tile-sub-title
+                          >
+                          <v-list-tile-title>
+                            <span v-if="stockOrder.logisticsDetails.discountType === 'amount'">
+                              {{ stockOrder.logisticsDetails.discountAmount | currency("&#8369; ") }}
+                            </span>
+                            <span v-else-if="stockOrder.logisticsDetails.discountType === 'percentage'">
+                              {{ stockOrder.logisticsDetails.discountAmount }} %
+                            </span>
+                            <span v-else> </span>
+                          </v-list-tile-title>
+                        </v-list-tile-content>
+                      </v-list-tile>
+                      
+                      <v-list-tile>
+                        <v-list-tile-content>
+                          <v-list-tile-sub-title
+                            >Reseller's Shipping Fee</v-list-tile-sub-title
+                          >
+                          <v-list-tile-title>
+                            <span>{{ stockOrder.logisticsDetails.resellersShippingFee | currency("&#8369; ") }}</span>
+                          </v-list-tile-title>
+                        </v-list-tile-content>
+                      </v-list-tile>
+                    </div>
+                    
                   </v-list>
                 </v-card-text>
               </v-card>
@@ -211,6 +352,8 @@
             <v-btn
               color="success"
               @click="updateStatus('processing')"
+              :loading="updateBtnLoading"
+              :disabled="updateBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() != 'pending'
                   ? 'v-btn--disabled '
@@ -239,6 +382,8 @@
             <v-btn
               color="error"
               @click="CancelOrder()"
+              :loading="cancelBtnLoading"
+              :disabled="cancelBtnLoading"
               :class="[
                 stockOrder.status.toLowerCase() === 'cancelled'
                   ? 'v-btn--disabled '
@@ -259,10 +404,35 @@
 			</v-card-actions> -->
     </v-card>
     <div class="mb-2"></div>
+
     <v-card>
       <v-card-title class="title">Shipment Details</v-card-title>
       <ShipmentDetails :stockOrderId="stockOrder.id" />
     </v-card>
+
+     <v-dialog v-model="enlargeDialog" max-width="600">
+      <v-card>
+        <v-img
+          :src="stockOrder.paymentDetails.proofOfPayment"
+          :lazy-src="placeholder"
+          contain
+          v-if="stockOrder.paymentDetails.proofOfPayment"
+        >
+          <v-layout
+            slot="placeholder"
+            fill-height
+            align-center
+            justify-center
+            ma-0
+          >
+            <v-progress-circular
+              indeterminate
+              color="grey lighten-5"
+            ></v-progress-circular>
+          </v-layout>
+        </v-img>
+      </v-card>
+    </v-dialog>
 
     <v-dialog v-model="shipmentDialog" max-width="900">
       <v-card>
@@ -335,6 +505,7 @@
 import mixins from "@/mixins";
 import { FB } from "@/config/firebase";
 import userPlaceholder from "@/assets/placeholder.png";
+import Placeholder from '@/assets/no-image.png';
 import AccountData from "@/components/AccountData";
 import Toast from "@/components/Toast";
 import StockOrderItems from "@/components/StockOrderItems";
@@ -355,6 +526,12 @@ export default {
     pickupDate: null,
     menu: false,
 
+    updateBtnLoading: false,
+    cancelBtnLoading: false,
+
+    enlargeDialog: false,
+    placeholder: null,
+
     //tells the partialShipment component if the previously created
     //partial shipment list has been submitted already
     completed: false
@@ -362,11 +539,44 @@ export default {
   async created() {
     this.loading = true;
     try {
-      const id = this.$route.params;
+      const id = this.$route.params.id;
+      
+      if(!this.stockOrder.isRead) {
+        await this.$store.dispatch('stock_orders/UPDATE_STOCK_ORDER_DETAILS', {
+          referenceID: id,
+          updateObject: { isRead: true }
+        });
+      }
+
+      const QTYIsDeducted = (!this.stockOrder.isQTYDeducted || !this.stockOrder.hasOwnProperty('isQTYDeducted'));
+      const shipmentsToRecieve = this.stockOrder.shipmentsToReceive === 0;
+      const isStockOrderShipped = (this.stockOrder.status === 'shipped' || this.stockOrder.status === 'partially shipped');
+      
+      console.log(QTYIsDeducted, shipmentsToRecieve, isStockOrderShipped);
+      
+      if((QTYIsDeducted && shipmentsToRecieve) && isStockOrderShipped) {
+        for(const item of this.stockOrder.items) {
+          let updatedVariant = {
+            allocatedQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1),
+            onHandQTY: FB.firestore.FieldValue.increment(item.shippedQty * -1) 
+          };
+
+          await this.$store.dispatch('inventory/UPDATE_MULTIPLE_PRODUCT_FIELDS', {
+            id: item.variantId,
+            updatedDetails: updatedVariant
+          });
+        }
+
+        await this.$store.dispatch('stock_orders/UPDATE_STOCK_ORDER_DETAILS', {
+          referenceID: id,
+          updateObject: { isQTYDeducted: true }
+        });
+      }
 
       if (!id) {
         this.$router.push({ name: "StockOrders" });
       }
+
     } catch (error) {
       this.$refs.toast.show("error", "An error occurred");
       console.log(error);
@@ -386,6 +596,9 @@ export default {
           qtyToShip: item.qtyToShip,
           productName: item.name,
           productId: item.productId,
+          variantId: item.variantId,
+          sku: item.sku,
+          variantName: item.variantName,
           price: item.price,
           qtyToShipPriceTotal: item.price * item.qtyToShip
         };
@@ -399,6 +612,13 @@ export default {
       console.log(this.itemsToShip);
     },
     async updateStatus(status) {
+      if(status === 'processing') {
+        this.updateBtnLoading = true;
+      }
+      else if(status === 'cancelled') {
+        this.cancelBtnLoading = true;
+      }
+
       try {
         let statusTimeline = this.stockOrder.statusTimeline;
         if (this.stockOrder.statusTimeline) {
@@ -416,11 +636,25 @@ export default {
           id: this.$route.params.id
         });
 
+        //adjust the allocatedQTY field of the variants associated to this stockOrder
+        if(status === 'cancelled') {
+          for(const item of this.stockOrder.items) {
+            await this.$store.dispatch('inventory/UPDATE_PRODUCT_DETAIL', {
+              id: item.variantId,
+              key: 'allocatedQTY',
+              value: FB.firestore.FieldValue.increment(item.qty * -1), //decrement the allocatedQTY field of the variant
+            });
+          }
+        }
+
         //this.stockOrder.status = status;
         this.$refs.toast.show(
           "success",
           "Order has been successfully marked as " + status
         );
+
+        this.updateBtnLoading = false;
+        this.cancelBtnLoading = false;
       } catch (error) {
         this.$refs.toast.show("error", "An error occurred");
         console.log(error);
@@ -460,6 +694,9 @@ export default {
                 productName: item.name,
                 productId: item.productId,
                 price: item.resellerPrice,
+                variantId: item.variantId,
+                sku: item.sku,
+                variantName: item.variantName,
                 qtyToShipPriceTotal:
                   item.resellerPrice * (item.qty - item.shippedQty)
               };
@@ -501,6 +738,9 @@ export default {
                 productId: item.productId,
                 qty: item.qty,
                 unique: item.unique,
+                variantId: item.variantId,
+                sku: item.sku,
+                variantName: item.variantName,
                 resellerPrice: item.resellerPrice,
                 shippedQty: item.qty - item.shippedQty + item.shippedQty
               };
@@ -594,6 +834,9 @@ export default {
                   qty: item.qty,
                   unique: item.unique,
                   resellerPrice: item.resellerPrice,
+                  variantId: item.variantId,
+                  sku: item.sku,
+                  variantName: item.variantName,
                   shippedQty: item.shippedQty
                 };
                 return updatedStockOrder;
@@ -606,6 +849,9 @@ export default {
                   qty: item.qty,
                   unique: item.unique,
                   resellerPrice: item.resellerPrice,
+                  variantId: item.variantId,
+                  sku: item.sku,
+                  variantName: item.variantName,
                   shippedQty: item.shippedQty + shippedQty
                 };
                 return updatedStockOrder;
@@ -717,10 +963,10 @@ export default {
         this.updateStatus("cancelled");
       }
     },
-    async UpdatePayment() {
+    async UpdatePayment(action) {
       const response = await this.$swal.fire({
         title: "Are you sure?",
-        text: "Are you sure you want to tag the payment of this order as PAID?",
+        text: `Are you sure you want to tag the payment of this order as ${action.toUpperCase()}?`,
         type: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -732,16 +978,29 @@ export default {
         try {
           let updateObj = {
             id: this.$route.params.id,
-            paymentDetails: this.stockOrder.paymentDetails
+            paymentDetails: this.stockOrder.paymentDetails,
           };
 
-          updateObj.paymentDetails.paymentStatus = "Paid";
+          updateObj.paymentDetails.paymentStatus = action;
           updateObj.paymentDetails.paymentDate = Date.now();
 
-          await this.$store.dispatch(
-            "stock_orders/UPDATE_STOCK_ORDER_PAYMENT_DETAILS",
-            updateObj
-          );
+          if(action === 'denied') {
+            updateObj.read = false;  
+            delete updateObj.id;
+
+            await this.$store.dispatch(
+              "stock_orders/UPDATE_STOCK_ORDER_DETAILS", {
+                referenceID: this.$route.params.id,
+                updateObject: updateObj
+              }
+            );
+
+          } else {
+            await this.$store.dispatch(
+              "stock_orders/UPDATE_STOCK_ORDER_PAYMENT_DETAILS",
+              updateObj
+            );
+          }
 
           this.$swal.fire({
             type: "success",
@@ -776,4 +1035,18 @@ export default {
   }
 };
 </script>
-</template>
+<style scoped>
+  .overlayImage {
+    position: absolute;
+    top: 38%;
+    left: 25%;
+    z-index: 1;
+  }
+
+  .overlayImageNoImg {
+    position: absolute;
+    top: 32%;
+    left: 28%;
+    z-index: 1;
+  }
+</style>

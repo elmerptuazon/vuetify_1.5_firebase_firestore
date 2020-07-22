@@ -4,7 +4,7 @@
       fixed
       :clipped="$vuetify.breakpoint.lgAndUp"
       app
-      width="250px"
+      width="270px"
       v-model="drawer"
     >
       <v-list dense>
@@ -38,6 +38,29 @@
               </v-list-tile-action>
             </v-list-tile>
           </v-list-group>
+          <v-list-tile 
+            v-else-if="item.url === 'Inventory'" 
+            :key="item.text" 
+            :to="{ name: item.url } "
+          >
+            <v-list-tile-action>
+              <v-icon size="18">{{ item.icon }}</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>
+                <v-layout align-center justify-end>
+                  <v-flex xs11>
+                    {{ item.text }}
+                  </v-flex>
+                  <v-flex xs2>
+                    <v-avatar color="red" size="22" dark v-show="inventoryNotif">
+                      <div class="overline white--text font-weight-regular">{{ inventoryNotif }}</div>
+                    </v-avatar>
+                  </v-flex>
+                </v-layout>
+              </v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
           <v-list-tile 
             v-else-if="item.url === 'StockOrders'" 
             :key="item.text" 
@@ -107,6 +130,29 @@
               </v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
+          <v-list-tile 
+            v-else-if="item.url === 'Support'" 
+            :key="item.text" 
+            :to="{ name: item.url } "
+          >
+            <v-list-tile-action>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>
+                <v-layout align-center justify-end>
+                  <v-flex xs10>
+                    {{ item.text }}
+                  </v-flex>
+                  <v-flex xs2 >
+                    <v-avatar color="red" size="22" dark v-show="newSupportMessageCount">
+                      <div class="overline white--text">{{ newSupportMessageCount }}</div>
+                    </v-avatar>
+                  </v-flex>
+                </v-layout>
+              </v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
           <v-list-tile v-else :to="{ name: item.url }" :key="item.text">
             <v-list-tile-action>
               <v-icon>{{ item.icon }}</v-icon>
@@ -134,7 +180,7 @@
         ></v-toolbar-side-icon>
         <Logo />
         <span class="hidden-sm-and-down">
-          
+          <!-- Ever Bilena Management Website -->
         </span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
@@ -187,7 +233,11 @@ export default {
 
     newStockOrdersCount() {
       const count = this.$store.getters['stock_orders/GET_NEW_ORDER_COUNT'];
-      console.log('this is the new default.vue', count);
+      return count;
+    },
+
+    inventoryNotif() {
+      const count = this.$store.getters['inventory/GET_INVENTORY_NOTIF'];
       return count;
     },
 
@@ -199,6 +249,10 @@ export default {
     newMessagesCount() {
       const count = this.$store.getters['conversations/GET_NEW_MESSAGES_COUNT'];
       return count;
+    },
+
+    newSupportMessageCount() {
+      return this.$store.getters['support/GET_SUPPORT_NOTIF'];
     }
   },
   components: {
@@ -206,7 +260,6 @@ export default {
   }
 };
 </script>
-
 <style>
   .swal2-container .swal2-popup {
     font-family: 'Roboto', sans-serif;

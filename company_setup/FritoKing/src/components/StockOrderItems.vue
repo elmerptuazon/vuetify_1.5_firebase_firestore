@@ -18,25 +18,13 @@
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
         <td class="text-xs-center">{{ props.item.remainingQty }}</td>
-        <td class="text-xs-center">{{ props.item.total | currency("P") }}</td>
+        <td class="text-xs-center">{{ props.item.total | currency("&#8369;") }}</td>
       </tr>
     </template>
     <template slot="footer">
-      <!-- <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong>Subtotal: {{ subTotal | currency("P") }}</strong>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong
-            >Discount: <span v-if="discount">{{ discount }}%</span></strong
-          >
-        </td>
-      </tr> -->
       <tr>
         <td colspan="7" class="text-xs-right">
-          <strong>Total: {{ total | currency("P") }}</strong>
+          <strong>Total: {{ total | currency("&#8369;") }}</strong>
         </td>
       </tr>
     </template>
@@ -94,7 +82,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr}: ${item.attributes[attr]}`;
+            attributes += `${item.attributes[attr]}`;
           }
         });
 
@@ -106,7 +94,10 @@ export default {
           total: item.qty * item.price,
           name: item.name,
           attributes: attributes,
-          image: item.downloadURL
+          image: item.downloadURL,
+          variantId: item.variantId,
+          sku: item.sku,
+          variantName: item.variantName
         };
       });
 

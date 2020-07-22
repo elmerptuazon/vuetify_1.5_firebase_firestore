@@ -720,7 +720,7 @@ export default {
       this.product.pictureName = item.pictureName;
       this.product.id = item.id;
       this.product.weight = item.weight;
-      this.product.minimumOrder = item.minimumOrder;
+      this.product.minimumOrder = item.minimumOrder || 0;
       this.product.attributes = item.attributes || [];
       this.$refs.productFile.files.value = null;
       
@@ -785,7 +785,6 @@ export default {
         this.resetVariantTable();
       }
     },
-
 
     addVariant(item) {
       if(!item.sku || !item.name || !item.minimumOrder) return;
@@ -876,7 +875,7 @@ export default {
           };
 
           if(!this.product.attributes.length) {
-            newProduct.minimumOrder = this.product.minimumOrder;
+            newProduct.minimumOrder = Number(this.product.minimumOrder);
           }
 
           console.log(newProduct);
@@ -948,6 +947,7 @@ export default {
           this.addProductButtonDisabled = false;
           this.addProductDialog = false;
           this.$refs.productFile.value = null;
+          this.product = {};
 
           this.resetVariantTable();
 
@@ -983,7 +983,7 @@ export default {
         };
 
         if(!this.product.attributes.length) {
-          updatedProductData.minimumOrder = this.product.minimumOrder;
+          updatedProductData.minimumOrder = Number(this.product.minimumOrder);
         }
 
         console.log("EDIT PRODUCT DETAILS: ", updatedProductData);
@@ -1041,6 +1041,7 @@ export default {
 
         this.addProductButtonDisabled = false;
         this.addProductDialog = false;
+        this.product = {};
         this.resetVariantTable();
 
         this.$swal.fire({

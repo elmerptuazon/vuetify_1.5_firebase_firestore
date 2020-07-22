@@ -68,6 +68,24 @@
 		<sweet-modal :icon="modal.icon" ref="modal" :blocking="modal.blocking">
 			{{modal.text}}
 		</sweet-modal>
+
+		<v-dialog v-model="waitingDialog" persistent max-width="400px">
+			<v-card>
+				<v-card-title class="display-1 font-weight-bold text-xs-center red--text">
+					{{ statusTitle }}
+				</v-card-title>
+				<v-container>
+					<v-layout row align-center justify-center wrap>
+						<v-flex xs12 class="body-1 text-xs-center">
+							<v-progress-circular indeterminate color="primary" size="80" width="6"></v-progress-circular>
+						</v-flex>
+						<v-flex mt-5 xs12 class="text-xs-center">
+							{{ statusMessage }}
+						</v-flex>
+					</v-layout>
+				</v-container>
+			</v-card>
+		</v-dialog>
 	</v-container>
 </template>
 
@@ -102,6 +120,10 @@ export default {
 		images: [],
 		excelButtonLoading: false,
 		excelDownloadURL: null,
+
+		waitingDialog: false,
+		statusTitle: null,
+		statusMessage: null,
 	}),
 	async created() {
 		this.excelDownloadURL = await this.$store.dispatch(
@@ -235,6 +257,21 @@ export default {
 			}
 		},
 
+		sleep(ms) {
+			console.log('sleeping for ' + ms);
+			return new Promise(resolve => setTimeout(resolve, ms));
+		},
+
+		openWaitingDialog() {
+			this.waitingDialog = true;
+		},
+
+		closeWaitingDialog() {
+			this.waitingDialog = false;
+			this.statusMessage = null;
+			this.statusTitle = null;
+		},
+
 		async uploadExcelFile() {
 			this.excelButtonLoading = true;
 			if (!this.$refs.excelFile.files[0]) {
@@ -256,6 +293,11 @@ export default {
 				this.excelButtonLoading = false;
 				return;
 			} 
+
+			this.statusTitle = "Please do not go to other pages, or close this dialog";
+			this.statusMessage = "Processing excel file...";
+
+			this.openWaitingDialog();
 
 			const categories = await this.$store.dispatch('categories/FETCH_ALL_CATEGORIES');
 
@@ -279,13 +321,15 @@ export default {
 			for (let i = 0; i != sheetsLength; i++) {
 				let worksheet = workbook.Sheets[workbook.SheetNames[i]];
 				let categoryName = workbook.SheetNames[i];
+				
+				this.statusMessage = `Reading sheet ${categoryName}...`;
 
-				//check if current category on excel is existing in the db
+				// check if current category on excel is existing in the db
 				const index = categories.findIndex(
 					item => item.name === categoryName
 				);
 				let categoryData = {};
-
+				this.statusMessage = `Saving ${categoryName} to database...`;
 				if (index == -1) {
 					categoryData = {
 						name: categoryName,
@@ -305,12 +349,15 @@ export default {
 					);
 
 					categoryData.id = uploadedCategory.id;
+
 				} else {
 					categoryData = categories[index];
 					console.log("EXISTING CATEGORY: ", categoryData);
 				}
 
 				let productList = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+
+				this.statusMessage = `Reading products in ${categoryName}...`;
 
 				productList = await productList.map(p => {
 
@@ -321,6 +368,7 @@ export default {
 						price: Number(p.Price),
 						description: p.Description,
 						weight: Number(p.Weight),
+						minimumOrder: Number(p['Minimum Order']),
 						attributes: [],
 						isOutofStock: false,
 						createdAt: Date.now(),
@@ -331,8 +379,11 @@ export default {
 						})
 					};
 				});
-				//console.log(`Current Category: ${currentCategory.categoryName} & Product List: ${productList}`);
-
+				console.log('current category: ', categoryData);
+				console.log('product list: ', productList);
+				
+				this.statusMessage = `Saving products to database...`;
+				
 				let totalProducts = 0;
 				const productLength = productList.length;
 				for (let i = 0; i < productLength; i++) {
@@ -353,12 +404,23 @@ export default {
 							productId: productId,
 							productData: product
 						});
+						
+						this.statusMessage = 'Adding product to inventory...';
+						product.id = productId;
+						await this.$store.dispatch('inventory/EDIT_VARIANTS_FROM_PRODUCT', {
+							productData: product
+						});
 
 					} else {
 						await this.$store.dispatch("products/ADD_PRODUCT", {
 							productData: product
 						});
 						totalProducts += 1;
+
+						this.statusMessage = 'Adding product to inventory...';
+						await this.$store.dispatch('inventory/CREATE_VARIANTS_FROM_PRODUCT', {
+							productData: product
+						});
 					}
 				}
 
@@ -371,11 +433,12 @@ export default {
 			}
 
 			this.excelButtonLoading = false;
+			this.closeWaitingDialog();
 
 			this.$swal.fire({
-			type: "info",
-			title: "Success",
-			text: "The Category and its Products has been uploaded successfully."
+				type: "info",
+				title: "Success",
+				text: "The Category and its Products has been uploaded successfully."
 			});
 
 			this.$refs.excelFile.value = null;

@@ -257,6 +257,7 @@ export default {
   }
 };
 </script>
+
 <style>
   .swal2-container .swal2-popup {
     font-family: 'Roboto', sans-serif;
@@ -270,3 +271,5 @@ export default {
     font-family: 'Roboto', sans-serif;
   }
 </style>
+
+

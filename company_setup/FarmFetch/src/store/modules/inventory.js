@@ -27,14 +27,10 @@ const inventory = {
         },
         AddProduct(state, payload) {
             state.products.unshift(payload);
-
         },
         UpdateProduct(state, payload) {
             const index = state.products.findIndex((product) => product.id === payload.id);
             if(index !== -1) {
-                // Object.keys(payload).forEach((key) => {
-                //     state.products[index][key] = payload[key];
-                // });
                 state.products[index] = Object.assign({}, payload);
                 state.products = [...state.products];
             }
@@ -63,15 +59,44 @@ const inventory = {
 
                     switch(change.type) {
                         case 'added': {
+                            console.log('variant has been added: ', data);
                             if(!state.products.length) {
-                                console.log('product was added in!', data);
+                                data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                                if(data.availableQTY === 0) {
+                                    data.isOutofStock = true;
+                                }
+
+                                if(data.isOutofStock) {
+                                    data.position = 1;
+                                
+                                } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                    data.position = 1;
+                        
+                                } else {
+                                    data.position = 2;
+                                }
+                        
                                 commit('AddProduct', data);
                             
                             } else {
                                 //avoid pushing the same product on the list
                                 const lastProductAdded = state.products[0];
                                 if(lastProductAdded.id !== data.id) {
-                                    console.log('product was added!', data);
+                                    data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                                    if(data.availableQTY === 0) {
+                                        data.isOutofStock = true;
+                                    }
+
+                                    if(data.isOutofStock) {
+                                        data.position = 1;
+                                    
+                                    } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                        data.position = 1;
+                            
+                                    } else {
+                                        data.position = 2;
+                                    }
+                            
                                     commit('AddProduct', data);
                                 }
                             }
@@ -80,19 +105,46 @@ const inventory = {
                         }
 
                         case 'modified': {
-                            console.log('product was modified!', data);
+                            data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+                            if(data.availableQTY === 0) {
+                                data.isOutofStock = true;
+                            }
+
+                            if(data.isOutofStock) {
+                                data.position = 1;
+                            
+                            } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                data.position = 1;
+                    
+                            } else {
+                                data.position = 2;
+                            }
+                    
+                            console.log('variant was modified!', data);
                             commit('UpdateProduct', data);
                             break;
                         }
 
                         case 'removed': {
-                            console.log('product was removed!', data);
+                            console.log('variant was removed!', data);
+                            data.availableQTY = Number(data.onHandQTY) - Number(data.allocatedQTY);
+
+                            if(data.isOutofStock) {
+                                data.position = 1;
+                            
+                            } else if(data.availableQTY <= Number(data.reOrderLevel)) {
+                                data.position = 1;
+                    
+                            } else {
+                                data.position = 2;
+                            }
+                            
                             commit('RemoveProduct', data);
                             break;
                         }
 
                         default: {
-                            console.log('product with unknown change type: ', data);
+                            console.log('variant with unknown change type: ', data);
                         }
                     }
                 });
@@ -143,6 +195,7 @@ const inventory = {
                         name: `${productData.name.toLowerCase()}`,
                         weight: productData.weight,
                         price: productData.price,
+                        variantName: null,
 
                         productName: productData.name,
                         productId: productData.id,
@@ -152,6 +205,7 @@ const inventory = {
                         onHandQTY: 0,
                         reOrderLevel:  0,
                         isOutofStock: true,
+                        minimumOrder: Number(productData.minimumOrder) || 1,
                     });
 
                     isSuccessful = true;
@@ -174,20 +228,18 @@ const inventory = {
             //if the product has attributes, then proceed to the steps below
             
             //extract all the variants object from the "items" field in each attributes of the product.
-            const itemsInAttributes = productData.attributes.map(attribute => attribute.items);
-
-            //create variants from all the items that is found in the attributes of the product
-            const productVariants = await dispatch('COMBINE_ALL_ATTRIBUTES', itemsInAttributes); 
+            const itemsInAttributes = productAttributes[0].items;
+            const variantName = productAttributes[0].name;
             
-            let skuID = 0;
-            for(const variant of productVariants) {
+            for(const variant of itemsInAttributes) {
                 try {
                     await DB.collection('products').doc('details').collection('variants').add({
-                        sku: `${productData.code}-${skuID++}`,
-                        name: `${variant.toLowerCase()}`,
+                        sku: `${variant.sku}`,
+                        name: `${variant.name}`,
+                        variantName,
                         weight: productData.weight,
                         price: productData.price,
-                        
+
                         productName: productData.name,
                         productId: productData.id,
                         category: categoryName,
@@ -195,7 +247,8 @@ const inventory = {
                         allocatedQTY: 0,
                         onHandQTY: 0,
                         reOrderLevel:  0,
-                        isOutofStock: true
+                        isOutofStock: true,
+                        minimumOrder: Number(variant.minimumOrder) || 1,
                     });
                 
                 } catch(error) {
@@ -224,21 +277,22 @@ const inventory = {
 
             const categoryDoc = await DB.collection('catalogues').doc(productData.categoryId).get();
             const categoryName = categoryDoc.data().name;
-            
-            //if a product doesnt have an attributes then edit its existing variants 
             const productAttributes = productData.attributes;
+
+            //if a product doesnt have attributes
             if(!productAttributes.length) {
                 try {
                     //extract from the inventory list the variants associated to the edited product 
-                    const productVariants = state.products.filter(product => product.productId === productData.id);
+                    const existingVariants = state.products.filter(product => product.productId === productData.id);
                     
-                    //if the product doesnt have variants yet, create one
-                    if(!productVariants.length) {
-                        await DB.collection('products').doc('details').collection('variants').add({
+                    //if the product doesnt have existing variants, create one
+                    if(!existingVariants.length) {
+                        await DB.collection('products').doc('details').collection('variants').doc().set({
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
-                            weight: productData.weight,
-                            price: productData.price,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
 
                             productName: productData.name,
                             productId: productData.id,
@@ -247,21 +301,56 @@ const inventory = {
                             allocatedQTY: 0,
                             onHandQTY: 0,
                             reOrderLevel:  0,
-                            isOutofStock: true
+                            isOutofStock: true,
+                            minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
                         });
                     
-                    //update the existing single variant of the edited product
-                    } else {
-                        await DB.collection('products').doc('details').collection('variants').doc(productVariants[0].id)
+                    } else if(existingVariants.length === 1) {
+                        //if a single variant exist for the product, then just update it
+                        DB.collection('products').doc('details').collection('variants').doc(existingVariants[0].id)
                         .update({
                             sku: productData.code,
                             name: `${productData.name.toLowerCase()}`,
-                            weight: productData.weight,
-                            price: productData.price,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
+
                             productName: productData.name,
                             productId: productData.id,
                             category: categoryName,
+                            minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
                         });
+
+                    } else {
+                        //if there are existing variants, remove them and create a single variant for the product. Based from its details.
+                        const batch = DB.batch();
+                        const variantsCollection = DB.collection('products').doc('details').collection('variants');
+                        
+                        //delete the existing variants of the product
+                        for(const variant of existingVariants) {
+                            batch.delete(variantsCollection.doc(variant.id));
+                        }
+
+                        //create a single variant out from the product's details
+                        batch.set(variantsCollection.doc(), {
+                            sku: productData.code,
+                            name: `${productData.name.toLowerCase()}`,
+                            variantName: null,
+                            weight: Number(productData.weight),
+                            price: Number(productData.price),
+
+                            productName: productData.name,
+                            productId: productData.id,
+                            category: categoryName,
+                            
+                            allocatedQTY: 0,
+                            onHandQTY: 0,
+                            reOrderLevel:  0,
+                            isOutofStock: true,
+                            minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
+                        });
+
+                        await batch.commit();
                     }
 
                     isSuccessful = true;
@@ -278,24 +367,28 @@ const inventory = {
                     };
                 }
 
-                return {
-                    isSuccessful
-                };
+                return { isSuccessful };
             }
             
-            //extract the variants that is present in each attributes of the edited product
-            const itemsInAttributes = productData.attributes.map(attribute => attribute.items);
-            const variantsInAttributes = await dispatch('COMBINE_ALL_ATTRIBUTES', itemsInAttributes);
-            const variantsInInventory = state.products.filter(product => product.productId === productData.id);
-            //if there are no variants in the inventory that is associated to the edited product, 
-            //but has attributes on it. Then create the variants
-            if(!variantsInInventory.length && variantsInAttributes.length) {
+            //if the edited product has attributes, proceed below.
+
+            //extract variants from the edited product
+            const variant = productAttributes[0];
+            const itemsInAttributes = variant.items;
+            const variantName = variant.name;
+            
+            console.log(itemsInAttributes);
+            
+            //extract existing variants from the inventory
+            const existingVariants = state.products.filter(product => product.productId === productData.id);
+            
+            //if there are no variants in the inventory associated to the edited product. 
+            //But the edited product has attributes on it, then create the variants
+            if(itemsInAttributes.length && !existingVariants.length) {
                 try {
                     await dispatch('CREATE_VARIANTS_FROM_PRODUCT', { productData });
 
-                    return {
-                        isSuccessful: true
-                    }
+                    return { isSuccessful: true };
 
                 } catch(error) {
                     console.log(
@@ -308,55 +401,76 @@ const inventory = {
                     };
                 }
             }
+            
+            //if there are variants in the inventory associated to the edited product.
+            //And the edited product has attributes on it, then re-create the variants.
 
             const variantsSubCollectionRef = DB.collection('products').doc('details').collection('variants');
             const batch = DB.batch();
-            //update all variants associated to the product
-            for(const variant of variantsInInventory) {
-                //remove the top item in the new variants in attributes of the edited product
-                //in order to monitor what variant has been updated
-                const updatedVariantName = variantsInAttributes.shift();
-                batch.update(variantsSubCollectionRef.doc(variant.id), {
-                    name: updatedVariantName.toLowerCase(),
-                    price: productData.price,
-                    weight: productData.weight,
+            
+            for(const newVariant of itemsInAttributes) {
+                let matchedVariantIndex = existingVariants.findIndex(existingVariant => (existingVariant.sku === newVariant.sku) || (existingVariant.name === newVariant.name));
+
+                //if an existing variant has the same SKU or NAME on one of the edited product's variant
+                //then update it only
+                if(matchedVariantIndex !== -1) {
+                    batch.update(variantsSubCollectionRef.doc(existingVariants[matchedVariantIndex].id), {
+                        sku: newVariant.sku,
+                        name: newVariant.name,
+                        variantName,
+                        category: categoryName,
+                        productName: productData.name,
+                        price: Number(productData.price),
+                        weight: Number(productData.weight),
+                        minimumOrder: newVariant.minimumOrder ? Number(newVariant.minimumOrder) : 1,
+                    });
+
+                    //remove from the existing variant list the variant that has been edited
+                    existingVariants.splice(matchedVariantIndex, 1);
+                    continue; //proceed to the next newVariant
+                }
+
+                //If there is an existing variant in the inventory, that has exactly the same content as the new variant from the edited product.
+                //Then leave it as is.
+                matchedVariantIndex = existingVariants.findIndex(existingVariant => (existingVariant.sku === newVariant.sku) && (existingVariant.name === newVariant.name));
+                if(matchedVariantIndex !== -1) {
+                    existingVariants.splice(matchedVariantIndex, 1);
+                    continue;
+                }
+
+                //if the new variant, from the edited product, is not included in the existing variants in the inventory. Then create that new variant
+                batch.set(variantsSubCollectionRef.doc(), {
+                    sku: newVariant.sku,
+                    name: newVariant.name,
+                    variantName, 
+                    weight: Number(productData.weight),
+                    price: Number(productData.price),
+
                     productName: productData.name,
+                    productId: productData.id,
+                    category: categoryName,
+                    
+                    allocatedQTY: 0,
+                    onHandQTY: 0,
+                    reOrderLevel:  0,
+                    isOutofStock: true,
+                    minimumOrder: productData.minimumOrder ? Number(productData.minimumOrder) : 1,
                 });
             }
 
-            //if there are still remaining new variants in the attributes of the edited product
-            //just add them to the product's variant
-            if(variantsInAttributes.length) {
-                let skuID = 0;
-                for(const variant of variantsInAttributes) {
-                    batch.add(variantsSubCollectionRef, {
-                        sku: `${productData.code}-${skuID}`,
-                        name: `${variant.toLowerCase()}`,
-                        weight: productData.weight,
-                        price: productData.price,
-
-                        productName: productData.name,
-                        productId: productData.id,
-                        category: categoryName,
-                        
-                        allocatedQTY: 0,
-                        onHandQTY: 0,
-                        reOrderLevel:  0,
-                        isOutofStock: true
-                    });
+            // delete the remaining existing variants associated to the edited product
+            if(existingVariants.length) {
+                for(const variant of existingVariants) {
+                    batch.delete(variantsSubCollectionRef.doc(variant.id));
                 }
             }
 
             try {
                 await batch.commit();
-                return {
-                    isSuccessful: true
-                }
+                return { isSuccessful: true };
             
             } catch(error) {
-                throw {
-                    origin: 'inventory/EDIT_VARIANT_FROM_PRODUCT: batch updating existing variants'
-                }
+                throw { origin: 'inventory/EDIT_VARIANT_FROM_PRODUCT: batch updating existing variants' };
             }
 
         }, 
