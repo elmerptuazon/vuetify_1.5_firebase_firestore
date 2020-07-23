@@ -8,7 +8,7 @@ module.exports = {
   messagingSenderId: '"26371903278"',
   appId: '"1:26371903278:web:850ae7581232b3484bb4bf"',
   measurementId: '"G-XV2JER7LNT"',
-  primaryColor: '"#b81212"',
-  companyName: '"Cacao Culture Farms"',
+  primaryColor: '"#508fe6"',
+  companyName: '"Company Name"',
   accountManagementURL: '"https://us-central1-cacaoculturefarms-dev.cloudfunctions.net/accounts"'
 }
