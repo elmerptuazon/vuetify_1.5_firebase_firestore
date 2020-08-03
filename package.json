@@ -29,6 +29,7 @@
     "test-CacaoCultureFarms": "cross-env NODE_ENV=test node config/companySetup.js CacaoCultureFarms",
     "test-Matenara": "cross-env NODE_ENV=test node config/companySetup.js Matenara",
     "test-Rraw": "cross-env NODE_ENV=test node config/companySetup.js Rraw",
+    "test-KayumanggiOrganic": "cross-env NODE_ENV=test node config/companySetup.js KayumanggiOrganic",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
