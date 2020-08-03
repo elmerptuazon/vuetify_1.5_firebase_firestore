@@ -1,14 +1,14 @@
 module.exports = {
   NODE_ENV: '"production"',
-  apiKey: '"AIzaSyDAxQ8dvBH2CQNkvoFuklqVRV76KaRyKJ0"',
-  authDomain: '"appselltestapp.firebaseapp.com"',
-  databaseURL: '"https://appselltestapp.firebaseio.com"',
-  projectId: '"appselltestapp"',
-  storageBucket: '"appselltestapp.appspot.com"',
-  messagingSenderId: '"671506060709"',
-  appId: '"1:671506060709:web:7bcc28481ba6b94d12044c"',
+  apiKey: '"AIzaSyD4xk-R2E7hkJGl3T820hkmUiMxVP0LPVE"',
+  authDomain: '"kayumanggiorganic-dev.firebaseapp.com"',
+  databaseURL: '"https://kayumanggiorganic-dev.firebaseio.com"',
+  projectId: '"kayumanggiorganic-dev"',
+  storageBucket: '"kayumanggiorganic-dev.appspot.com"',
+  messagingSenderId: '"316844676986"',
+  appId: '"1:316844676986:web:57c7a5a119b451aafc68c3"',
   measurementId: '"G-XV2JER7LNT"',
-  primaryColor: '"#0E1E38"',
-  companyName: '"AppSell Test App"',
+  primaryColor: '"#4bb6d7"',
+  companyName: '"Kayumanggi Organic Test App"',
   accountManagementURL: '"https://us-central1-appselltestapp.cloudfunctions.net/accounts"'
 }
