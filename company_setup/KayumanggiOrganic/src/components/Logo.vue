@@ -1,5 +1,5 @@
 <template>
-  <v-avatar tile>
+  <v-avatar size="150px" tile>
     <v-img :src="require('@/assets/logo.jpg')" tile contain></v-img>
   </v-avatar>
 </template>
