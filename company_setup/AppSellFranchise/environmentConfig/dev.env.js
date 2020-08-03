@@ -12,6 +12,6 @@ module.exports = merge(prodEnv, {
   messagingSenderId: '"1069219513340"',
   storageCode: '"AppSellFranchise"',
   primaryColor: '"#d66807"',
-  companyName: '"AppSell Franchise"',
+  companyName: '"AppSell Demo App"',
   accountManagementURL: '"https://us-central1-appsellfranchise.cloudfunctions.net/accounts"'
 })
