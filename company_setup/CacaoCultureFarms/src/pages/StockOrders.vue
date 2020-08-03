@@ -73,8 +73,9 @@
           <tr
             @click="view(props.item)"
             :class="[
-              props.item.isRead && props.item.status.toLowerCase() === 'pending' ? 'grey lighten-2' : '',
-              !props.item.isRead && props.item.status.toLowerCase() === 'pending' ? 'blue lighten-4' : '',
+              props.item.position === 1 ? 'red lighten-3' : '',
+              props.item.position === 2 ? 'blue lighten-4' : '',
+              props.item.position === 3 ? 'grey lighten-2' : '',
             ]"
           >
             <td>
@@ -106,7 +107,11 @@
               >{{ 'scheduled for shipping' | uppercase }}</span>
               <span v-else>{{ props.item.status | uppercase }}</span>
             </td>
-            <td>{{ props.item.resellerPrice | currency("P") }}</td>
+            <td class="text-xs-center">
+              <span v-if="props.item.paymentDetails.paymentStatus === 'pending' && props.item.paymentDetails.paymentType === 'POP'"> PROOF OF PAYMENT </span>
+              <span v-else>{{ props.item.paymentDetails.paymentStatus | uppercase }}</span>
+            </td>
+            <td>{{ props.item.resellerPrice | currency("&#8369; ") }}</td>
           </tr>
         </template>
       </v-data-table>
@@ -129,7 +134,7 @@ export default {
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
     pagination: {
-      sortBy: "Order Date"
+      sortBy: "position"
     },
     headers: [
       {
@@ -165,8 +170,12 @@ export default {
         value: "sku"
       },
       {
-        text: "Status",
+        text: "Shipping Status",
         value: "status"
+      },
+      {
+        text: "Payment Status",
+        value: "paymentDetails.paymentStatus"
       },
       {
         text: "Price",
@@ -248,9 +257,26 @@ export default {
   mixins: [mixins],
   computed: {
     items() {
-      const orders = this.$store.getters['stock_orders/GET_STOCK_ORDER_LIST'];
-      this.computeStatusNumbers(orders);
-      return orders;
+      const stockOrderList = this.$store.getters['stock_orders/GET_STOCK_ORDER_LIST'];
+      const stockOrders = stockOrderList.map(stockorder => {
+        if(stockorder.paymentDetails.paymentStatus === 'pending' && stockorder.paymentDetails.paymentType === 'POP') {
+          stockorder.position = 1;
+        
+        } else if(!stockorder.isRead && stockorder.status.toLowerCase() === 'pending') {
+          stockorder.position = 2;
+        
+        } else if(stockorder.isRead && stockorder.status.toLowerCase() === 'pending') {
+          stockorder.position = 3;
+        
+        } else {
+          stockorder.position = 4;
+        } 
+
+        return stockorder;
+      });
+
+      this.computeStatusNumbers(stockOrders);
+      return stockOrders;
     }
   },
 

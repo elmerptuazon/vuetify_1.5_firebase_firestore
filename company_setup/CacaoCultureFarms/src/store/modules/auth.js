@@ -35,6 +35,7 @@ const auth = {
 					dispatch('distributors/LISTEN_TO_NEW_REGISTRATIONS', null, { root: true });
 					dispatch('conversations/listenToConversations', null, { root: true });
 					dispatch('inventory/LISTEN_TO_PRODUCT_STATS', null, { root: true });
+					dispatch('support/LISTEN_TO_SUPPORT', null, { root: true });
 					return userData;
 				} catch (error) {
 					await AUTH.signOut();
@@ -54,6 +55,7 @@ const auth = {
 				dispatch('distributors/LISTEN_TO_NEW_REGISTRATIONS', null, { root: true });
 				dispatch('conversations/listenToConversations', null, { root: true });
 				dispatch('inventory/LISTEN_TO_PRODUCT_STATS', null, { root: true });
+				dispatch('support/LISTEN_TO_SUPPORT', null, { root: true });
 				return;
 			} catch (error) {
 				await AUTH.signOut();
@@ -91,6 +93,7 @@ const auth = {
 				dispatch('stock_orders/UNSUBSCRIBE_FROM_STOCK_ORDERS', {}, { root: true });
 				dispatch('distributors/UNSUBSCRIBE_FROM_NEW_RESELLERS', {}, { root: true });
 				dispatch('inventory/UNSUBSCRIBE_TO_PRODUCT_STATS', null, { root: true });
+				dispatch('support/UNSUBSCRIBE_TO_SUPPORT', null, { root: true });
 			} catch (error) {
 				throw error;
 			}
