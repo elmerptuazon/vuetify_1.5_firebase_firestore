@@ -41,6 +41,7 @@ const prompts = require('prompts');
             { title: 'Cacao Culture Farms', value: 'CacaoCultureFarms' },
             { title: 'Matenara', value: 'Matenara' },
             { title: 'Rraw', value: 'Rraw' },
+            { title: 'Kayumanggi Organic', value: 'KayumanggiOrganic' },
         ],
         initial: 0
     }
