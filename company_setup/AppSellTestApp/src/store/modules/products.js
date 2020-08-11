@@ -33,6 +33,7 @@ const products = {
                         product.minimumOrder = payloadproduct.minimumOrder;
                         product.weight = payloadproduct.weight;
                         product.sale = payloadproduct.sale;
+                        product.position = payloadproduct.position;
                     }
                     if (payloadproduct.hasOwnProperty('downloadURL')) {
                         console.log('image url found');
@@ -60,6 +61,7 @@ const products = {
                             product.price = payloadproduct.price;
                             product.minimumOrder = payloadproduct.minimumOrder;
                             product.sale = payloadproduct.sale;
+                            product.position = payloadproduct.position;
                         }
                         if (payloadproduct.hasOwnProperty('downloadURL')) {
                             console.log('image url found');
