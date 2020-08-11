@@ -31,18 +31,16 @@
         </v-layout>
       </v-card-title>
       <v-data-table
-        v-model="selected"
         :headers="headers"
         :items="items"
         item-key="name"
-        select-all
         :pagination.sync="pagination"
         class="elevation-1"
-        :loading="items.length === 0"
         :search="search"
         :rows-per-page-items="rowsPerPageItems"
+        no-data-text="No products yet..."
       >
-        <template slot="headers" slot-scope="props">
+        <!-- <template slot="headers" slot-scope="props">
           <tr>
             <th
               v-for="header in props.headers"
@@ -58,6 +56,13 @@
               {{ header.text }}
             </th>
           </tr>
+        </template> -->
+        <template v-slot:headerCell="props">
+          <div class="pb-2">
+            <div v-for="(word, index) in props.header.text.split('\n')" :key="index">
+              {{ word }}
+            </div>
+          </div>
         </template>
         <template slot="items" slot-scope="props">
           <tr
@@ -94,6 +99,11 @@
             </td>
             <td class="text-xs-center">
               {{ props.item.createdAt | momentize("MMMM D, YYYY") }}
+            </td>
+            <td class="text-xs-center">
+              <a @click.prevent="updatePosition(props.item)">{{
+                props.item.position
+              }}</a>
             </td>
             <td class="text-xs-center">
               <div v-if="!props.item.attributes.length">{{ props.item.minimumOrder }}</div>
@@ -447,6 +457,28 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog max-width="300px" v-model="updatePositionDialog">
+      <v-card>
+        <v-card-title>
+          <div class="title">Update Position</div>
+        </v-card-title>
+        <v-card-text>
+          <v-select
+            :items="positions"
+            v-model="selectedPosition"
+            label="Position"
+          ></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn flat @click.native="updatePositionDialog = false"
+            >Cancel</v-btn
+          >
+          <v-btn color="primary" :loading="positionDialogLoading" @click="savePosition">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-dialog max-width="800" v-model="uploadImagesDialog" persistent>
       <v-card>
         <v-card-title class="primary white--text headline">
@@ -555,32 +587,41 @@ export default {
   },
   data: () => ({
     pagination: {
-      sortBy: "name"
+      sortBy: "position"
     },
     rowsPerPageItems: [10, 20, 30, { text: "All", value: -1 }],
     selected: [],
     headers: [
       {
-        text: "Thumbnail",
+        text: "\nThumbnail",
         align: "center",
         sortable: false,
         value: "downloadURL"
       },
       {
-        text: "Name",
-        value: "name"
+        text: "Name\n",
+        value: "name",
+        align: 'center'
       },
       {
-        text: "Date added",
-        value: "createdAt"
+        text: "Date Added",
+        value: "createdAt",
+        align: 'center'
       },
       {
-        text: "Minimum Stock Order",
-        value: "minimumOrder"
+        text: 'Display\nPosition',
+        value: 'position',
+        align: 'center'
+      },
+      {
+        text: "Minimum\nStock Order",
+        value: "minimumOrder",
+        align: 'center'
       },
       {
         text: "Actions",
-        sortable: false
+        sortable: false,
+        align: 'center'
       }
     ],
     loading: false,
@@ -655,7 +696,13 @@ export default {
       acceptedFiles: "image/*",
       addRemoveLinks: true
     },
-    images: []
+    images: [],
+
+    positions: [],
+    selectedPosition: null,
+    updatePositionDialog: false,
+    selectedProductIndex: null,
+    positionDialogLoading: false,
   }),
   methods: {
     variantEntryModel() {
@@ -1089,6 +1136,71 @@ export default {
           type: "error",
           title: "Error",
           text: "An error occurred"
+        });
+      }
+    },
+
+    updatePosition(item) {
+      this.positions = [];
+
+      this.selectedProduct = Object.assign({}, item);
+      const index = this.items.findIndex(item => item.id === this.selectedProduct.id);
+      if(index !== -1) this.selectedProductIndex = index;
+
+      this.items.forEach((product, index) => {
+        this.positions.push(index + 1);
+      });
+
+      this.updatePositionDialog = true;
+    },
+
+    async savePosition() {
+      this.positionDialogLoading = true;
+      let productsCopy = this.items;
+
+      productsCopy.splice(this.selectedProductIndex, 1); //remove the selected product from the list
+      productsCopy.splice(this.selectedPosition - 1, 0, this.selectedProduct); //insert the selected product to the desired position
+
+      try {
+        const N = productsCopy.length;
+        //this loop will fis the position values of all affected products
+        for(let index = 0; index < N; index++) {
+          const currentPosition = index + 1;
+          const currentProduct = productsCopy[index];
+
+          if(currentProduct.position !== currentPosition) {
+            currentProduct.position = currentPosition;
+            await this.$store.dispatch('products/UPDATE_PRODUCT', {
+              productId: currentProduct.id,
+              productData: { position: currentPosition }
+            });
+          }
+        }
+
+        for(let index = 0; index < N; index++) {
+          this.$set(this.items, index, productsCopy[index]);
+        }
+        
+        this.positionDialogLoading = false;
+        this.updatePositionDialog = false;
+        this.selectedPosition = null;
+        this.selectedProduct = {};
+        this.selectedProductIndex = null;
+
+        this.$swal.fire({
+          type: "success",
+          title: "Position Updated!",
+          text: "Display position updated!"
+        });
+
+      } catch(error) {
+        console.log(error);
+        this.positionDialogLoading = false;
+        
+        this.$swal.fire({
+          type: "error",
+          title: "Position not Updated!",
+          text: "Display position was not updated!"
         });
       }
     },
