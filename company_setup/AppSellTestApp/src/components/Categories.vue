@@ -226,7 +226,7 @@
           <v-btn flat @click.native="updatePositionDialog = false"
             >Cancel</v-btn
           >
-          <v-btn color="primary" @click="savePosition">Save</v-btn>
+          <v-btn color="primary" :loading="positionDialogLoading" @click="savePosition">Save</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -369,6 +369,8 @@ export default {
     selectedPosition: null,
     updatePositionDialog: false,
     selectedCategory: {},
+    selectedCategoryIndex: null,
+    positionDialogLoading: false,
     disableDeleteButton: true,
     editCategoryDialog: false,
     categoryButtonDisabled: false,
@@ -601,6 +603,9 @@ export default {
       this.positions = [];
 
       this.selectedCategory = item;
+      const index = this.items.findIndex(item => item.id === this.selectedCategory.id);
+      if(index !== -1) this.selectedCategoryIndex = index;
+
       this.items.forEach((product, index) => {
         this.positions.push(index + 1);
       });
@@ -608,45 +613,50 @@ export default {
       this.updatePositionDialog = true;
     },
     async savePosition() {
+      this.positionDialogLoading = true;
+      let categoriesCopy = this.items;
+
+      categoriesCopy.splice(this.selectedCategoryIndex, 1); //remove the selected category from the list
+      categoriesCopy.splice(this.selectedPosition - 1, 0, this.selectedCategory); //insert the selected category to the desired position
+
       try {
-        const index = this.items.findIndex(
-          i => i.position === this.selectedPosition
-        );
+        const N = categoriesCopy.length;
+        //this loop will fis the position values of all affected categories
+        for(let index = 0; index < N; index++) {
+          const currentPosition = index + 1;
+          const currentCategory = categoriesCopy[index];
 
-        const selectedCategoryClone = JSON.parse(
-          JSON.stringify(this.selectedCategory)
-        );
-
-        if (index === -1) {
-          await categoriesCollection
-            .doc(selectedCategoryClone.id)
-            .update({ position: this.selectedPosition });
-          const categoryIndex = this.items.findIndex(
-            i => i.id === selectedCategoryClone.id
-          );
-          this.items[categoryIndex].position = this.selectedPosition;
-        } else {
-          await categoriesCollection
-            .doc(selectedCategoryClone.id)
-            .update({ position: this.selectedPosition });
-          await categoriesCollection
-            .doc(this.items[index].id)
-            .update({ position: selectedCategoryClone.position });
-          const categoryIndex = this.items.findIndex(
-            i => i.id === selectedCategoryClone.id
-          );
-          this.items[categoryIndex].position = this.items[index].position;
-          this.items[index].position = selectedCategoryClone.position;
+          if(currentCategory.position !== currentPosition) {
+            currentCategory.position = currentPosition;
+            await categoriesCollection.doc(currentCategory.id).update({position: currentPosition});
+          }
         }
+
+        for(let index = 0; index < N; index++) {
+          this.$set(this.items, index, categoriesCopy[index]);
+        }
+        
+        this.positionDialogLoading = false;
+        this.updatePositionDialog = false;
+        this.selectedPosition = null;
+        this.selectedCategory = null;
+        this.selectedCategoryIndex = null;
 
         this.$swal.fire({
           type: "success",
-          title: "success",
+          title: "Position Updated!",
           text: "Display position updated!"
         });
-        this.updatePositionDialog = false;
-      } catch (error) {
+
+      } catch(error) {
         console.log(error);
+        this.positionDialogLoading = false;
+        
+        this.$swal.fire({
+          type: "error",
+          title: "Position not Updated!",
+          text: "Display position was not updated!"
+        });
       }
     },
   },
