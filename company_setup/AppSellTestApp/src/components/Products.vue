@@ -919,7 +919,7 @@ export default {
             minimumOrder: this.product.minimumOrder ? Number(this.product.minimumOrder) : 1,
             attributes: this.product.attributes,
             searchTerms: this.product.name.split(" "),
-
+            position: this.items.length + 1,
           };
           console.log(newProduct);
 
