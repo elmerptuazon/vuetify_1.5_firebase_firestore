@@ -111,9 +111,17 @@
               {{ props.item.created | momentize("MMMM D, YYYY") }}
             </td>
             <td class="text-xs-center">
-              <a @click.prevent="updatePosition(props.item)">{{
-                props.item.position
-              }}</a>
+              <v-tooltip bottom>
+                <template v-slot:activator="{on}">
+                  <a v-on="on" @click.prevent="updatePosition(props.item)">
+                    {{ props.item.position}}
+                    <span class="ml-2">
+                      <v-icon small>edit</v-icon>
+                    </span>
+                  </a>
+                </template>
+                <span>Click to change product's display position...</span>
+              </v-tooltip>
             </td>
             <td class="text-xs-center">
               <v-tooltip left>
