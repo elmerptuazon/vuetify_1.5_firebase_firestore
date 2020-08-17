@@ -69,9 +69,16 @@ const auth = {
 		async GET_USER({ }, uid) {
 			try {
 				const user = await DB.collection('accounts').doc(uid).get();
-				const userData = user.data();
-				userData.id = user.id;
-				return userData;
+				if(user.exists) {
+					const userData = user.data();
+					userData.id = user.id;
+					return userData;
+				
+				} else {
+					console.log('get user action, user id with no data: ', uid)
+					return null;
+				}
+				
 			} catch (error) {
 				throw error;
 			}

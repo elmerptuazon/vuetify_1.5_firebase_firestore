@@ -12,6 +12,11 @@ import distributors from './modules/distributors';
 import stock_orders from './modules/stock-orders';
 import users from './modules/users';
 import shipment from './modules/shipment';
+import delivery_settings from './modules/delivery-settings';
+import articles from './modules/articles';
+import inventory from './modules/inventory';
+import support from './modules/support';
+
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -27,6 +32,11 @@ export default new Vuex.Store({
 				icon: 'cloud_upload',
 				text: 'Multiple Product Upload',
 				url: 'MultiProductUpload'
+			},
+			{
+				icon: 'fa-warehouse',
+				text: 'Inventory Management',
+				url: 'Inventory'
 			},
 			{
 				icon: 'keyboard_arrow_up',
@@ -47,6 +57,11 @@ export default new Vuex.Store({
 				url: 'StockOrders',
 			},
 			{
+				icon: 'rv_hookup',
+				text: 'Delivery Settings',
+				url: 'DeliverySettings',
+			},
+			{
 				icon: 'supervisor_account',
 				text: 'New Registrations',
 				url: 'NewRegistrations',
@@ -55,6 +70,11 @@ export default new Vuex.Store({
 				icon: 'messages',
 				text: 'Messages',
 				url: 'Messages',
+			},
+			{
+				icon: 'chrome_reader_mode',
+				text: 'Articles',
+				url: 'Articles',
 			},
 			{
 				icon: 'contact_support',
@@ -82,6 +102,10 @@ export default new Vuex.Store({
 		distributors,
 		stock_orders,
 		users,
-		shipment
+		shipment,
+		delivery_settings,
+		articles,
+		inventory,
+		support
 	}
 })

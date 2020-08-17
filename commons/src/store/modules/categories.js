@@ -98,7 +98,7 @@ const categories = {
         },
         async GET_EXCEL_TEMPLATE() {
             try {
-                const downloadURL = STORAGE.ref("appsell").child('CategoryExcelTemplate.zip').getDownloadURL();
+                const downloadURL = await STORAGE.ref("appsell").child('CategoryExcelTemplate.zip').getDownloadURL();
                 return downloadURL;
             } catch (error) {
                 throw error;

@@ -28,11 +28,29 @@ const stock_orders = {
             state.stockOrderList = payload;
         },
         UPDATE_STOCK_ORDER(state, payload) {
-            Object.keys(payload).forEach((key) => {
+            for(const key of Object.keys(payload)) {
                 state.stockOrder[key] = payload[key];
-            });
-            // key: the name of the object key
-            // index: the ordinal position of the key within the object 
+            }
+        },
+        ADD_TO_STOCK_ORDER_LIST(state, payload) {
+            state.stockOrderList.unshift(payload);
+            console.log('stock order has been added: ', payload);
+        },
+        UPDATE_STOCK_ORDER_LIST(state, payload) {
+            const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === payload.id);
+            if(index !== -1) {
+                state.stockOrderList[index] = Object.assign({}, payload);
+                state.stockOrderList = [...state.stockOrderList];
+                console.log('stock order has been modified: ', payload);
+            }
+        },
+        REMOVE_TO_STOCK_ORDER_LIST(state, payload) {
+            const index = state.stockOrderList.findIndex(stockOrder => stockOrder.id === payload.id);
+            if(index !== -1) {
+                state.stockOrderList.splice(index, 1);
+                state.stockOrderList = [...state.stockOrderList];
+                console.log('stock order has been removed: ', payload);
+            }
         }
     },
     actions: {
@@ -43,81 +61,51 @@ const stock_orders = {
 
             state.subscriber = DB.collection('stock_orders')
                 .where('active', '==', false) //get all stock orders that are already submitted by a reseller
-                .orderBy('submittedAt', 'desc')
-				.onSnapshot((snapshot) => {
+                .orderBy('submittedAt')
+				.onSnapshot(async (snapshot) => {
 
 					console.log('Listening to stock orders...');
 
                     let changes = snapshot.docChanges();
 
-					changes = changes.map((change) => {
-
-                        console.log(change);
-                        
+                    for(const change of changes) {
                         let data = change.doc.data();
                         data.id = change.doc.id;
-
-                        data.type = change.type; 
                         
                         data.user = {};
                         const userIndex = fetchedUsers.findIndex(user => user.id === data.userId);
                         if (userIndex !== -1) {
                             data.user = fetchedUsers[userIndex];
                         } else {
-                            dispatch('auth/GET_USER', data.userId, { root: true })
-                                .then((res) => {
-                                    data.user = res;
-                                    fetchedUsers.push(data.user);
-                                })
-                                .catch(error => {
-                                    console.log('stock orders listening: ', error);
-                                });
+                            try {
+                                const userData = await dispatch('auth/GET_USER', data.userId, { root: true });
+                                fetchedUsers.push(userData);
+                                data.user = userData;
+                            
+                            } catch(error) {
+                                console.log('error in stock order user data: ', error);
+                            }
                         }
 
                         data.sku = data.items.length;
                         data.price = 0;
                         data.resellerPrice = 0;
                         data.items.forEach((item) => {
-                            data.price += (item.qty * item.price);
-                            data.resellerPrice += (item.qty * item.resellerPrice);
-
+                            data.price += (item.qty * item.resellerPrice);
                         });
 
-                        if(!data.hasOwnProperty('isRead') && data.status.toLowerCase() === 'pending') {
-                            data.isRead = true;
+                        if(change.type === 'added') {
+                            commit('ADD_TO_STOCK_ORDER_LIST', data);
                         
-                        } else if(data.status.toLowerCase() !== 'pending') {
-                            data.isRead = true;
+                        } else if(change.type === 'modified') {
+                            commit('UPDATE_STOCK_ORDER_LIST', data);
+                        
+                        } else if(change.type === 'removed') {
+                            commit('REMOVE_TO_STOCK_ORDER_LIST', data);
                         }
-
-                        return data;
-                    });
-                    
-                    console.log('CHANGES IN STOCKORDER: ', changes);
-                    let newOrderCounter = 0;
-
-                    if(!state.stockOrderList || !state.stockOrderList.length) {
-                        commit('SET_STOCK_ORDER_LIST', changes);
-
-                    } else {
-                        changes.forEach(change => {
-                            //dont add the document that is due to an update on the 'status' field of an existing order
-                            if(
-                                change.type === 'added' && (!change.isRead || !change.hasOwnProperty('isRead'))
-                            ) {
-                                change.isRead = false;
-                                state.stockOrderList.unshift(change);
-                                // newOrderCounter++;
-                            }
-                                
-                            delete change.type;
-                            // state.newOrderCount = newOrderCounter;
-                        });
-                        
+   
                     }
-                    
-                    // state.newOrderCount = newOrderCounter;
-                    console.log('new orders count: ', state.newOrderCount);
+
 				});
 		},
 
@@ -181,6 +169,20 @@ const stock_orders = {
                 commit('SET_STOCK_ORDER_LIST', data);
                 return data;
             } catch (error) {
+                throw error;
+            }
+        },
+
+        async GET_STOCK_ORDER({}, payload) {
+            try {
+                
+                const stockOrderData = await DB.collection('stock_orders').doc(payload).get();
+                const data = stockOrderData.data();
+                data.id = stockOrderData.id;
+                return data;
+
+            } catch(error) {
+                console.log(error);
                 throw error;
             }
         },

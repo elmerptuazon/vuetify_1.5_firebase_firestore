@@ -30,11 +30,18 @@ const prompts = require('prompts');
             { title: 'Fetch', value: 'Fetch' },
             { title: 'Babae', value: 'Babae' },
             { title: 'Mother Nurture', value: 'MotherNurture' },
-            { title: 'Aquitek', value: 'Aquitek' },
-            { title: 'Chicharooms', value: 'Chicharooms' },
-            { title: 'Ever Bilena', value: 'EverBilena', disabled: true },
-            { title: 'Mary Kay', value: 'MaryKay', disabled: true },
-            { title: 'My Natural', value: 'MyNatural', disabled: true }
+            { title: 'Farm Fetch', value: 'FarmFetch' },
+            { title: 'Potato Corner', value: 'PotatoCorner' },
+            { title: 'Bente Silog', value: 'BenteSilog' },
+            { title: 'Frito King', value: 'FritoKing' },
+            { title: 'Pick Up Sticks', value: 'PickUpSticks' },
+            { title: 'Sip Avenue', value: 'SipAvenue' },
+            { title: 'Buffalo Wing\'s N Things', value: 'BuffaloWingsNThings' },
+            { title: 'AppSell Franchise', value: 'AppSellFranchise' },
+            { title: 'Cacao Culture Farms', value: 'CacaoCultureFarms' },
+            { title: 'Matenara', value: 'Matenara' },
+            { title: 'Rraw', value: 'Rraw' },
+            { title: 'Kayumanggi Organic', value: 'KayumanggiOrganic' },
         ],
         initial: 0
     }

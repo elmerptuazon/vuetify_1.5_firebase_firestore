@@ -12,7 +12,8 @@ import VueProgressBar from 'vue-progressbar';
 import Vue2Filters from 'vue2-filters';
 import store from './store'
 import { AUTH } from './config/firebase';
-import JsonExcel from 'vue-json-excel'
+import JsonExcel from 'vue-json-excel';
+import '@fortawesome/fontawesome-free/css/all.css';
 
 Vue.component('downloadExcel', JsonExcel)
 Vue.config.productionTip = false;
@@ -26,7 +27,8 @@ Vue.use(Vuetify, {
 		info: '#2196F3',
 		success: '#4CAF50',
 		warning: '#FFC107'
-	}
+	},
+	iconfont: 'md' || 'fa',
 });
 Vue.use(SocialSharing);
 Vue.use(VueExtendLayout);

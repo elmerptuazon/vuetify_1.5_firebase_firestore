@@ -18,6 +18,7 @@ import StockOrderDetails from '@/pages/StockOrderDetails';
 import MyAccount from '@/pages/MyAccount';
 import ShipmentReport from '@/pages/ShipmentReport';
 import DeliverySettings from '@/pages/DeliverySettings';
+import InventoryManagement from '@/pages/InventoryManagement';
 import { AUTH } from '@/config/firebase';
 import store from '@/store';
 
@@ -166,6 +167,14 @@ const router = new Router({
 			path: '/articles',
 			name: 'Articles',
 			component: Articles,
+			meta: {
+				requiresAuth: true
+			}
+		},
+		{
+			path: '/inventory',
+			name: 'Inventory',
+			component: InventoryManagement,
 			meta: {
 				requiresAuth: true
 			}

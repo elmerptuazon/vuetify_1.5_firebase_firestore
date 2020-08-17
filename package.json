@@ -18,6 +18,18 @@
     "test-Babae": "cross-env NODE_ENV=test node config/companySetup.js Babae",
     "test-MotherNurture": "cross-env NODE_ENV=test node config/companySetup.js MotherNurture",
     "test-Avon": "cross-env NODE_ENV=test node config/companySetup.js Avon",
+    "test-FarmFetch": "cross-env NODE_ENV=test node config/companySetup.js FarmFetch",
+    "test-PotatoCorner": "cross-env NODE_ENV=test node config/companySetup.js PotatoCorner",
+    "test-BenteSilog": "cross-env NODE_ENV=test node config/companySetup.js BenteSilog",
+    "test-FritoKing": "cross-env NODE_ENV=test node config/companySetup.js FritoKing",
+    "test-PickUpSticks": "cross-env NODE_ENV=test node config/companySetup.js PickUpSticks",
+    "test-SipAvenue": "cross-env NODE_ENV=test node config/companySetup.js SipAvenue",
+    "test-AppSellFranchise": "cross-env NODE_ENV=test node config/companySetup.js AppSellFranchise",
+    "test-BuffaloWingsNThings": "cross-env NODE_ENV=test node config/companySetup.js BuffaloWingsNThings",
+    "test-CacaoCultureFarms": "cross-env NODE_ENV=test node config/companySetup.js CacaoCultureFarms",
+    "test-Matenara": "cross-env NODE_ENV=test node config/companySetup.js Matenara",
+    "test-Rraw": "cross-env NODE_ENV=test node config/companySetup.js Rraw",
+    "test-KayumanggiOrganic": "cross-env NODE_ENV=test node config/companySetup.js KayumanggiOrganic",
     "setup": "node config/manualCompanySetup.js"
   },
   "dependencies": {
@@ -27,6 +39,7 @@
     "firebase": "^7.9.1",
     "fs-extra": "^8.1.0",
     "moment": "^2.24.0",
+    "philippines": "^1.0.0",
     "prompts": "^2.2.1",
     "sweet-modal-vue": "^2.0.0",
     "uuid": "^3.3.2",
@@ -45,6 +58,7 @@
     "xlsx": "^0.12.10"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "^5.13.0",
     "autoprefixer": "^7.1.2",
     "babel-core": "^6.22.1",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",

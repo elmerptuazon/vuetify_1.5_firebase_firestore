@@ -14,29 +14,18 @@
           </v-avatar>
         </td>
         <td class="text-xs-left">{{ props.item.name }}</td>
-        <td class="text-xs-left">{{ props.item.attributes | capitalize }}</td>
+        <td class="text-xs-left">{{ (props.item.attributes || '-') | capitalize }}</td>
+        <td class="text-xs-left">{{ props.item.sku }}</td>
         <td class="text-xs-center">{{ props.item.qty }}</td>
         <td class="text-xs-center">{{ props.item.shippedQty }}</td>
         <td class="text-xs-center">{{ props.item.remainingQty }}</td>
-        <td class="text-xs-center">{{ props.item.total | currency("P") }}</td>
+        <td class="text-xs-center">{{ props.item.total | currency("&#8369;") }}</td>
       </tr>
     </template>
     <template slot="footer">
-      <!-- <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong>Subtotal: {{ subTotal | currency("P") }}</strong>
-        </td>
-      </tr>
       <tr>
-        <td colspan="6" class="text-xs-right">
-          <strong
-            >Discount: <span v-if="discount">{{ discount }}%</span></strong
-          >
-        </td>
-      </tr> -->
-      <tr>
-        <td colspan="7" class="text-xs-right">
-          <strong>Total: {{ total | currency("P") }}</strong>
+        <td colspan="8" class="text-xs-right">
+          <strong>Total: {{ total | currency("&#8369;") }}</strong>
         </td>
       </tr>
     </template>
@@ -58,12 +47,17 @@ export default {
       {
         text: "Name",
         value: "name",
-        align: "center"
+        align: "left"
       },
       {
-        text: "Attributes",
+        text: "Variant",
         value: "attributes",
-        align: "center"
+        align: "left"
+      },
+      {
+        text: "Variant SKU",
+        value: "sku",
+        align: "left"
       },
       {
         text: "Order Qty",
@@ -94,7 +88,7 @@ export default {
         let attributes = "";
         Object.keys(item.attributes).forEach(attr => {
           if (attr !== "qty" && attr !== "quantity") {
-            attributes += `${attr}: ${item.attributes[attr]}`;
+            attributes += `${item.attributes[attr]}`;
           }
         });
 
@@ -106,7 +100,10 @@ export default {
           total: item.qty * item.resellerPrice,
           name: item.name,
           attributes: attributes,
-          image: item.downloadURL
+          image: item.downloadURL,
+          sku: item.sku,
+          variantId: item.variantId,
+          variantName: item.variantName
         };
       });
 

@@ -51,7 +51,7 @@ const distributors = {
 
                         data.type = change.type;
 
-                        console.log(data);
+                        // console.log(data);
 
                         if(!data.hasOwnProperty('isRead') 
                             && data.status.toLowerCase() === 'pending'
